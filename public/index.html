@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel OS</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0f1117;--surface:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892a4;
+      --primary:#4f6ef7;--green:#22c55e;--orange:#f97316;--gray:#94a3b8;
+      --green-bg:#052e16;--orange-bg:#431407;--gray-bg:#1e293b;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+    /* Header */
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+    .header-left h1{font-size:1.2rem;font-weight:700}
+    .header-left span{font-size:.78rem;color:var(--muted)}
+    .bot-badge{display:flex;align-items:center;gap:6px;font-size:.8rem;padding:5px 12px;border-radius:999px;border:1px solid var(--border)}
+    .dot{width:8px;height:8px;border-radius:50%;background:#ef4444}
+    .dot.online{background:var(--green);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    /* Stats */
+    .stats-bar{display:flex;gap:12px;padding:16px 24px;flex-wrap:wrap}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 20px;min-width:100px;text-align:center}
+    .stat-card .num{font-size:1.6rem;font-weight:700;line-height:1}
+    .stat-card .lbl{font-size:.72rem;color:var(--muted);margin-top:4px}
+    .stat-card.orange .num{color:var(--orange)}
+    .stat-card.green  .num{color:var(--green)}
+    .stat-card.gray   .num{color:var(--gray)}
+
+    /* Filters */
+    .filters{display:flex;gap:10px;padding:0 24px 16px;flex-wrap:wrap;align-items:center}
+    .filters input,.filters select{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.875rem;outline:none}
+    .filters input:focus,.filters select:focus{border-color:var(--primary)}
+    .filters input{min-width:220px}
+    .btn-refresh{margin-left:auto;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.875rem;cursor:pointer;transition:opacity .15s}
+    .btn-refresh:hover{opacity:.85}
+    .btn-refresh:disabled{opacity:.5;cursor:default}
+
+    /* Grid */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:0 24px 32px}
+
+    /* Card */
+    .os-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:transform .15s,border-color .15s}
+    .os-card:hover{transform:translateY(-2px);border-color:var(--primary)}
+    .card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+    .unidade{font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+    .os-num{font-size:.75rem;color:var(--muted);white-space:nowrap}
+    .card-servico{font-size:.9rem;font-weight:600;line-height:1.4}
+    .card-row{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:600}
+    .badge.Andamento{background:var(--orange-bg);color:var(--orange);border:1px solid #7c2d12}
+    .badge.Concluído{background:var(--green-bg); color:var(--green); border:1px solid #14532d}
+    .badge.Cancelado{background:var(--gray-bg);  color:var(--gray);  border:1px solid #334155}
+
+    /* Status buttons */
+    .card-footer{display:flex;gap:6px;margin-top:4px}
+    .btn-status{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:6px 4px;font-size:.72rem;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+    .btn-status:hover{background:var(--border);color:var(--text)}
+    .btn-status:disabled{opacity:.35;cursor:default}
+    .btn-status.active-Andamento{border-color:var(--orange);color:var(--orange)}
+    .btn-status.active-Concluído{border-color:var(--green); color:var(--green)}
+    .btn-status.active-Cancelado{border-color:var(--gray);  color:var(--gray)}
+
+    /* Modal */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal-bg.hidden{display:none}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+    .modal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .modal-title{font-size:1.05rem;font-weight:700;line-height:1.4}
+    .modal-close{background:transparent;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1;padding:0 4px}
+    .modal-close:hover{color:var(--text)}
+    .modal-section{display:flex;flex-direction:column;gap:6px}
+    .modal-section-title{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+    .modal-field{display:flex;align-items:flex-start;gap:10px;font-size:.85rem;padding:6px 0;border-bottom:1px solid var(--border)}
+    .modal-field:last-child{border-bottom:none}
+    .modal-field .icon{font-size:1rem;min-width:22px;text-align:center}
+    .modal-field .val{color:var(--text);line-height:1.5}
+    .modal-field .lbl{color:var(--muted);font-size:.75rem;margin-top:2px}
+    .modal-desc{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:.82rem;color:var(--muted);line-height:1.6;border-left:3px solid var(--border)}
+    .modal-footer{display:flex;gap:8px}
+    .modal-btn{flex:1;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:8px;padding:8px;font-size:.8rem;cursor:pointer;transition:background .15s,color .15s}
+    .modal-btn:hover{background:var(--border);color:var(--text)}
+    .modal-btn:disabled{opacity:.35;cursor:default}
+    .modal-btn.active-Andamento{border-color:var(--orange);color:var(--orange)}
+    .modal-btn.active-Concluído{border-color:var(--green); color:var(--green)}
+    .modal-btn.active-Cancelado{border-color:var(--gray);  color:var(--gray)}
+
+    /* Empty/spinner */
+    .empty{grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)}
+    .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Toast */
+    #toast{position:fixed;bottom:24px;right:24px;background:#1e293b;border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:.875rem;transform:translateY(80px);opacity:0;transition:all .25s;z-index:300;max-width:320px}
+    #toast.show{transform:translateY(0);opacity:1}
+    #toast.ok {border-color:var(--green);color:var(--green)}
+    #toast.err{border-color:#ef4444;   color:#ef4444}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>⚡ Painel de Ordens de Serviço</h1>
+    <span>Grupo WhatsApp → Automação</span>
+  </div>
+  <div class="bot-badge">
+    <div class="dot" id="botDot"></div>
+    <span id="botLabel">Verificando...</span>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat-card">        <div class="num" id="sTotal">–</div>    <div class="lbl">Total</div></div>
+  <div class="stat-card orange"> <div class="num" id="sAndamento">–</div> <div class="lbl">Andamento</div></div>
+  <div class="stat-card green">  <div class="num" id="sConcluido">–</div> <div class="lbl">Concluído</div></div>
+  <div class="stat-card gray">   <div class="num" id="sCancelado">–</div> <div class="lbl">Cancelado</div></div>
+</div>
+
+<div class="filters">
+  <input type="text" id="search" placeholder="🔍  Buscar OS, equipe, serviço..." oninput="debounceLoad()"/>
+  <select id="filterStatus" onchange="load()">
+    <option value="">Todos os status</option>
+    <option value="Andamento">Andamento</option>
+    <option value="Concluído">Concluído</option>
+    <option value="Cancelado">Cancelado</option>
+  </select>
+  <select id="filterUnidade" onchange="load()">
+    <option value="">Todas as unidades</option>
+  </select>
+  <button class="btn-refresh" id="btnRefresh" onclick="load()">↻ Atualizar</button>
+</div>
+
+<div class="grid" id="grid">
+  <div class="empty"><div class="spinner"></div><br>Carregando...</div>
+</div>
+
+<!-- Modal de detalhes -->
+<div class="modal-bg hidden" id="modalBg" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">—</div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <span class="badge" id="modalBadge">—</span>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Resenha</div>
+      <div class="modal-field"><span class="icon">⚙️</span><div><div class="lbl">Guarda</div><div class="val" id="mGuarda">—</div></div></div>
+      <div class="modal-field"><span class="icon">⏰</span><div><div class="lbl">Horário</div><div class="val" id="mHorario">—</div></div></div>
+      <div class="modal-field"><span class="icon">📆</span><div><div class="lbl">Dia / Data</div><div class="val" id="mData">—</div></div></div>
+      <div class="modal-field"><span class="icon">🏛️</span><div><div class="lbl">Subestações</div><div class="val" id="mSub">—</div></div></div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Equipe</div>
+      <div class="modal-field"><span class="icon">👷</span><div><div class="lbl">Colaboradores</div><div class="val" id="mEquipe">—</div></div></div>
+      <div class="modal-field"><span class="icon">📱</span><div><div class="lbl">Telefone</div><div class="val" id="mTel">—</div></div></div>
+      <div class="modal-field"><span class="icon">🚔</span><div><div class="lbl">Veículo</div><div class="val" id="mVeiculo">—</div></div></div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Atividade</div>
+      <div class="modal-desc" id="mServico">—</div>
+    </div>
+
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const STATUS = ['Andamento', 'Concluído', 'Cancelado'];
+  let _debounce, _unidades = new Set(), _currentId = null;
+
+  function e(s){ return String(s||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+  function toast(msg, type='ok'){
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className = 'show ' + type;
+    clearTimeout(el._t); el._t = setTimeout(()=>{ el.className=''; }, 3000);
+  }
+
+  function debounceLoad(){ clearTimeout(_debounce); _debounce = setTimeout(load, 400); }
+
+  // ── Bot status ─────────────────────────────────────────────────────────────
+  async function checkBot(){
+    try{
+      const r = await fetch('/api/bot-status').then(r=>r.json());
+      const dot = document.getElementById('botDot'), lbl = document.getElementById('botLabel');
+      if(r.ready){ dot.className='dot online'; lbl.textContent='Bot online'; }
+      else if(r.hasQR){ dot.className='dot'; dot.style.background='#f59e0b'; lbl.innerHTML='Aguardando QR &nbsp;<a href="/qr" target="_blank" style="color:#4f6ef7">Escanear</a>'; }
+      else{ dot.className='dot'; lbl.textContent='Bot iniciando...'; }
+    }catch{}
+  }
+
+  async function loadStats(){
+    try{
+      const {data} = await fetch('/api/stats').then(r=>r.json());
+      document.getElementById('sTotal').textContent    = data.total    ||0;
+      document.getElementById('sAndamento').textContent= data.andamento||0;
+      document.getElementById('sConcluido').textContent= data.concluido||0;
+      document.getElementById('sCancelado').textContent= data.cancelado||0;
+    }catch{}
+  }
+
+  // ── Load ───────────────────────────────────────────────────────────────────
+  async function load(){
+    const btn = document.getElementById('btnRefresh');
+    btn.disabled = true; btn.textContent = '↻ Carregando...';
+    const p = new URLSearchParams();
+    const search = document.getElementById('search').value.trim();
+    const status = document.getElementById('filterStatus').value;
+    const unidade= document.getElementById('filterUnidade').value;
+    if(search)  p.set('search', search);
+    if(status)  p.set('status', status);
+    if(unidade) p.set('unidade', unidade);
+    try{
+      const {data} = await fetch('/api/os?'+p).then(r=>r.json());
+      renderGrid(data); populateUnidades(data); await loadStats();
+    }catch(err){
+      document.getElementById('grid').innerHTML='<div class="empty">⚠️ Erro: '+err.message+'</div>';
+    }finally{ btn.disabled=false; btn.textContent='↻ Atualizar'; }
+  }
+
+  function populateUnidades(lista){
+    lista.forEach(o=>{ if(o.unidade && o.unidade!=='—') _unidades.add(o.unidade); });
+    const sel = document.getElementById('filterUnidade'), cur = sel.value;
+    sel.innerHTML = '<option value="">Todas as unidades</option>' +
+      [..._unidades].sort().map(u=>'<option value="'+u+'"'+(u===cur?' selected':'')+'>'+u+'</option>').join('');
+  }
+
+  // ── Grid ───────────────────────────────────────────────────────────────────
+  function renderGrid(lista){
+    const grid = document.getElementById('grid');
+    if(!lista.length){ grid.innerHTML='<div class="empty">📭 Nenhuma OS encontrada.</div>'; return; }
+    grid.innerHTML = lista.map(renderCard).join('');
+  }
+
+  function renderCard(os){
+    const partes  = (os.servico||'—').split(' | ');
+    const principal = e(partes[0]);
+    const btns = STATUS.map(s=>{
+      const active = os.status===s;
+      return '<button class="btn-status'+(active?' active-'+s:'')+'" onclick="event.stopPropagation();updateStatus('+os.id+',\''+s+'\')" '+(active?'disabled':'')+'>'+s+'</button>';
+    }).join('');
+
+    return '<div class="os-card" id="card-'+os.id+'" onclick="openModal('+os.id+')">'+
+      '<div class="card-header"><div class="unidade">'+e(os.unidade)+'</div><div class="os-num">OS '+e(os.os)+'</div></div>'+
+      '<div class="card-servico">'+principal+'</div>'+
+      (os.equipe  ? '<div class="card-row">👷 '+e(os.equipe)+'</div>'  : '')+
+      (os.veiculo ? '<div class="card-row">🚔 '+e(os.veiculo)+'</div>' : '')+
+      (os.data    ? '<div class="card-row">📅 '+(os.dia_semana?e(os.dia_semana)+', ':'')+e(os.data)+'</div>' : '')+
+      '<span class="badge '+e(os.status)+'">'+e(os.status)+'</span>'+
+      '<div class="card-footer">'+btns+'</div>'+
+    '</div>';
+  }
+
+  // ── Modal ──────────────────────────────────────────────────────────────────
+  let _osCache = {};
+
+  async function openModal(id){
+    _currentId = id;
+    // Busca OS atualizada
+    try{
+      const {data} = await fetch('/api/os').then(r=>r.json());
+      const os = data.find(o=>o.id===id);
+      if(!os) return;
+      _osCache[id] = os;
+      fillModal(os);
+      document.getElementById('modalBg').classList.remove('hidden');
+    }catch(err){ toast('Erro ao abrir detalhes', 'err'); }
+  }
+
+  function fillModal(os){
+    const partes = (os.servico||'').split(' | ');
+    document.getElementById('modalTitle').textContent = partes[0] || '—';
+
+    const badge = document.getElementById('modalBadge');
+    badge.textContent = os.status; badge.className = 'badge ' + os.status;
+
+    document.getElementById('mGuarda').textContent  = os.guarda     || '—';
+    document.getElementById('mHorario').textContent = os.horario    || '—';
+    document.getElementById('mData').textContent    = [os.dia_semana, os.data].filter(Boolean).join(', ') || '—';
+    document.getElementById('mSub').textContent     = os.subestacoes|| '—';
+    document.getElementById('mEquipe').textContent  = os.equipe     || '—';
+    document.getElementById('mTel').textContent     = os.telefone   || '—';
+    document.getElementById('mVeiculo').textContent = os.veiculo    || '—';
+
+    const descricao = partes.slice(1).join('\n') || partes[0] || '—';
+    document.getElementById('mServico').textContent = descricao;
+
+    // Botões de status no modal
+    const footer = document.getElementById('modalFooter');
+    footer.innerHTML = STATUS.map(s=>{
+      const active = os.status===s;
+      return '<button class="modal-btn'+(active?' active-'+s:'')+'" onclick="updateStatus('+os.id+',\''+s+'\')" '+(active?'disabled':'')+'>'+s+'</button>';
+    }).join('');
+  }
+
+  function closeModal(e){ if(e.target===document.getElementById('modalBg')) closeModalDirect(); }
+  function closeModalDirect(){ document.getElementById('modalBg').classList.add('hidden'); _currentId=null; }
+
+  // ── Update status ──────────────────────────────────────────────────────────
+  async function updateStatus(id, status){
+    const card = document.getElementById('card-'+id);
+    if(card) card.querySelectorAll('.btn-status').forEach(b=>b.disabled=true);
+    document.querySelectorAll('.modal-btn').forEach(b=>b.disabled=true);
+
+    try{
+      const res = await fetch('/api/os/'+id,{
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({status})
+      }).then(r=>r.json());
+      if(!res.ok) throw new Error(res.error);
+
+      // Atualiza card na grid
+      if(card) card.outerHTML = renderCard(res.data);
+
+      // Atualiza modal se aberto
+      if(_currentId===id) fillModal(res.data);
+
+      toast('✅ Status: '+status);
+      loadStats();
+    }catch(err){
+      toast('❌ '+err.message,'err');
+      if(card) card.querySelectorAll('.btn-status').forEach(b=>b.disabled=false);
+      document.querySelectorAll('.modal-btn').forEach(b=>b.disabled=false);
+    }
+  }
+
+  load();
+  checkBot();
+  setInterval(checkBot, 15_000);
+  setInterval(load, 60_000);
+</script>
+</body>
+</html>
