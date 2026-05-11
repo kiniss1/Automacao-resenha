@@ -68,13 +68,23 @@ function inserirOS(d) {
       d.guarda, d.horario, d.dia_semana, d.telefone, d.subestacoes]);
 }
 
-function listarOS({ status, unidade, search } = {}) {
+function listarOS({ status, unidade, search, dataDe, dataAte } = {}) {
   const cond = [], params = [];
   if (status)  { cond.push('status = ?');     params.push(status); }
   if (unidade) { cond.push('unidade LIKE ?'); params.push('%' + unidade + '%'); }
   if (search) {
     cond.push('(os LIKE ? OR equipe LIKE ? OR servico LIKE ? OR veiculo LIKE ?)');
     const s = '%' + search + '%'; params.push(s, s, s, s);
+  }
+  // Filtro de data — campo "data" está no formato DD/MM/AAAA
+  // Converte para comparação: transforma input YYYY-MM-DD → DD/MM/AAAA
+  if (dataDe) {
+    const [y,m,d] = dataDe.split('-');
+    cond.push("data >= ?"); params.push(`${d}/${m}/${y}`);
+  }
+  if (dataAte) {
+    const [y,m,d] = dataAte.split('-');
+    cond.push("data <= ?"); params.push(`${d}/${m}/${y}`);
   }
   const where = cond.length ? 'WHERE ' + cond.join(' AND ') : '';
   return all('SELECT * FROM ordens_servico ' + where + ' ORDER BY criado_em DESC', params);
