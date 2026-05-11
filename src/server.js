@@ -77,8 +77,8 @@ function startServer() {
   // ── API OS ─────────────────────────────────────────────────────────────────
   app.get('/api/os', (req, res) => {
     try {
-      const { status, unidade, search } = req.query;
-      res.json({ ok: true, data: db.listarOS({ status, unidade, search }) });
+      const { status, unidade, search, dataDe, dataAte } = req.query;
+      res.json({ ok: true, data: db.listarOS({ status, unidade, search, dataDe, dataAte }) });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
