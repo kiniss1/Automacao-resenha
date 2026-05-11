@@ -36,6 +36,8 @@
     .btn-refresh{margin-left:auto;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.875rem;cursor:pointer;transition:opacity .15s}
     .btn-refresh:hover{opacity:.85}
     .btn-refresh:disabled{opacity:.5;cursor:default}
+    .btn-limpar{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 12px;font-size:.875rem;cursor:pointer;transition:background .15s}
+    .btn-limpar:hover{background:var(--border);color:var(--text)}
 
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:0 24px 32px}
 
@@ -138,6 +140,9 @@
   <select id="filterUnidade" onchange="load()">
     <option value="">Todas as unidades</option>
   </select>
+  <input type="date" id="filterDataDe"  onchange="load()" title="Data início"/>
+  <input type="date" id="filterDataAte" onchange="load()" title="Data fim"/>
+  <button class="btn-limpar" onclick="limparFiltros()">✕ Limpar</button>
   <button class="btn-refresh" id="btnRefresh" onclick="load()">↻ Atualizar</button>
 </div>
 
@@ -234,18 +239,31 @@
     const btn = document.getElementById('btnRefresh');
     btn.disabled=true; btn.textContent='↻ Carregando...';
     const p = new URLSearchParams();
-    const search = document.getElementById('search').value.trim();
-    const status = document.getElementById('filterStatus').value;
-    const unidade= document.getElementById('filterUnidade').value;
+    const search  = document.getElementById('search').value.trim();
+    const status  = document.getElementById('filterStatus').value;
+    const unidade = document.getElementById('filterUnidade').value;
+    const dataDe  = document.getElementById('filterDataDe').value;
+    const dataAte = document.getElementById('filterDataAte').value;
     if(search)  p.set('search',search);
     if(status)  p.set('status',status);
     if(unidade) p.set('unidade',unidade);
+    if(dataDe)  p.set('dataDe',dataDe);
+    if(dataAte) p.set('dataAte',dataAte);
     try{
       const {data} = await fetch('/api/os?'+p).then(r=>r.json());
       renderGrid(data); populateUnidades(data); await loadStats();
     }catch(err){
       document.getElementById('grid').innerHTML='<div class="empty">⚠️ Erro: '+err.message+'</div>';
     }finally{ btn.disabled=false; btn.textContent='↻ Atualizar'; }
+  }
+
+  function limparFiltros(){
+    document.getElementById('search').value='';
+    document.getElementById('filterStatus').value='';
+    document.getElementById('filterUnidade').value='';
+    document.getElementById('filterDataDe').value='';
+    document.getElementById('filterDataAte').value='';
+    load();
   }
 
   function populateUnidades(lista){
