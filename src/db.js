@@ -85,6 +85,13 @@ function atualizarStatus(id, status) {
   return get('SELECT * FROM ordens_servico WHERE id=?', [id]);
 }
 
+function removerOS(id) {
+  const os = get('SELECT * FROM ordens_servico WHERE id=?', [id]);
+  if (!os) return null;
+  run('DELETE FROM ordens_servico WHERE id=?', [id]);
+  return os;
+}
+
 function estatisticas() {
   return get(`SELECT COUNT(*) AS total,
     SUM(status='Andamento') AS andamento,
@@ -93,4 +100,4 @@ function estatisticas() {
     FROM ordens_servico`);
 }
 
-module.exports = { init, inserirOS, listarOS, atualizarStatus, estatisticas };
+module.exports = { init, inserirOS, listarOS, atualizarStatus, removerOS, estatisticas };
