@@ -12,25 +12,12 @@ const EXEC_PATH  = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 async function processarMensagem(msg) {
   try {
     const chat = await msg.getChat();
-
-    console.log(`[MSG] fromMe: ${msg.fromMe} | Chat: "${chat.name}" | isGroup: ${chat.isGroup}`);
-    console.log(`[MSG] Corpo:\n${msg.body}\n---`);
-
-    if (!chat.isGroup || chat.name !== GRUPO_NOME) {
-      console.log(`[MSG] Ignorado. Esperado: "${GRUPO_NOME}" | Recebido: "${chat.name}"`);
-      return;
-    }
-
-    // Evita loop: ignora respostas automáticas do próprio bot
+    console.log(`[MSG] Chat: "${chat.name}" | isGroup: ${chat.isGroup}`);
+    if (!chat.isGroup || chat.name !== GRUPO_NOME) return;
     if (msg.fromMe && msg.body.startsWith('✅')) return;
 
     const ordens = parseOS(msg.body);
-    console.log('[PARSER] Resultado:', JSON.stringify(ordens));
-
-    if (!ordens) {
-      console.log('[PARSER] Nenhuma OS detectada nesta mensagem.');
-      return;
-    }
+    if (!ordens) { console.log('[PARSER] Nenhuma OS detectada.'); return; }
 
     const registradas = [];
     for (const os of ordens) {
@@ -40,7 +27,6 @@ async function processarMensagem(msg) {
     }
 
     await msg.reply(`✅ *${registradas.length} OS(s) registrada(s):*\n${registradas.join('\n')}`);
-
   } catch (err) {
     console.error('[BOT] Erro:', err.message);
   }
@@ -75,9 +61,7 @@ function startBot() {
     }
   });
 
-  client.on('authenticated', () => {
-    console.log('[BOT] Autenticado com sucesso.');
-  });
+  client.on('authenticated', () => console.log('[BOT] Autenticado com sucesso.'));
 
   client.on('loading_screen', (percent, message) => {
     console.log(`[BOT] Carregando... ${percent}% — ${message}`);
@@ -100,23 +84,10 @@ function startBot() {
     console.log(`[BOT] Pronto! Monitorando grupo "${GRUPO_NOME}".`);
   });
 
-  client.on('auth_failure', (msg) => {
-    console.error('[BOT] Falha de autenticação:', msg);
-    state.setReady(false);
-  });
-
-  client.on('disconnected', (reason) => {
-    state.setReady(false);
-    console.warn('[BOT] Desconectado:', reason);
-  });
-
-  // Mensagens recebidas DE OUTROS
+  client.on('auth_failure', (msg) => { console.error('[BOT] Falha de autenticação:', msg); state.setReady(false); });
+  client.on('disconnected', (reason) => { state.setReady(false); console.warn('[BOT] Desconectado:', reason); });
   client.on('message', processarMensagem);
-
-  // Mensagens enviadas PELO PRÓPRIO NÚMERO (necessário quando bot e remetente são o mesmo número)
-  client.on('message_create', (msg) => {
-    if (msg.fromMe) processarMensagem(msg);
-  });
+  client.on('message_create', (msg) => { if (msg.fromMe) processarMensagem(msg); });
 
   client.initialize();
 }
