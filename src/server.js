@@ -2,6 +2,7 @@
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
+const fs      = require('fs');
 const db      = require('./db');
 const state   = require('./state');
 
@@ -37,6 +38,43 @@ function startServer() {
     `);
   });
 
+  // ── Reset de sessão WhatsApp ───────────────────────────────────────────────
+  app.get('/reset-session', (_req, res) => {
+    const authPath  = process.env.WA_DATA_PATH || '/data/.wwebjs_auth';
+    const cachePath = '/data/.wwebjs_cache';
+
+    try {
+      if (fs.existsSync(authPath))  fs.rmSync(authPath,  { recursive: true, force: true });
+      if (fs.existsSync(cachePath)) fs.rmSync(cachePath, { recursive: true, force: true });
+      state.setReady(false);
+      console.log('[RESET] Sessão apagada via /reset-session. Reiniciando processo...');
+    } catch (err) {
+      console.error('[RESET] Erro ao apagar sessão:', err.message);
+      return res.send(`
+        <html><head><style>body{font-family:sans-serif;text-align:center;padding:40px}</style></head>
+        <body><h2 style="color:red">❌ Erro ao apagar sessão</h2><p>${err.message}</p></body></html>
+      `);
+    }
+
+    res.send(`
+      <html>
+      <head>
+        <meta http-equiv="refresh" content="6;url=/qr">
+        <style>body{font-family:sans-serif;text-align:center;padding:40px}</style>
+      </head>
+      <body>
+        <h2>🔄 Sessão apagada!</h2>
+        <p>O bot vai reiniciar em instantes...</p>
+        <p>Você será redirecionado para o QR Code em <strong>6 segundos</strong>.</p>
+        <a href="/qr">Ir agora →</a>
+      </body></html>
+    `);
+
+    // Encerra o processo após responder — Railway reinicia automaticamente
+    setTimeout(() => process.exit(0), 1000);
+  });
+
+  // ── API OS ─────────────────────────────────────────────────────────────────
   app.get('/api/os', (req, res) => {
     try {
       const { status, unidade, search } = req.query;
