@@ -1,0 +1,96 @@
+// src/db.js
+const initSqlJs = require('sql.js');
+const fs   = require('fs');
+const path = require('path');
+
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'os_local.db');
+let db;
+
+async function init() {
+  const SQL = await initSqlJs();
+  db = fs.existsSync(DB_PATH) ? new SQL.Database(fs.readFileSync(DB_PATH)) : new SQL.Database();
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ordens_servico (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      os            TEXT NOT NULL UNIQUE,
+      unidade       TEXT,
+      equipe        TEXT,
+      veiculo       TEXT,
+      servico       TEXT,
+      status        TEXT NOT NULL DEFAULT 'Andamento',
+      data          TEXT,
+      guarda        TEXT,
+      horario       TEXT,
+      dia_semana    TEXT,
+      telefone      TEXT,
+      subestacoes   TEXT,
+      criado_em     TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      atualizado_em TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    )
+  `);
+
+  persist();
+  console.log('[DB] Banco iniciado:', DB_PATH);
+}
+
+function persist() {
+  try {
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+  } catch (err) { console.error('[DB] Erro ao salvar:', err.message); }
+}
+
+function run(sql, params = []) { db.run(sql, params); persist(); }
+
+function get(sql, params = []) {
+  const s = db.prepare(sql); s.bind(params);
+  const r = s.step() ? s.getAsObject() : null; s.free(); return r;
+}
+
+function all(sql, params = []) {
+  const rows = []; const s = db.prepare(sql); s.bind(params);
+  while (s.step()) rows.push(s.getAsObject()); s.free(); return rows;
+}
+
+function inserirOS(d) {
+  run(`
+    INSERT INTO ordens_servico
+      (os, unidade, equipe, veiculo, servico, status, data, guarda, horario, dia_semana, telefone, subestacoes)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(os) DO UPDATE SET
+      unidade=excluded.unidade, equipe=excluded.equipe, veiculo=excluded.veiculo,
+      servico=excluded.servico, status=excluded.status, data=excluded.data,
+      guarda=excluded.guarda, horario=excluded.horario, dia_semana=excluded.dia_semana,
+      telefone=excluded.telefone, subestacoes=excluded.subestacoes,
+      atualizado_em=datetime('now','localtime')
+  `, [d.os, d.unidade, d.equipe, d.veiculo, d.servico, d.status, d.data,
+      d.guarda, d.horario, d.dia_semana, d.telefone, d.subestacoes]);
+}
+
+function listarOS({ status, unidade, search } = {}) {
+  const cond = [], params = [];
+  if (status)  { cond.push('status = ?');     params.push(status); }
+  if (unidade) { cond.push('unidade LIKE ?'); params.push('%' + unidade + '%'); }
+  if (search) {
+    cond.push('(os LIKE ? OR equipe LIKE ? OR servico LIKE ? OR veiculo LIKE ?)');
+    const s = '%' + search + '%'; params.push(s, s, s, s);
+  }
+  const where = cond.length ? 'WHERE ' + cond.join(' AND ') : '';
+  return all('SELECT * FROM ordens_servico ' + where + ' ORDER BY criado_em DESC', params);
+}
+
+function atualizarStatus(id, status) {
+  run(`UPDATE ordens_servico SET status=?, atualizado_em=datetime('now','localtime') WHERE id=?`, [status, id]);
+  return get('SELECT * FROM ordens_servico WHERE id=?', [id]);
+}
+
+function estatisticas() {
+  return get(`SELECT COUNT(*) AS total,
+    SUM(status='Andamento') AS andamento,
+    SUM(status='Concluído') AS concluido,
+    SUM(status='Cancelado') AS cancelado
+    FROM ordens_servico`);
+}
+
+module.exports = { init, inserirOS, listarOS, atualizarStatus, estatisticas };
