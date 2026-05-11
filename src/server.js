@@ -56,7 +56,7 @@ function startServer() {
 
   app.patch('/api/os/:id', (req, res) => {
     try {
-      const id     = parseInt(req.params.id, 10);
+      const id = parseInt(req.params.id, 10);
       const { status } = req.body;
       if (!STATUS_VALIDOS.includes(status)) {
         return res.status(400).json({ ok: false, error: `Status inválido. Use: ${STATUS_VALIDOS.join(', ')}` });
@@ -64,6 +64,17 @@ function startServer() {
       const atualizado = db.atualizarStatus(id, status);
       if (!atualizado) return res.status(404).json({ ok: false, error: 'OS não encontrada.' });
       res.json({ ok: true, data: atualizado });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  app.delete('/api/os/:id', (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const removida = db.removerOS(id);
+      if (!removida) return res.status(404).json({ ok: false, error: 'OS não encontrada.' });
+      res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
