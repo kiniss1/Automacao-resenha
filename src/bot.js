@@ -35,7 +35,7 @@ async function processarMensagem(msg) {
     const registradas = [];
     for (const os of ordens) {
       db.inserirOS(os);
-      registradas.push(`• *${os.os}* — ${os.unidade} — ${os.servico.substring(0, 40)}`);
+      registradas.push(`• ${os.unidade} — ${os.servico.substring(0, 50)}`);
       console.log(`[BOT] ✅ Registrada: ${os.os} | ${os.unidade} | ${os.status}`);
     }
 
