@@ -191,6 +191,13 @@
 
 <script>
   const STATUS = ['Andamento', 'Concluído', 'Cancelado'];
+
+  // Remove o sufixo de hash gerado automaticamente (ex: -LNWGVM, -621KVW)
+  // Padrão do hash: traço + 5 a 7 letras maiúsculas no final
+  function displayOs(os) {
+    if (!os) return '';
+    return os.replace(/-[A-Z0-9]{5,7}$/, '');
+  }
   let _debounce, _unidades = new Set(), _currentId = null, _currentOs = null;
 
   function e(s){ return String(s||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
@@ -262,7 +269,7 @@
       return '<button class="btn-status'+(active?' active-'+s:'')+'" onclick="event.stopPropagation();updateStatus('+os.id+',\''+s+'\')" '+(active?'disabled':'')+'>'+s+'</button>';
     }).join('');
     return '<div class="os-card" id="card-'+os.id+'" onclick="openModal('+os.id+')">'+
-      '<div class="card-header"><div class="unidade">'+e(os.unidade)+'</div><div class="os-num">OS '+e(os.os)+'</div></div>'+
+      '<div class="card-header"><div class="unidade">'+e(os.unidade)+'</div><div class="os-num">'+e(displayOs(os.os))+'</div></div>'+
       '<div class="card-servico">'+principal+'</div>'+
       (os.equipe  ?'<div class="card-row">👷 '+e(os.equipe)+'</div>':'')+
       (os.veiculo ?'<div class="card-row">🚔 '+e(os.veiculo)+'</div>':'')+
