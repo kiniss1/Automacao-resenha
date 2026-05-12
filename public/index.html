@@ -165,6 +165,8 @@
       <div class="modal-field"><span class="icon">⏰</span><div><div class="lbl">Horário</div><div class="val" id="mHorario">—</div></div></div>
       <div class="modal-field"><span class="icon">📆</span><div><div class="lbl">Dia / Data</div><div class="val" id="mData">—</div></div></div>
       <div class="modal-field"><span class="icon">🏛️</span><div><div class="lbl">Subestações</div><div class="val" id="mSub">—</div></div></div>
+      <div class="modal-field"><span class="icon">⏰</span><div><div class="lbl">Saída da base</div><div class="val" id="mSaida">—</div></div></div>
+      <div class="modal-field"><span class="icon">⏰</span><div><div class="lbl">Chegada na base</div><div class="val" id="mChegada">—</div></div></div>
     </div>
 
     <div class="modal-section">
@@ -320,6 +322,8 @@
     document.getElementById('mHorario').textContent = os.horario   ||'—';
     document.getElementById('mData').textContent    = [os.dia_semana,os.data].filter(Boolean).join(', ')||'—';
     document.getElementById('mSub').textContent     = os.subestacoes||'—';
+    document.getElementById('mSaida').textContent    = os.saida_base   ||'—';
+    document.getElementById('mChegada').textContent  = os.chegada_base ||'—';
     document.getElementById('mEquipe').textContent  = os.equipe    ||'—';
     document.getElementById('mTel').textContent     = os.telefone  ||'—';
     document.getElementById('mVeiculo').textContent = os.veiculo   ||'—';
