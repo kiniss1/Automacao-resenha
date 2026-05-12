@@ -118,6 +118,80 @@ function startServer() {
     }
   });
 
+  // ── Check-in routes ───────────────────────────────────────────────────────
+  const checkin = require('./checkin');
+
+  app.get('/api/subestacoes', (_req, res) => {
+    res.json({ ok: true, data: checkin.SUBESTACOES });
+  });
+
+  app.get('/api/colaborador/:matricula', (req, res) => {
+    const colab = checkin.buscarColaborador(req.params.matricula);
+    res.json({ ok: true, data: colab || null });
+  });
+
+  app.get('/api/checkin/ativo/:matricula', (req, res) => {
+    try {
+      const c = require('./checkin');
+      // Reusa get interno via listarAtivos filtrado
+      const ativos = c.listarAtivos();
+      const ativo = ativos.find(a => a.matricula === req.params.matricula) || null;
+      res.json({ ok: true, data: ativo });
+    } catch(err) { res.status(500).json({ ok: false, error: err.message }); }
+  });
+
+  app.post('/api/checkin', (req, res) => {
+    try {
+      const { matricula, subestacao, atividade } = req.body;
+      if (!matricula || !subestacao) return res.status(400).json({ ok: false, erro: true, msg: 'Matrícula e subestação obrigatórios.' });
+      const result = checkin.fazerCheckin({ matricula, subestacao, atividade });
+      res.json({ ok: !result.erro, ...result });
+    } catch(err) { res.status(500).json({ ok: false, erro: true, msg: err.message }); }
+  });
+
+  app.post('/api/checkout', (req, res) => {
+    try {
+      const { matricula } = req.body;
+      if (!matricula) return res.status(400).json({ ok: false, erro: true, msg: 'Matrícula obrigatória.' });
+      const result = checkin.fazerCheckout(matricula);
+      res.json({ ok: !result.erro, ...result });
+    } catch(err) { res.status(500).json({ ok: false, erro: true, msg: err.message }); }
+  });
+
+  app.get('/api/checkin/ativos', (req, res) => {
+    try {
+      const ativos = checkin.listarAtivos();
+      const sub = req.query.sub;
+      res.json({ ok: true, data: sub ? ativos.filter(a => a.subestacao === sub.toUpperCase()) : ativos });
+    } catch(err) { res.status(500).json({ ok: false, error: err.message }); }
+  });
+
+  app.get('/api/checkin/historico', (req, res) => {
+    try {
+      const { subestacao, status, dataDe, dataAte, matricula } = req.query;
+      const data = checkin.listarHistorico({ subestacao, matricula, dataDe, dataAte });
+      const filtered = status ? data.filter(c => c.status === status) : data;
+      res.json({ ok: true, data: filtered });
+    } catch(err) { res.status(500).json({ ok: false, error: err.message }); }
+  });
+
+  app.get('/api/checkin/stats', (_req, res) => {
+    try { res.json({ ok: true, data: checkin.estatisticasCheckin() }); }
+    catch(err) { res.status(500).json({ ok: false, error: err.message }); }
+  });
+
+  app.get('/api/qrcode', async (req, res) => {
+    try {
+      const qrcode = require('qrcode');
+      const url = req.query.url;
+      if (!url) return res.status(400).send('URL obrigatória');
+      const buffer = await qrcode.toBuffer(url, { width: 300, margin: 2 });
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.send(buffer);
+    } catch(err) { res.status(500).send(err.message); }
+  });
+
   app.get('/api/bot-status', (_req, res) => {
     res.json({ ready: state.isReady(), hasQR: !!state.getQR() });
   });
