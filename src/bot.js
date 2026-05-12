@@ -85,7 +85,37 @@ async function processarMensagem(msg) {
   }
 }
 
+function limparLockChromium() {
+  // Remove arquivo de lock que o Chromium deixa ao ser encerrado abruptamente
+  const lockFiles = [
+    '/data/.wwebjs_auth/Default/SingletonLock',
+    '/data/.wwebjs_auth/Default/SingletonSocket',
+    '/data/.wwebjs_auth/Default/SingletonCookie',
+  ];
+  lockFiles.forEach(f => {
+    try {
+      if (require('fs').existsSync(f)) {
+        require('fs').unlinkSync(f);
+        console.log('[BOT] Lock removido:', f);
+      }
+    } catch (e) { /* silencioso */ }
+  });
+
+  // Remove também qualquer SingletonLock dentro de subpastas do perfil
+  try {
+    const base = '/data/.wwebjs_auth';
+    const fs = require('fs');
+    if (fs.existsSync(base)) {
+      fs.readdirSync(base).forEach(dir => {
+        const lock = require('path').join(base, dir, 'SingletonLock');
+        if (fs.existsSync(lock)) { fs.unlinkSync(lock); console.log('[BOT] Lock removido:', lock); }
+      });
+    }
+  } catch (e) { /* silencioso */ }
+}
+
 function startBot() {
+  limparLockChromium();
   const client = new Client({
     authStrategy: new LocalAuth({ dataPath: DATA_PATH }),
     puppeteer: {
