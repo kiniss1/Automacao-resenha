@@ -32,6 +32,10 @@ async function init() {
     )
   `);
 
+  // Inicializa tabela de checkins
+  const checkin = require('./checkin');
+  checkin.setDb(db);
+
   persist();
   console.log('[DB] Banco iniciado:', DB_PATH);
 }
