@@ -11,6 +11,10 @@
       --primary:#4f6ef7;--green:#22c55e;--orange:#f97316;--gray:#94a3b8;--red:#ef4444;
       --green-bg:#052e16;--orange-bg:#431407;--gray-bg:#1e293b;--red-bg:#450a0a;
     }
+    body.light{
+      --bg:#f1f5f9;--surface:#ffffff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;
+      --green-bg:#dcfce7;--orange-bg:#ffedd5;--gray-bg:#f1f5f9;--red-bg:#fee2e2;
+    }
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
 
     header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
@@ -114,11 +118,14 @@
 <header>
   <div class="header-left">
     <h1>⚡ Painel de Ordens de Serviço</h1>
-    <span>Grupo WhatsApp → Automação</span>
+    <span>OOMC - MANUTENÇÃO ALTA TENSÃO</span>
   </div>
-  <div class="bot-badge">
-    <div class="dot" id="botDot"></div>
-    <span id="botLabel">Verificando...</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button id="btnTema" onclick="toggleTema()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:.8rem;cursor:pointer;transition:background .15s" title="Alternar tema">🌙 Escuro</button>
+    <div class="bot-badge">
+      <div class="dot" id="botDot"></div>
+      <span id="botLabel">Verificando...</span>
+    </div>
   </div>
 </header>
 
@@ -385,6 +392,24 @@
       if(card) card.querySelectorAll('.btn-status').forEach(b=>b.disabled=false);
       document.querySelectorAll('.modal-btn').forEach(b=>b.disabled=false);
     }
+  }
+
+  // ── Tema ──────────────────────────────────────────────────────────────────
+  function toggleTema(){
+    const isLight = document.body.classList.toggle('light');
+    const btn = document.getElementById('btnTema');
+    btn.textContent = isLight ? '🌑 Escuro' : '🌙 Escuro';
+    btn.title = isLight ? 'Mudar para tema escuro' : 'Mudar para tema claro';
+    localStorage.setItem('tema', isLight ? 'light' : 'dark');
+  }
+
+  // Restaura tema salvo
+  if(localStorage.getItem('tema') === 'light'){
+    document.body.classList.add('light');
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('btnTema');
+      if(btn){ btn.textContent = '🌑 Escuro'; }
+    });
   }
 
   load();
