@@ -11,14 +11,21 @@
       --primary:#4f6ef7;--green:#22c55e;--red:#ef4444;--orange:#f97316;
       --green-bg:#052e16;--red-bg:#450a0a;--orange-bg:#431407;
     }
-    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px}
 
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:420px;padding:28px;display:flex;flex-direction:column;gap:20px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:460px;padding:24px;display:flex;flex-direction:column;gap:18px}
 
     .card-header{text-align:center}
-    .card-header .sub-badge{display:inline-block;background:var(--primary);color:#fff;font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:999px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
-    .card-header h1{font-size:1.3rem;font-weight:700}
+    .sub-badge{display:inline-block;background:var(--primary);color:#fff;font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:999px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+    .card-header h1{font-size:1.25rem;font-weight:700}
     .card-header p{font-size:.82rem;color:var(--muted);margin-top:4px}
+
+    .tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .tab{flex:1;background:transparent;border:none;color:var(--muted);padding:10px;font-size:.85rem;cursor:pointer;transition:background .15s,color .15s;font-weight:600}
+    .tab.active{background:var(--primary);color:#fff}
+
+    .panel{display:none}
+    .panel.active{display:flex;flex-direction:column;gap:14px}
 
     .field{display:flex;flex-direction:column;gap:6px}
     .field label{font-size:.8rem;font-weight:600;color:var(--muted)}
@@ -28,18 +35,32 @@
       transition:border-color .15s;font-family:inherit;
     }
     .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
-    .field textarea{resize:none;height:80px}
+    .field textarea{resize:none;height:72px}
 
-    .btn{width:100%;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .15s;letter-spacing:.02em}
+    /* Colaboradores */
+    .colab-list{display:flex;flex-direction:column;gap:8px}
+    .colab-row{display:flex;gap:8px;align-items:center}
+    .colab-row input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none}
+    .colab-row input:focus{border-color:var(--primary)}
+    .colab-row input.identified{border-color:var(--green);color:var(--green)}
+    .colab-row input.error{border-color:var(--red)}
+    .colab-name{font-size:.72rem;color:var(--green);margin-top:2px;min-height:16px;padding-left:2px}
+    .colab-name.error{color:var(--red)}
+    .colab-wrap{flex:1;display:flex;flex-direction:column}
+
+    .btn-add-colab{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:8px;font-size:.82rem;cursor:pointer;transition:all .15s;width:100%;text-align:center}
+    .btn-add-colab:hover{border-color:var(--primary);color:var(--primary)}
+
+    .btn-remove{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:8px 10px;font-size:.8rem;cursor:pointer;line-height:1;flex-shrink:0;transition:background .15s}
+    .btn-remove:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+
+    .btn{width:100%;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .15s}
     .btn:hover{opacity:.88}
     .btn:disabled{opacity:.4;cursor:default}
     .btn-checkin{background:var(--green);color:#fff}
     .btn-checkout{background:var(--red);color:#fff}
 
-    .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.78rem}
-    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-
-    .result{border-radius:10px;padding:16px;font-size:.88rem;line-height:1.6;display:none}
+    .result{border-radius:10px;padding:14px 16px;font-size:.88rem;line-height:1.7;display:none;white-space:pre-wrap}
     .result.ok  {background:var(--green-bg); border:1px solid #14532d; color:var(--green)}
     .result.err {background:var(--red-bg);   border:1px solid #7f1d1d; color:var(--red)}
     .result.warn{background:var(--orange-bg);border:1px solid #7c2d12; color:var(--orange)}
@@ -54,12 +75,14 @@
     .ativo-sub{color:var(--primary);font-size:.75rem}
     .ativo-hora{color:var(--muted);font-size:.72rem}
 
-    .tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
-    .tab{flex:1;background:transparent;border:none;color:var(--muted);padding:10px;font-size:.82rem;cursor:pointer;transition:background .15s,color .15s;font-weight:600}
-    .tab.active{background:var(--primary);color:#fff}
-
-    .panel{display:none}
-    .panel.active{display:flex;flex-direction:column;gap:16px}
+    .checkout-ativos{display:flex;flex-direction:column;gap:8px}
+    .checkout-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;gap:10px}
+    .checkout-item-info{display:flex;flex-direction:column;gap:2px}
+    .checkout-item-nome{font-size:.9rem;font-weight:600}
+    .checkout-item-det{font-size:.75rem;color:var(--muted)}
+    .checkout-item-btn{background:var(--red);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap}
+    .checkout-item-btn:hover{opacity:.85}
+    .checkout-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:20px 0}
   </style>
 </head>
 <body>
@@ -78,139 +101,204 @@
   <!-- CHECKIN -->
   <div class="panel active" id="panelCheckin">
     <div class="field">
-      <label>Matrícula</label>
-      <input type="number" id="matriculaIn" placeholder="Digite sua matrícula" inputmode="numeric"/>
-    </div>
-    <div class="field" id="nomeFieldIn" style="display:none">
-      <label>Colaborador identificado</label>
-      <input type="text" id="nomeIn" readonly style="opacity:.7"/>
-    </div>
-    <div class="field">
       <label>Subestação</label>
       <select id="subIn"></select>
     </div>
+
+    <div class="field">
+      <label>Colaboradores (matrícula) — adicione todos da equipe</label>
+      <div class="colab-list" id="colabList"></div>
+      <button class="btn-add-colab" onclick="addColabRow()" id="btnAddColab">+ Adicionar colaborador</button>
+    </div>
+
     <div class="field">
       <label>Atividade a executar</label>
       <textarea id="atividadeIn" placeholder="Descreva a atividade..."></textarea>
     </div>
+
     <button class="btn btn-checkin" id="btnCheckin" onclick="doCheckin()">✅ Registrar Entrada</button>
   </div>
 
   <!-- CHECKOUT -->
   <div class="panel" id="panelCheckout">
     <div class="field">
-      <label>Matrícula</label>
-      <input type="number" id="matriculaOut" placeholder="Digite sua matrícula" inputmode="numeric"/>
+      <label>Subestação</label>
+      <select id="subOut"></select>
     </div>
-    <div class="field" id="nomeFieldOut" style="display:none">
-      <label>Entrada ativa encontrada</label>
-      <input type="text" id="nomeOut" readonly style="opacity:.7"/>
+    <div id="checkoutAtivos" class="checkout-ativos">
+      <div class="checkout-empty">Selecione a subestação para ver quem está em campo.</div>
     </div>
-    <button class="btn btn-checkout" id="btnCheckout" onclick="doCheckout()">🚪 Registrar Saída</button>
   </div>
 
   <div class="result" id="result"></div>
 
   <div class="ativos-box" id="ativosBox">
-    <div class="ativos-title">🟢 Colaboradores na subestação agora</div>
+    <div class="ativos-title">🟢 Em campo agora nesta subestação</div>
     <div id="ativosList"></div>
   </div>
 </div>
 
 <script>
-  const params = new URLSearchParams(location.search);
+  const params  = new URLSearchParams(location.search);
   const subParam = (params.get('sub') || '').toUpperCase();
+  const MAX_COLAB = 6;
 
-  // Preenche badge e select de subestação
+  // ── Init ──────────────────────────────────────────────────────────────────
   fetch('/api/subestacoes').then(r=>r.json()).then(({data}) => {
-    const badge = document.getElementById('subBadge');
-    const selIn = document.getElementById('subIn');
-    data.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s; opt.textContent = s;
-      if (s === subParam) opt.selected = true;
-      selIn.appendChild(opt);
+    [document.getElementById('subIn'), document.getElementById('subOut')].forEach(sel => {
+      data.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s; o.textContent = s;
+        if (s === subParam) o.selected = true;
+        sel.appendChild(o);
+      });
     });
+    document.getElementById('subBadge').textContent = '⚡ ' + (subParam || data[0]);
     if (subParam) {
-      badge.textContent = '⚡ ' + subParam;
       loadAtivos(subParam);
+      loadCheckoutAtivos(subParam);
     }
   });
 
-  function setTab(tab) {
-    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='checkin')||(i===1&&tab==='checkout')));
-    document.getElementById('panelCheckin').classList.toggle('active', tab==='checkin');
-    document.getElementById('panelCheckout').classList.toggle('active', tab==='checkout');
-    hideResult();
+  document.getElementById('subIn').addEventListener('change', function() {
+    loadAtivos(this.value);
+  });
+
+  document.getElementById('subOut').addEventListener('change', function() {
+    loadCheckoutAtivos(this.value);
+  });
+
+  // Inicia com 1 campo de matrícula
+  addColabRow();
+
+  // ── Colaboradores dinâmicos ───────────────────────────────────────────────
+  function addColabRow() {
+    const list = document.getElementById('colabList');
+    if (list.children.length >= MAX_COLAB) return;
+
+    const idx = list.children.length;
+    const wrap = document.createElement('div');
+    wrap.className = 'colab-wrap';
+    wrap.innerHTML = `
+      <div class="colab-row">
+        <input type="number" inputmode="numeric" placeholder="Matrícula ${idx === 0 ? '(responsável)' : (idx + 1) + 'º colaborador'}"
+          oninput="lookupColab(this)" class="colab-input" data-idx="${idx}"/>
+        ${idx > 0 ? `<button class="btn-remove" onclick="removeColab(this)" title="Remover">✕</button>` : ''}
+      </div>
+      <div class="colab-name" id="colabName${idx}"></div>
+    `;
+    list.appendChild(wrap);
+
+    // Oculta botão de adicionar se atingiu o máximo
+    document.getElementById('btnAddColab').style.display =
+      list.children.length >= MAX_COLAB ? 'none' : '';
   }
 
-  // Auto-identifica colaborador pela matrícula
-  document.getElementById('matriculaIn').addEventListener('input', function() {
-    const mat = this.value.trim();
-    if (mat.length >= 4) {
-      fetch('/api/colaborador/' + mat).then(r=>r.json()).then(({data}) => {
-        if (data) {
-          document.getElementById('nomeIn').value = data.nome;
-          document.getElementById('nomeFieldIn').style.display = 'flex';
-        } else {
-          document.getElementById('nomeFieldIn').style.display = 'none';
-        }
-      });
-    } else {
-      document.getElementById('nomeFieldIn').style.display = 'none';
-    }
-  });
+  function removeColab(btn) {
+    btn.closest('.colab-wrap').remove();
+    // Renumera placeholders
+    document.querySelectorAll('.colab-input').forEach((inp, i) => {
+      inp.placeholder = i === 0 ? 'Matrícula (responsável)' : `${i + 1}º colaborador`;
+      inp.dataset.idx = i;
+      const nameEl = inp.closest('.colab-wrap').querySelector('.colab-name');
+      if (nameEl) nameEl.id = `colabName${i}`;
+    });
+    document.getElementById('btnAddColab').style.display = '';
+  }
 
-  document.getElementById('matriculaOut').addEventListener('input', function() {
-    const mat = this.value.trim();
+  async function lookupColab(inp) {
+    const mat = inp.value.trim();
+    const nameEl = inp.closest('.colab-wrap').querySelector('.colab-name');
     if (mat.length >= 4) {
-      fetch('/api/checkin/ativo/' + mat).then(r=>r.json()).then(({data}) => {
-        if (data) {
-          document.getElementById('nomeOut').value = (data.nome||mat) + ' — ' + data.subestacao + ' desde ' + data.entrada;
-          document.getElementById('nomeFieldOut').style.display = 'flex';
-        } else {
-          document.getElementById('nomeFieldOut').style.display = 'none';
-        }
-      });
+      const {data} = await fetch('/api/colaborador/' + mat).then(r=>r.json());
+      if (data) {
+        inp.classList.add('identified'); inp.classList.remove('error');
+        nameEl.textContent = '✓ ' + data.nome; nameEl.className = 'colab-name';
+      } else {
+        inp.classList.add('error'); inp.classList.remove('identified');
+        nameEl.textContent = '✗ Matrícula não encontrada'; nameEl.className = 'colab-name error';
+      }
     } else {
-      document.getElementById('nomeFieldOut').style.display = 'none';
+      inp.classList.remove('identified','error');
+      nameEl.textContent = '';
     }
-  });
+  }
 
+  // ── Checkin ───────────────────────────────────────────────────────────────
   async function doCheckin() {
-    const matricula  = document.getElementById('matriculaIn').value.trim();
     const subestacao = document.getElementById('subIn').value;
     const atividade  = document.getElementById('atividadeIn').value.trim();
-    if (!matricula) { showResult('Digite sua matrícula.', 'err'); return; }
+    const matriculas = [...document.querySelectorAll('.colab-input')]
+      .map(i => i.value.trim()).filter(Boolean);
+
+    if (!matriculas.length) { showResult('Informe pelo menos uma matrícula.', 'err'); return; }
     if (!atividade) { showResult('Descreva a atividade a executar.', 'err'); return; }
 
     const btn = document.getElementById('btnCheckin');
-    btn.disabled = true;
-    try {
-      const res = await fetch('/api/checkin', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ matricula, subestacao, atividade })
-      }).then(r=>r.json());
+    btn.disabled = true; btn.textContent = '⏳ Registrando...';
 
-      if (res.erro) { showResult('⚠️ ' + res.msg, 'warn'); }
-      else {
-        showResult(`✅ Entrada registrada!\n${res.nome || matricula} → ${subestacao}`, 'ok');
-        document.getElementById('matriculaIn').value = '';
-        document.getElementById('atividadeIn').value = '';
-        document.getElementById('nomeFieldIn').style.display = 'none';
-        loadAtivos(subestacao);
-      }
-    } catch(e) { showResult('Erro de conexão.', 'err'); }
-    finally { btn.disabled = false; }
+    const resultados = [];
+    const erros = [];
+
+    for (const matricula of matriculas) {
+      try {
+        const res = await fetch('/api/checkin', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ matricula, subestacao, atividade })
+        }).then(r=>r.json());
+
+        if (res.erro) erros.push(`✗ ${res.msg}`);
+        else resultados.push(`✓ ${res.nome || matricula}`);
+      } catch(e) { erros.push(`✗ Erro ao registrar matrícula ${matricula}`); }
+    }
+
+    let msg = '';
+    if (resultados.length) msg += `✅ Entradas registradas em ${subestacao}:\n${resultados.join('\n')}`;
+    if (erros.length) msg += (msg ? '\n\n' : '') + `⚠️ Problemas:\n${erros.join('\n')}`;
+
+    const type = erros.length && !resultados.length ? 'err' : resultados.length && erros.length ? 'warn' : 'ok';
+    showResult(msg, type);
+
+    if (resultados.length) {
+      // Limpa campos
+      document.getElementById('atividadeIn').value = '';
+      document.querySelectorAll('.colab-input').forEach(i => {
+        i.value = ''; i.classList.remove('identified','error');
+      });
+      document.querySelectorAll('.colab-name').forEach(n => n.textContent = '');
+      loadAtivos(subestacao);
+      loadCheckoutAtivos(subestacao);
+    }
+
+    btn.disabled = false; btn.textContent = '✅ Registrar Entrada';
   }
 
-  async function doCheckout() {
-    const matricula = document.getElementById('matriculaOut').value.trim();
-    if (!matricula) { showResult('Digite sua matrícula.', 'err'); return; }
+  // ── Checkout por lista ────────────────────────────────────────────────────
+  async function loadCheckoutAtivos(sub) {
+    const box = document.getElementById('checkoutAtivos');
+    if (!sub) return;
+    try {
+      const {data} = await fetch('/api/checkin/ativos?sub=' + sub).then(r=>r.json());
+      if (!data || !data.length) {
+        box.innerHTML = '<div class="checkout-empty">Nenhum colaborador em campo nesta subestação.</div>';
+        return;
+      }
+      box.innerHTML = data.map(c => `
+        <div class="checkout-item" id="ci-${c.id}">
+          <div class="checkout-item-info">
+            <div class="checkout-item-nome">${c.nome || c.matricula}</div>
+            <div class="checkout-item-det">${c.subestacao} · desde ${c.entrada.split(' ')[1] || c.entrada}</div>
+            <div class="checkout-item-det" style="color:var(--muted)">${c.atividade || '—'}</div>
+          </div>
+          <button class="checkout-item-btn" onclick="doCheckout('${c.matricula}', '${c.subestacao}', this)">Registrar Saída</button>
+        </div>
+      `).join('');
+    } catch(e) { box.innerHTML = '<div class="checkout-empty">Erro ao carregar.</div>'; }
+  }
 
-    const btn = document.getElementById('btnCheckout');
-    btn.disabled = true;
+  async function doCheckout(matricula, subestacao, btn) {
+    btn.disabled = true; btn.textContent = '⏳';
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -218,18 +306,21 @@
         body: JSON.stringify({ matricula })
       }).then(r=>r.json());
 
-      if (res.erro) { showResult('⚠️ ' + res.msg, 'warn'); }
+      if (res.erro) { showResult('⚠️ ' + res.msg, 'warn'); btn.disabled=false; btn.textContent='Registrar Saída'; }
       else {
-        const c = res.checkin;
-        showResult(`✅ Saída registrada!\n${c.nome||matricula} saiu de ${c.subestacao}\nEntrada: ${c.entrada}\nSaída: ${c.saida}`, 'ok');
-        document.getElementById('matriculaOut').value = '';
-        document.getElementById('nomeFieldOut').style.display = 'none';
-        loadAtivos(c.subestacao);
+        const item = document.getElementById('ci-' + res.checkin.id);
+        if (item) item.remove();
+        showResult(`✅ Saída registrada!\n${res.checkin.nome || matricula} saiu de ${subestacao}`, 'ok');
+        loadAtivos(subestacao);
+        // Se não tem mais itens
+        if (!document.getElementById('checkoutAtivos').children.length) {
+          loadCheckoutAtivos(subestacao);
+        }
       }
-    } catch(e) { showResult('Erro de conexão.', 'err'); }
-    finally { btn.disabled = false; }
+    } catch(e) { showResult('Erro de conexão.', 'err'); btn.disabled=false; btn.textContent='Registrar Saída'; }
   }
 
+  // ── Ativos na subestação ──────────────────────────────────────────────────
   async function loadAtivos(sub) {
     try {
       const {data} = await fetch('/api/checkin/ativos?sub=' + sub).then(r=>r.json());
@@ -239,25 +330,35 @@
       list.innerHTML = data.map(c => `
         <div class="ativo-item">
           <div>
-            <div class="ativo-nome">${c.nome||c.matricula}</div>
-            <div class="ativo-sub">${c.subestacao} · ${c.atividade||'—'}</div>
+            <div class="ativo-nome">${c.nome || c.matricula}</div>
+            <div class="ativo-sub">${c.subestacao} · ${c.atividade || '—'}</div>
           </div>
-          <div class="ativo-hora">${c.entrada.split(' ')[1]||c.entrada}</div>
+          <div class="ativo-hora">${(c.entrada||'').split(' ')[1] || c.entrada}</div>
         </div>
       `).join('');
       box.classList.add('show');
     } catch(e) {}
   }
 
+  function setTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='checkin')||(i===1&&tab==='checkout')));
+    document.getElementById('panelCheckin').classList.toggle('active', tab==='checkin');
+    document.getElementById('panelCheckout').classList.toggle('active', tab==='checkout');
+    hideResult();
+    if (tab === 'checkout') {
+      const sub = document.getElementById('subOut').value;
+      if (sub) loadCheckoutAtivos(sub);
+    }
+  }
+
   function showResult(msg, type) {
     const el = document.getElementById('result');
     el.textContent = msg; el.className = 'result show ' + type;
-    setTimeout(() => el.classList.remove('show'), 6000);
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 8000);
   }
 
-  function hideResult() {
-    document.getElementById('result').classList.remove('show');
-  }
+  function hideResult() { document.getElementById('result').classList.remove('show'); }
 </script>
 </body>
 </html>
