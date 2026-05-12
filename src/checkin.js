@@ -113,16 +113,35 @@ const COLABORADORES = [
 ];
 
 const SUBESTACOES = [
-  'BFG','LEM','FCN','SCO','ITP','MKZ','BPD','COT','SLZ','ITQ','COP',
-  'ALV','ANT','ARC','BAR','BEL','BOA','CAM','CAP','CAS','CEN','CLI',
-  'COL','COR','CRU','CUR','DIV','ENT','FAR','FLO','FOR','GAL','GRA',
-  'GUA','IBI','IGA','ILH','INA','IND','INH','ITB','ITC','ITG','JAC',
-  'JAR','JOA','JUA','LAG','LAJ','LAR','LIN','LON','LOU','MAG','MAR',
-  'MED','MEN','MES','MOC','MON','MOR','MUR','NAZ','NIL','NIT','NOV',
-  'OLI','OUR','PAC','PAR','PAS','PAT','PAU','PED','PER','PIR','PON',
-  'POR','QUA','RAI','REC','RES','RIB','RIO','ROC','SAL','SAN','SAO',
-  'SER','SOB','TAB','TAQ','TER','TIM','TOQ','TRE','TUB','UBA','UNA',
-  'VAL','VEN','VIT','VOU'
+  'ABR','ABV','ACT','ADP','AFR','AGA','AGR','AIM','ALC','AMP',
+  'AMR','ANT','APR','ARB','ARZ','ATP','AUS','AVA','AVD','AVL',
+  'BAB','BAR','BAY','BCN','BFC','BFG','BFI','BJP','BML','BMT',
+  'BNF','BPD','BPN','BRI','BRP','BRR','BSN','BVD','CAB','CAL',
+  'CAM','CBI','CCB','CCD','CCL','CDR','CDV','CEN','CFR','CGR',
+  'CHR','CIP','CLG','CLN','CMD','CMJ','CMO','CMR','CMS','CMT',
+  'CNN','CNP','COP','CPE','CPN','CPP','CPV','CRD','CRM','CRO',
+  'CSC','CSN','CSO','CTG','CTL','CTR','CUR','CVT','CXS','DCT',
+  'DMC','DTA','DUP','EBO','EGB','ELD','ERC','ESP','ETV','FCC',
+  'FCN','FCZ','FIC','FLR','FMD','FME','FND','FPX','FRR','FTL',
+  'FTN','GDL','GDN','GDU','GLB','GNB','GRA','GTB','GTL','GVD',
+  'GVP','HMT','ILH','IMD','IMT','INF','IPB','IPG','IPQ','ITG',
+  'ITP','ITR','JAB','JDB','JMP','JPA','JPR','JUN','KND','LAG',
+  'LAM','LBN','LDC','LEM','LIN','LJS','LPD','LVY','MAN','MAZ',
+  'MBA','MBF','MBR','MCB','MCH','MCL','MDU','MFC','MGA','MGC',
+  'MGP','MGR','MJV','MKZ','MML','MMX','MNB','MND','MNG','MRJ',
+  'MRN','MRP','MRT','MSG','MSR','MTC','MTH','MTO','MTS','MZB',
+  'NIG','NLP','NUC','NVI','OLP','OLR','OWI','PAC','PAL','PAN',
+  'PBI','PBR','PBS','PCI','PDD','PDG','PDR','PER','PFT','PGN',
+  'PII','PIN','PIR','PJC','PLM','PMG','POS','PPS','PRC','PRM',
+  'PRP','PRS','PSB','PTA','PTC','PTN','PTS','PVN','QCS','QMC',
+  'QMD','QTS','RAM','RCL','RCP','RDO','REC','RFL','RFR','ROS',
+  'RST','RTO','SAT','SBM','SCI','SCO','SDD','SFE','SFR','SGA',
+  'SJO','SJS','SLO','SLZ','SMT','SPB','SPC','SRA','SRD','SRI',
+  'SRP','SRS','STC','STI','STN','STP','STS','TBO','TER','TFL',
+  'TQR','TRG','TRS','TRV','TSU','TUR','TUT','TUV','UFM','UNS',
+  'UNV','URG','USC','USFL','VDN','VGA','VGE','VIG','VIL','VLA',
+  'VLB','VLC','VLG','VLM','VPB','VRD','VTL','VTR','VVQ','WLS',
+  'WNK','ZIN','ZNO','ZPL'
 ];
 
 function setDb(database) {
