@@ -25,6 +25,8 @@ async function init() {
       dia_semana    TEXT,
       telefone      TEXT,
       subestacoes   TEXT,
+      saida_base    TEXT,
+      chegada_base  TEXT,
       criado_em     TEXT NOT NULL DEFAULT (datetime('now','localtime')),
       atualizado_em TEXT NOT NULL DEFAULT (datetime('now','localtime'))
     )
@@ -56,16 +58,17 @@ function all(sql, params = []) {
 function inserirOS(d) {
   run(`
     INSERT INTO ordens_servico
-      (os, unidade, equipe, veiculo, servico, status, data, guarda, horario, dia_semana, telefone, subestacoes)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+      (os, unidade, equipe, veiculo, servico, status, data, guarda, horario, dia_semana, telefone, subestacoes, saida_base, chegada_base)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(os) DO UPDATE SET
       unidade=excluded.unidade, equipe=excluded.equipe, veiculo=excluded.veiculo,
       servico=excluded.servico, status=excluded.status, data=excluded.data,
       guarda=excluded.guarda, horario=excluded.horario, dia_semana=excluded.dia_semana,
       telefone=excluded.telefone, subestacoes=excluded.subestacoes,
+      saida_base=excluded.saida_base, chegada_base=excluded.chegada_base,
       atualizado_em=datetime('now','localtime')
   `, [d.os, d.unidade, d.equipe, d.veiculo, d.servico, d.status, d.data,
-      d.guarda, d.horario, d.dia_semana, d.telefone, d.subestacoes]);
+      d.guarda, d.horario, d.dia_semana, d.telefone, d.subestacoes, d.saida_base, d.chegada_base]);
 }
 
 function listarOS({ status, unidade, search, dataDe, dataAte } = {}) {
