@@ -73,19 +73,24 @@ function djb2(str) {
 // Formato: 🧰 [CODIGO] - descrição livre
 // OU:      🧰 SE SIGLA / CODIGO - descrição
 // OU:      🧰 descrição livre sem código (gera hash)
-const RE_OS_CODIGO = /^([\w#][\w#\s]*\d[\w\-]*)\s*[-–]/i;  // código explícito antes do traço
-const RE_SE_CODIGO = /SE\s+\w+\s*\/\s*([\w#][\w#\s\-]*\d[\w\-]*)/i; // SE X / CODIGO
+const RE_SE_CODIGO  = /SE\s+\w+\s*\/\s*([\w#][\w#\s\-]*\d[\w\-]*)/i;  // SE X / CODIGO
+const RE_NUM_INICIO = /^(\d{6,})/;  // número longo no início (OS real: 10+ dígitos)
+const RE_COD_TRACO  = /^([\w#][\w#\s]*\d[\w\-]*)\s*[-–]/i; // código antes do traço
 
 function extrairCodigo(textoRaw) {
-  // Tenta SE SIGLA / CODIGO
+  // 1. Padrão SE SIGLA / CODIGO
   const mSE = textoRaw.match(RE_SE_CODIGO);
   if (mSE) return mSE[1].trim().toUpperCase().replace(/\s+/g, ' ');
 
-  // Tenta CODIGO - descrição
-  const mCod = textoRaw.match(RE_OS_CODIGO);
+  // 2. Número longo no início (OS real tipo 3257260621)
+  const mNum = textoRaw.match(RE_NUM_INICIO);
+  if (mNum) return mNum[1].trim();
+
+  // 3. CODIGO - descrição (equipamento curto tipo DJ 3336)
+  const mCod = textoRaw.match(RE_COD_TRACO);
   if (mCod) return mCod[1].trim().toUpperCase().replace(/\s+/g, ' ');
 
-  // Sem código → hash do texto normalizado (consistente entre mensagens)
+  // 4. Sem código → hash estável do texto
   const norm = normalizarTexto(textoRaw).replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
   const prefixo = norm.split(' ').slice(0, 3).join('-').toUpperCase().substring(0, 20);
   return prefixo + '-' + djb2(norm);
@@ -97,12 +102,18 @@ function extrairUnidade(textoRaw) {
 }
 
 function extrairServico(textoRaw) {
-  // Remove código SE X / Y - desc → retorna só desc
+  // Padrão SE X / Y - desc
   const mSE = textoRaw.match(/SE\s+\w+\s*\/[^-–]*[-–]\s*(.+)/i);
   if (mSE) return mSE[1].trim();
-  // Remove CODIGO - desc → retorna só desc
+
+  // Número longo no início (OS real): remove número + qualquer separador (- : espaço)
+  const mNum = textoRaw.match(/^\d{6,}\s*[-:\u2013]?\s*(.*)/);
+  if (mNum) return mNum[1].trim() || textoRaw;
+
+  // CODIGO - desc (com traço)
   const mCod = textoRaw.match(/^[\w#][\w#\s]*\d[\w\-]*\s*[-–]\s*(.+)/i);
   if (mCod) return mCod[1].trim();
+
   return textoRaw;
 }
 
