@@ -91,7 +91,10 @@
 </div>
 
 <div class="section">
-  <div class="section-title">QR Codes das Subestações — clique para ampliar e imprimir</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div class="section-title" style="margin-bottom:0">QR Codes das Subestações — clique para ampliar e imprimir</div>
+    <button id="btnToggleQr" onclick="toggleQrGrid()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap">🙈 Ocultar QR Codes</button>
+  </div>
   <div class="qr-grid" id="qrGrid"></div>
 
   <div class="section-title">Registros de Check-in</div>
@@ -141,6 +144,17 @@
 <script>
   let _subs = [];
 
+  function toggleQrGrid() {
+    const grid = document.getElementById('qrGrid');
+    const btn  = document.getElementById('btnToggleQr');
+    const hidden = grid.style.display === 'none';
+    grid.style.display = hidden ? '' : 'none';
+    btn.textContent = hidden ? '🙈 Ocultar QR Codes' : '👁️ Mostrar QR Codes';
+    btn.style.borderColor = hidden ? 'var(--border)' : 'var(--primary)';
+    btn.style.color = hidden ? 'var(--muted)' : 'var(--primary)';
+    localStorage.setItem('qrVisible', hidden ? '1' : '0');
+  }
+
   async function init() {
     const {data} = await fetch('/api/subestacoes').then(r=>r.json());
     _subs = data;
@@ -165,6 +179,15 @@
 
     loadCheckins();
     loadStats();
+
+    // Restaura estado do toggle
+    if (localStorage.getItem('qrVisible') === '0') {
+      document.getElementById('qrGrid').style.display = 'none';
+      const btn = document.getElementById('btnToggleQr');
+      btn.textContent = '👁️ Mostrar QR Codes';
+      btn.style.borderColor = 'var(--primary)';
+      btn.style.color = 'var(--primary)';
+    }
   }
 
   async function loadStats() {
