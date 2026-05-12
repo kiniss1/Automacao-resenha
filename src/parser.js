@@ -44,7 +44,9 @@ function gerarIdEstavel(texto) {
 
 // Emojis de campo
 const RE_GUARDA   = /\u{2699}\u{FE0F}?[^\S\n]*(?:Guarda:?\s*)(.+)/u;           // ⚙️
-const RE_HORARIO  = /\u{23F0}[^\S\n]*(.+)/u;                           // ⏰
+const RE_HORARIO  = /\u{23F0}[^\S\n]*(?!Sa[íi]da|Chegada)(.+)/u;         // ⏰ (horário do turno)
+const RE_SAIDA    = /\u{23F0}[^\S\n]*Sa[íi]da\s*(?:base)?[:\s]*(.+)?/iu;    // ⏰ Saída base
+const RE_CHEGADA  = /\u{23F0}[^\S\n]*Chegada\s*(?:base)?[:\s]*(.+)?/iu;     // ⏰ Chegada base
 const RE_DIA      = /\u{1F4C6}[^\S\n]*(.+)/u;                          // 📆
 const RE_BASE     = /\u{1F3DB}[^\S\n]*(.+)/u;                          // 🏛️
 const RE_TELEFONE = /\u{1F4F1}[^\S\n]*(.+)/u;                          // 📱
@@ -68,7 +70,7 @@ function parseOS(texto) {
 
   // ── Campos globais ─────────────────────────────────────────────────────────
   let data = null, veiculo = null, base = null;
-  let guarda = null, horario = null, diaSemana = null, telefone = null;
+  let guarda = null, horario = null, diaSemana = null, telefone = null, saida_base = null, chegada_base = null;
   const membros = [];
   const subestacoes = [];
   let emSubstBloco = false;
@@ -78,7 +80,9 @@ function parseOS(texto) {
     if (!guarda)    { const m = linha.match(RE_GUARDA);   if (m) guarda    = stripEmojis(m[1]); }
     if (!horario)   { const m = linha.match(RE_HORARIO);  if (m) horario   = stripEmojis(m[1]); }
     if (!diaSemana) { const m = linha.match(RE_DIA);      if (m) diaSemana = stripEmojis(m[1]); }
-    if (!telefone)  { const m = linha.match(RE_TELEFONE); if (m) telefone  = stripEmojis(m[1]); }
+    if (!telefone)    { const m = linha.match(RE_TELEFONE); if (m) telefone    = stripEmojis(m[1]); }
+    if (!saida_base)  { const m = linha.match(RE_SAIDA);    if (m) saida_base   = m[1] ? stripEmojis(m[1]) : linha.includes('Saída') || linha.includes('Saida') ? '' : null; if (saida_base === '') saida_base = 'Registrada'; }
+    if (!chegada_base){ const m = linha.match(RE_CHEGADA);  if (m) chegada_base = m[1] ? stripEmojis(m[1]) : linha.includes('Chegada') ? '' : null; if (chegada_base === '') chegada_base = 'Registrada'; }
     if (!veiculo)   { const m = linha.match(RE_VEICULO);  if (m) { const v = stripEmojis(m[1]); if (v) veiculo = v; } }
     if (!base)      { const m = linha.match(RE_BASE);     if (m) { const b = stripEmojis(m[1]); if (b) base    = b; } }
 
@@ -149,18 +153,20 @@ function parseOS(texto) {
   if (!blocos.length) return null;
 
   return blocos.map(b => ({
-    os:          b.os,
-    unidade:     b.unidade,
+    os:           b.os,
+    unidade:      b.unidade,
     equipe,
     veiculo,
-    servico:     b.descricao.length ? b.servico + ' | ' + b.descricao.join(' | ') : b.servico,
-    status:      b.status || 'Andamento',
+    servico:      b.descricao.length ? b.servico + ' | ' + b.descricao.join(' | ') : b.servico,
+    status:       b.status || 'Andamento',
     data,
     guarda,
     horario,
-    dia_semana:  diaSemana,
+    dia_semana:   diaSemana,
     telefone,
-    subestacoes: substeStr,
+    subestacoes:  substeStr,
+    saida_base,
+    chegada_base,
   }));
 }
 
