@@ -9,26 +9,79 @@ const GRUPO_NOME = process.env.GRUPO_NOME || 'Resenha';
 const DATA_PATH  = process.env.WA_DATA_PATH || '/data/.wwebjs_auth';
 const EXEC_PATH  = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 
+const MAX_RETRY = 3;
+const RETRY_DELAY = 2000; // ms
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function salvarComRetry(os, tentativa = 1) {
+  try {
+    db.inserirOS(os);
+    return true;
+  } catch (err) {
+    if (tentativa < MAX_RETRY) {
+      console.warn(`[DB] Tentativa ${tentativa} falhou para OS ${os.os}: ${err.message}. Tentando novamente...`);
+      await sleep(RETRY_DELAY);
+      return salvarComRetry(os, tentativa + 1);
+    }
+    console.error(`[DB] Falha definitiva ao salvar OS ${os.os} após ${MAX_RETRY} tentativas:`, err.message);
+    return false;
+  }
+}
+
 async function processarMensagem(msg) {
   try {
     const chat = await msg.getChat();
     console.log(`[MSG] Chat: "${chat.name}" | isGroup: ${chat.isGroup}`);
     if (!chat.isGroup || chat.name !== GRUPO_NOME) return;
     if (msg.fromMe && msg.body.startsWith('✅')) return;
+    if (msg.fromMe && msg.body.startsWith('⚠️')) return;
 
-    const ordens = parseOS(msg.body);
-    if (!ordens) { console.log('[PARSER] Nenhuma OS detectada.'); return; }
+    const resultado = parseOS(msg.body);
+    if (!resultado) return; // mensagem comum, não é resenha
 
-    const registradas = [];
-    for (const os of ordens) {
-      db.inserirOS(os);
-      registradas.push(`• ${os.unidade} — ${os.servico.substring(0, 50)}`);
-      console.log(`[BOT] ✅ Registrada: ${os.os} | ${os.unidade} | ${os.status}`);
+    // Resenha sem 🧰 — avisa no grupo
+    if (resultado.erro) {
+      await msg.reply(resultado.aviso);
+      return;
     }
 
-    await msg.reply(`✅ *${registradas.length} OS(s) registrada(s):*\n${registradas.join('\n')}`);
+    const { ordens, avisos } = resultado;
+    const registradas = [];
+    const falhas = [];
+
+    for (const os of ordens) {
+      const ok = await salvarComRetry(os);
+      if (ok) {
+        registradas.push(`• ${os.unidade} — ${os.servico.substring(0, 50)}`);
+        console.log(`[BOT] ✅ Registrada: ${os.os} | ${os.unidade} | ${os.status}`);
+      } else {
+        falhas.push(os.os);
+      }
+    }
+
+    // Monta resposta
+    const linhas = [];
+
+    if (registradas.length) {
+      linhas.push(`✅ *${registradas.length} OS(s) registrada(s):*`);
+      linhas.push(...registradas);
+    }
+
+    if (falhas.length) {
+      linhas.push(`\n❌ Falha ao salvar: ${falhas.join(', ')}`);
+    }
+
+    // Avisos de campos ausentes ou status não reconhecido
+    if (avisos.length) {
+      linhas.push(`\n⚠️ *Atenção:*`);
+      avisos.forEach(a => linhas.push(`  ${a}`));
+    }
+
+    if (linhas.length) await msg.reply(linhas.join('\n'));
+
   } catch (err) {
-    console.error('[BOT] Erro:', err.message);
+    console.error('[BOT] Erro ao processar mensagem:', err.message);
   }
 }
 
@@ -84,8 +137,21 @@ function startBot() {
     console.log(`[BOT] Pronto! Monitorando grupo "${GRUPO_NOME}".`);
   });
 
-  client.on('auth_failure', (msg) => { console.error('[BOT] Falha de autenticação:', msg); state.setReady(false); });
-  client.on('disconnected', (reason) => { state.setReady(false); console.warn('[BOT] Desconectado:', reason); });
+  client.on('auth_failure', (msg) => {
+    console.error('[BOT] Falha de autenticação:', msg);
+    state.setReady(false);
+  });
+
+  client.on('disconnected', (reason) => {
+    state.setReady(false);
+    console.warn('[BOT] Desconectado:', reason);
+    // Tenta reinicializar após 10s
+    setTimeout(() => {
+      console.log('[BOT] Tentando reconectar...');
+      client.initialize().catch(err => console.error('[BOT] Erro ao reconectar:', err.message));
+    }, 10000);
+  });
+
   client.on('message', processarMensagem);
   client.on('message_create', (msg) => { if (msg.fromMe) processarMensagem(msg); });
 
