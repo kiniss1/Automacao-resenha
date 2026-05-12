@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Check-in / Check-out</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0f1117;--surface:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892a4;
+      --primary:#4f6ef7;--green:#22c55e;--red:#ef4444;--orange:#f97316;
+      --green-bg:#052e16;--red-bg:#450a0a;--orange-bg:#431407;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:420px;padding:28px;display:flex;flex-direction:column;gap:20px}
+
+    .card-header{text-align:center}
+    .card-header .sub-badge{display:inline-block;background:var(--primary);color:#fff;font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:999px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+    .card-header h1{font-size:1.3rem;font-weight:700}
+    .card-header p{font-size:.82rem;color:var(--muted);margin-top:4px}
+
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:.8rem;font-weight:600;color:var(--muted)}
+    .field input,.field select,.field textarea{
+      background:var(--bg);border:1px solid var(--border);color:var(--text);
+      border-radius:8px;padding:12px 14px;font-size:1rem;outline:none;width:100%;
+      transition:border-color .15s;font-family:inherit;
+    }
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
+    .field textarea{resize:none;height:80px}
+
+    .btn{width:100%;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .15s;letter-spacing:.02em}
+    .btn:hover{opacity:.88}
+    .btn:disabled{opacity:.4;cursor:default}
+    .btn-checkin{background:var(--green);color:#fff}
+    .btn-checkout{background:var(--red);color:#fff}
+
+    .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.78rem}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    .result{border-radius:10px;padding:16px;font-size:.88rem;line-height:1.6;display:none}
+    .result.ok  {background:var(--green-bg); border:1px solid #14532d; color:var(--green)}
+    .result.err {background:var(--red-bg);   border:1px solid #7f1d1d; color:var(--red)}
+    .result.warn{background:var(--orange-bg);border:1px solid #7c2d12; color:var(--orange)}
+    .result.show{display:block}
+
+    .ativos-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;display:none}
+    .ativos-box.show{display:block}
+    .ativos-title{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+    .ativo-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:.82rem}
+    .ativo-item:last-child{border-bottom:none}
+    .ativo-nome{font-weight:600}
+    .ativo-sub{color:var(--primary);font-size:.75rem}
+    .ativo-hora{color:var(--muted);font-size:.72rem}
+
+    .tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .tab{flex:1;background:transparent;border:none;color:var(--muted);padding:10px;font-size:.82rem;cursor:pointer;transition:background .15s,color .15s;font-weight:600}
+    .tab.active{background:var(--primary);color:#fff}
+
+    .panel{display:none}
+    .panel.active{display:flex;flex-direction:column;gap:16px}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="card-header">
+    <div class="sub-badge" id="subBadge">⚡ Subestação</div>
+    <h1>Check-in / Check-out</h1>
+    <p>OOMC — Manutenção Alta Tensão</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('checkin')">▶ Entrada</button>
+    <button class="tab" onclick="setTab('checkout')">◀ Saída</button>
+  </div>
+
+  <!-- CHECKIN -->
+  <div class="panel active" id="panelCheckin">
+    <div class="field">
+      <label>Matrícula</label>
+      <input type="number" id="matriculaIn" placeholder="Digite sua matrícula" inputmode="numeric"/>
+    </div>
+    <div class="field" id="nomeFieldIn" style="display:none">
+      <label>Colaborador identificado</label>
+      <input type="text" id="nomeIn" readonly style="opacity:.7"/>
+    </div>
+    <div class="field">
+      <label>Subestação</label>
+      <select id="subIn"></select>
+    </div>
+    <div class="field">
+      <label>Atividade a executar</label>
+      <textarea id="atividadeIn" placeholder="Descreva a atividade..."></textarea>
+    </div>
+    <button class="btn btn-checkin" id="btnCheckin" onclick="doCheckin()">✅ Registrar Entrada</button>
+  </div>
+
+  <!-- CHECKOUT -->
+  <div class="panel" id="panelCheckout">
+    <div class="field">
+      <label>Matrícula</label>
+      <input type="number" id="matriculaOut" placeholder="Digite sua matrícula" inputmode="numeric"/>
+    </div>
+    <div class="field" id="nomeFieldOut" style="display:none">
+      <label>Entrada ativa encontrada</label>
+      <input type="text" id="nomeOut" readonly style="opacity:.7"/>
+    </div>
+    <button class="btn btn-checkout" id="btnCheckout" onclick="doCheckout()">🚪 Registrar Saída</button>
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <div class="ativos-box" id="ativosBox">
+    <div class="ativos-title">🟢 Colaboradores na subestação agora</div>
+    <div id="ativosList"></div>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const subParam = (params.get('sub') || '').toUpperCase();
+
+  // Preenche badge e select de subestação
+  fetch('/api/subestacoes').then(r=>r.json()).then(({data}) => {
+    const badge = document.getElementById('subBadge');
+    const selIn = document.getElementById('subIn');
+    data.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      if (s === subParam) opt.selected = true;
+      selIn.appendChild(opt);
+    });
+    if (subParam) {
+      badge.textContent = '⚡ ' + subParam;
+      loadAtivos(subParam);
+    }
+  });
+
+  function setTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='checkin')||(i===1&&tab==='checkout')));
+    document.getElementById('panelCheckin').classList.toggle('active', tab==='checkin');
+    document.getElementById('panelCheckout').classList.toggle('active', tab==='checkout');
+    hideResult();
+  }
+
+  // Auto-identifica colaborador pela matrícula
+  document.getElementById('matriculaIn').addEventListener('input', function() {
+    const mat = this.value.trim();
+    if (mat.length >= 4) {
+      fetch('/api/colaborador/' + mat).then(r=>r.json()).then(({data}) => {
+        if (data) {
+          document.getElementById('nomeIn').value = data.nome;
+          document.getElementById('nomeFieldIn').style.display = 'flex';
+        } else {
+          document.getElementById('nomeFieldIn').style.display = 'none';
+        }
+      });
+    } else {
+      document.getElementById('nomeFieldIn').style.display = 'none';
+    }
+  });
+
+  document.getElementById('matriculaOut').addEventListener('input', function() {
+    const mat = this.value.trim();
+    if (mat.length >= 4) {
+      fetch('/api/checkin/ativo/' + mat).then(r=>r.json()).then(({data}) => {
+        if (data) {
+          document.getElementById('nomeOut').value = (data.nome||mat) + ' — ' + data.subestacao + ' desde ' + data.entrada;
+          document.getElementById('nomeFieldOut').style.display = 'flex';
+        } else {
+          document.getElementById('nomeFieldOut').style.display = 'none';
+        }
+      });
+    } else {
+      document.getElementById('nomeFieldOut').style.display = 'none';
+    }
+  });
+
+  async function doCheckin() {
+    const matricula  = document.getElementById('matriculaIn').value.trim();
+    const subestacao = document.getElementById('subIn').value;
+    const atividade  = document.getElementById('atividadeIn').value.trim();
+    if (!matricula) { showResult('Digite sua matrícula.', 'err'); return; }
+    if (!atividade) { showResult('Descreva a atividade a executar.', 'err'); return; }
+
+    const btn = document.getElementById('btnCheckin');
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/checkin', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ matricula, subestacao, atividade })
+      }).then(r=>r.json());
+
+      if (res.erro) { showResult('⚠️ ' + res.msg, 'warn'); }
+      else {
+        showResult(`✅ Entrada registrada!\n${res.nome || matricula} → ${subestacao}`, 'ok');
+        document.getElementById('matriculaIn').value = '';
+        document.getElementById('atividadeIn').value = '';
+        document.getElementById('nomeFieldIn').style.display = 'none';
+        loadAtivos(subestacao);
+      }
+    } catch(e) { showResult('Erro de conexão.', 'err'); }
+    finally { btn.disabled = false; }
+  }
+
+  async function doCheckout() {
+    const matricula = document.getElementById('matriculaOut').value.trim();
+    if (!matricula) { showResult('Digite sua matrícula.', 'err'); return; }
+
+    const btn = document.getElementById('btnCheckout');
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ matricula })
+      }).then(r=>r.json());
+
+      if (res.erro) { showResult('⚠️ ' + res.msg, 'warn'); }
+      else {
+        const c = res.checkin;
+        showResult(`✅ Saída registrada!\n${c.nome||matricula} saiu de ${c.subestacao}\nEntrada: ${c.entrada}\nSaída: ${c.saida}`, 'ok');
+        document.getElementById('matriculaOut').value = '';
+        document.getElementById('nomeFieldOut').style.display = 'none';
+        loadAtivos(c.subestacao);
+      }
+    } catch(e) { showResult('Erro de conexão.', 'err'); }
+    finally { btn.disabled = false; }
+  }
+
+  async function loadAtivos(sub) {
+    try {
+      const {data} = await fetch('/api/checkin/ativos?sub=' + sub).then(r=>r.json());
+      const box = document.getElementById('ativosBox');
+      const list = document.getElementById('ativosList');
+      if (!data || !data.length) { box.classList.remove('show'); return; }
+      list.innerHTML = data.map(c => `
+        <div class="ativo-item">
+          <div>
+            <div class="ativo-nome">${c.nome||c.matricula}</div>
+            <div class="ativo-sub">${c.subestacao} · ${c.atividade||'—'}</div>
+          </div>
+          <div class="ativo-hora">${c.entrada.split(' ')[1]||c.entrada}</div>
+        </div>
+      `).join('');
+      box.classList.add('show');
+    } catch(e) {}
+  }
+
+  function showResult(msg, type) {
+    const el = document.getElementById('result');
+    el.textContent = msg; el.className = 'result show ' + type;
+    setTimeout(() => el.classList.remove('show'), 6000);
+  }
+
+  function hideResult() {
+    document.getElementById('result').classList.remove('show');
+  }
+</script>
+</body>
+</html>

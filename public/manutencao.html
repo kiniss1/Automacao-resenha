@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Operação</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0f1117;--surface:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892a4;
+      --primary:#4f6ef7;--green:#22c55e;--orange:#f97316;--gray:#94a3b8;--red:#ef4444;
+      --green-bg:#052e16;--orange-bg:#431407;--gray-bg:#1e293b;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+    .header-left h1{font-size:1.2rem;font-weight:700}
+    .header-left span{font-size:.78rem;color:var(--muted)}
+    .nav-links{display:flex;gap:8px}
+    .nav-link{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
+    .nav-link:hover,.nav-link.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+    .stats-bar{display:flex;gap:12px;padding:16px 24px;flex-wrap:wrap}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 20px;min-width:100px;text-align:center}
+    .stat-card .num{font-size:1.6rem;font-weight:700;line-height:1}
+    .stat-card .lbl{font-size:.72rem;color:var(--muted);margin-top:4px}
+    .stat-card.green .num{color:var(--green)}
+    .stat-card.orange .num{color:var(--orange)}
+
+    .section{padding:0 24px 32px}
+    .section-title{font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+
+    /* QR Codes */
+    .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:32px}
+    .qr-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:border-color .15s}
+    .qr-card:hover{border-color:var(--primary)}
+    .qr-card img{width:120px;height:120px;border-radius:6px;background:#fff;padding:4px}
+    .qr-card .qr-sub{font-size:.9rem;font-weight:700;margin-top:8px}
+    .qr-card .qr-link{font-size:.7rem;color:var(--muted)}
+
+    /* Tabela */
+    .filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+    .filters input,.filters select{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.875rem;outline:none}
+    .filters input:focus,.filters select:focus{border-color:var(--primary)}
+    .btn-refresh{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.875rem;cursor:pointer;margin-left:auto}
+    .btn-refresh:hover{opacity:.85}
+
+    table{width:100%;border-collapse:collapse;font-size:.83rem}
+    thead th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+    tbody tr:hover{background:var(--surface)}
+    tbody td{padding:10px 12px;vertical-align:middle}
+
+    .badge-ativo{display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);color:var(--green);border:1px solid #14532d;border-radius:999px;padding:3px 10px;font-size:.72rem;font-weight:600}
+    .badge-ativo::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+    .badge-enc{background:var(--gray-bg);color:var(--gray);border:1px solid #334155;border-radius:999px;padding:3px 10px;font-size:.72rem;font-weight:600;display:inline-flex}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    .empty-row td{text-align:center;padding:40px;color:var(--muted)}
+
+    /* Modal QR */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal-bg.hidden{display:none}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;max-width:320px;width:100%;display:flex;flex-direction:column;gap:16px}
+    .modal h2{font-size:1.1rem;font-weight:700}
+    .modal img{width:200px;height:200px;border-radius:8px;background:#fff;padding:6px;margin:0 auto}
+    .modal p{font-size:.8rem;color:var(--muted);line-height:1.5}
+    .modal-close{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;font-weight:600}
+    .modal-print{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px;cursor:pointer}
+    .modal-print:hover{background:var(--border);color:var(--text)}
+    .modal-btns{display:flex;gap:8px}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>🔧 Operação</h1>
+    <span>OOMC — Check-in / Check-out de Colaboradores</span>
+  </div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">🔧 Manutenção</a>
+    <a href="/manutencao.html" class="nav-link active">⚙️ Operação</a>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat-card green">  <div class="num" id="sAtivos">–</div>    <div class="lbl">Em campo agora</div></div>
+  <div class="stat-card">        <div class="num" id="sTotal">–</div>     <div class="lbl">Total hoje</div></div>
+  <div class="stat-card orange"> <div class="num" id="sSubs">–</div>      <div class="lbl">Subestações ativas</div></div>
+</div>
+
+<div class="section">
+  <div class="section-title">QR Codes das Subestações — clique para ampliar e imprimir</div>
+  <div class="qr-grid" id="qrGrid"></div>
+
+  <div class="section-title">Registros de Check-in</div>
+  <div class="filters">
+    <select id="fSub" onchange="loadCheckins()">
+      <option value="">Todas as subestações</option>
+    </select>
+    <select id="fStatus" onchange="loadCheckins()">
+      <option value="">Todos</option>
+      <option value="Ativo">Em campo</option>
+      <option value="Encerrado">Encerrados</option>
+    </select>
+    <input type="date" id="fDe"  onchange="loadCheckins()" title="Data início"/>
+    <input type="date" id="fAte" onchange="loadCheckins()" title="Data fim"/>
+    <button class="btn-refresh" onclick="loadCheckins()">↻ Atualizar</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Colaborador</th>
+        <th>Matrícula</th>
+        <th>Subestação</th>
+        <th>Atividade</th>
+        <th>Entrada</th>
+        <th>Saída</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- Modal QR -->
+<div class="modal-bg hidden" id="modalBg" onclick="closeModal(event)">
+  <div class="modal">
+    <h2 id="modalSub">—</h2>
+    <img id="modalQr" src="" alt="QR Code"/>
+    <p>Aponte a câmera do celular para este QR Code para registrar entrada ou saída na subestação.</p>
+    <div class="modal-btns">
+      <button class="modal-print" onclick="printQr()">🖨️ Imprimir</button>
+      <button class="modal-close" onclick="document.getElementById('modalBg').classList.add('hidden')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _subs = [];
+
+  async function init() {
+    const {data} = await fetch('/api/subestacoes').then(r=>r.json());
+    _subs = data;
+
+    // Popula select
+    const sel = document.getElementById('fSub');
+    data.forEach(s => {
+      const o = document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
+    });
+
+    // Gera QR cards
+    const grid = document.getElementById('qrGrid');
+    grid.innerHTML = data.map(s => {
+      const url = location.origin + '/checkin.html?sub=' + s;
+      const qrUrl = '/api/qrcode?url=' + encodeURIComponent(url);
+      return `<div class="qr-card" onclick="openModal('${s}','${qrUrl}')">
+        <img src="${qrUrl}" alt="QR ${s}" loading="lazy"/>
+        <div class="qr-sub">⚡ ${s}</div>
+        <div class="qr-link">check-in/out</div>
+      </div>`;
+    }).join('');
+
+    loadCheckins();
+    loadStats();
+  }
+
+  async function loadStats() {
+    try {
+      const {data} = await fetch('/api/checkin/stats').then(r=>r.json());
+      document.getElementById('sAtivos').textContent = data.ativos||0;
+      document.getElementById('sTotal').textContent  = data.total||0;
+
+      // Conta subestações com ativos
+      const {data: ativos} = await fetch('/api/checkin/ativos').then(r=>r.json());
+      const subs = new Set((ativos||[]).map(a=>a.subestacao));
+      document.getElementById('sSubs').textContent = subs.size;
+    } catch(e){}
+  }
+
+  async function loadCheckins() {
+    const p = new URLSearchParams();
+    const sub    = document.getElementById('fSub').value;
+    const status = document.getElementById('fStatus').value;
+    const de     = document.getElementById('fDe').value;
+    const ate    = document.getElementById('fAte').value;
+    if(sub)    p.set('subestacao', sub);
+    if(status) p.set('status', status);
+    if(de)     p.set('dataDe', de);
+    if(ate)    p.set('dataAte', ate);
+
+    const {data} = await fetch('/api/checkin/historico?' + p).then(r=>r.json());
+    const tbody = document.getElementById('tbody');
+    if(!data||!data.length){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum registro encontrado.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(c => `
+      <tr>
+        <td><strong>${c.nome||'—'}</strong></td>
+        <td>${c.matricula}</td>
+        <td><strong>${c.subestacao}</strong></td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.atividade||''}">${c.atividade||'—'}</td>
+        <td>${c.entrada||'—'}</td>
+        <td>${c.saida||'—'}</td>
+        <td>${c.status==='Ativo'
+          ? '<span class="badge-ativo">Em campo</span>'
+          : '<span class="badge-enc">Encerrado</span>'}</td>
+      </tr>
+    `).join('');
+  }
+
+  function openModal(sub, qrUrl) {
+    document.getElementById('modalSub').textContent = '⚡ ' + sub;
+    document.getElementById('modalQr').src = qrUrl;
+    document.getElementById('modalBg').classList.remove('hidden');
+  }
+
+  function closeModal(e) {
+    if(e.target===document.getElementById('modalBg'))
+      document.getElementById('modalBg').classList.add('hidden');
+  }
+
+  function printQr() {
+    const img = document.getElementById('modalQr').src;
+    const sub = document.getElementById('modalSub').textContent;
+    const w = window.open('');
+    w.document.write(`<html><body style="text-align:center;font-family:sans-serif;padding:40px">
+      <h2>${sub}</h2>
+      <img src="${img}" style="width:250px;height:250px"/>
+      <p style="margin-top:16px;font-size:14px">Escaneie para registrar entrada/saída</p>
+      <p style="font-size:12px;color:#666">OOMC — Manutenção Alta Tensão</p>
+      <script>window.print();window.close();<\/script>
+    </body></html>`);
+  }
+
+  init();
+  setInterval(loadStats, 30_000);
+  setInterval(loadCheckins, 60_000);
+</script>
+</body>
+</html>
