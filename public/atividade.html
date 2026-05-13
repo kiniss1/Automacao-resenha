@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Registro de Atividade</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0f1117;--surface:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892a4;
+      --primary:#4f6ef7;--green:#22c55e;--red:#ef4444;--orange:#f97316;--gray:#94a3b8;
+      --green-bg:#052e16;--red-bg:#450a0a;--orange-bg:#431407;--gray-bg:#1e293b;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px;display:flex;justify-content:center}
+    .page{width:100%;max-width:520px;display:flex;flex-direction:column;gap:0}
+
+    /* Header */
+    .page-header{background:var(--surface);border:1px solid var(--border);border-radius:14px 14px 0 0;padding:20px 24px;text-align:center;border-bottom:none}
+    .page-header h1{font-size:1.15rem;font-weight:700}
+    .page-header p{font-size:.78rem;color:var(--muted);margin-top:3px}
+
+    /* Type selector */
+    .type-tabs{display:flex;background:var(--surface);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 24px 16px}
+    .type-tab{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px;font-size:.88rem;cursor:pointer;font-weight:600;transition:all .15s}
+    .type-tab:first-child{border-radius:8px 0 0 8px}
+    .type-tab:last-child{border-radius:0 8px 8px 0;border-left:none}
+    .type-tab.active-inicial{background:#052e16;border-color:var(--green);color:var(--green)}
+    .type-tab.active-final{background:var(--orange-bg);border-color:var(--orange);color:var(--orange)}
+
+    /* Card sections */
+    .card{background:var(--surface);border:1px solid var(--border);padding:20px 24px;display:flex;flex-direction:column;gap:14px;border-top:none}
+    .card:last-of-type{border-radius:0 0 14px 14px}
+    .section-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:2px}
+
+    .field{display:flex;flex-direction:column;gap:5px}
+    .field label{font-size:.78rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:5px}
+    .field input,.field select,.field textarea{
+      background:var(--bg);border:1px solid var(--border);color:var(--text);
+      border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;width:100%;
+      transition:border-color .15s;font-family:inherit;
+    }
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
+    .field textarea{resize:none;height:68px}
+    .field-row{display:flex;gap:10px}
+    .field-row .field{flex:1}
+
+    /* Colaboradores */
+    .colab-list{display:flex;flex-direction:column;gap:6px}
+    .colab-wrap{display:flex;flex-direction:column;gap:2px}
+    .colab-row{display:flex;gap:6px;align-items:center}
+    .colab-row input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;transition:border-color .15s}
+    .colab-row input:focus{border-color:var(--primary)}
+    .colab-row input.ok{border-color:var(--green)}
+    .colab-row input.err{border-color:var(--red)}
+    .colab-hint{font-size:.72rem;padding-left:2px;min-height:14px}
+    .colab-hint.ok{color:var(--green)}
+    .colab-hint.err{color:var(--red)}
+    .btn-remove{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:8px 10px;font-size:.8rem;cursor:pointer;flex-shrink:0}
+    .btn-remove:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+    .btn-add{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:7px;font-size:.8rem;cursor:pointer;transition:all .15s;text-align:center;width:100%}
+    .btn-add:hover{border-color:var(--primary);color:var(--primary)}
+
+    /* OS List */
+    .os-list{display:flex;flex-direction:column;gap:10px}
+    .os-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;position:relative}
+    .os-item-header{display:flex;justify-content:space-between;align-items:center}
+    .os-item-num{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase}
+
+    /* Trajeto */
+    .trajeto-list{display:flex;flex-direction:column;gap:8px}
+    .trajeto-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+    .trajeto-row{display:flex;gap:8px;align-items:center}
+    .trajeto-row input,.trajeto-row select{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.88rem;outline:none}
+    .trajeto-row input:focus,.trajeto-row select:focus{border-color:var(--primary)}
+
+    /* Status badges */
+    .status-select{appearance:none;cursor:pointer;font-weight:600}
+    .status-Andamento{border-color:var(--orange)!important;color:var(--orange)!important;background:var(--orange-bg)!important}
+    .status-Concluído{border-color:var(--green)!important; color:var(--green)!important; background:var(--green-bg)!important}
+    .status-Cancelado{border-color:var(--gray)!important;  color:var(--gray)!important;  background:var(--gray-bg)!important}
+
+    /* Submit */
+    .btn-submit{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s;margin-top:4px}
+    .btn-submit:hover{opacity:.88}
+    .btn-submit:disabled{opacity:.4;cursor:default}
+
+    .result{border-radius:10px;padding:14px 16px;font-size:.88rem;line-height:1.7;display:none;white-space:pre-wrap;margin-top:4px}
+    .result.ok  {background:var(--green-bg); border:1px solid #14532d; color:var(--green);display:block}
+    .result.err {background:var(--red-bg);   border:1px solid #7f1d1d; color:var(--red);  display:block}
+    .result.warn{background:var(--orange-bg);border:1px solid #7c2d12; color:var(--orange);display:block}
+
+    .nav-back{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--muted);font-size:.82rem;text-decoration:none;transition:color .15s}
+    .nav-back:hover{color:var(--text)}
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <a href="/" class="nav-back">← Voltar ao Painel</a>
+
+  <div class="page-header">
+    <h1>⚡ Registro de Atividade</h1>
+    <p>OOMC — Manutenção Alta Tensão</p>
+  </div>
+
+  <!-- Tipo -->
+  <div class="type-tabs">
+    <button class="type-tab active-inicial" id="tabInicial" onclick="setTipo('inicial')">▶ Início da Atividade</button>
+    <button class="type-tab" id="tabFinal" onclick="setTipo('final')">◀ Final da Atividade</button>
+  </div>
+
+  <!-- Resenha -->
+  <div class="card">
+    <div class="section-label">📋 Resenha</div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>⚙️ Guarda</label>
+        <select id="guarda">
+          <option value="Manhã">Manhã</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noite">Noite</option>
+          <option value="A/B">A/B</option>
+          <option value="B/C">B/C</option>
+          <option value="C/D">C/D</option>
+          <option value="D/A">D/A</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>⏰ Horário</label>
+        <input type="text" id="horario" placeholder="07h x 16h"/>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>📆 Dia da semana</label>
+        <select id="diaSemana">
+          <option>Segunda-feira</option>
+          <option>Terça-feira</option>
+          <option>Quarta-feira</option>
+          <option>Quinta-feira</option>
+          <option>Sexta-feira</option>
+          <option>Sábado</option>
+          <option>Domingo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>📅 Data</label>
+        <input type="date" id="data"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equipe -->
+  <div class="card">
+    <div class="section-label">👷 Equipe</div>
+
+    <div class="field">
+      <label>Colaboradores (matrícula)</label>
+      <div class="colab-list" id="colabList"></div>
+      <button class="btn-add" id="btnAddColab" onclick="addColab()">+ Adicionar colaborador</button>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>📱 Telefone</label>
+        <input type="tel" id="telefone" placeholder="Ex: 98980-0372"/>
+      </div>
+      <div class="field">
+        <label>🚔 Veículo</label>
+        <input type="text" id="veiculo" placeholder="Ex: 4679-5"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Atividades (OS) -->
+  <div class="card">
+    <div class="section-label">🧰 Atividades / Ordens de Serviço</div>
+    <div class="os-list" id="osList"></div>
+    <button class="btn-add" onclick="addOS()">+ Adicionar atividade</button>
+  </div>
+
+  <!-- Trajeto -->
+  <div class="card">
+    <div class="section-label">🗺️ Trajeto (saída/chegada base e deslocamentos)</div>
+    <div class="trajeto-list" id="trajetoList"></div>
+    <button class="btn-add" onclick="addTrajeto()">+ Adicionar ponto de trajeto</button>
+  </div>
+
+  <!-- Submit -->
+  <div class="card">
+    <button class="btn-submit" id="btnSubmit" onclick="submeter()">✅ Registrar Atividade</button>
+    <div class="result" id="result" style="display:none"></div>
+  </div>
+
+</div>
+
+<script>
+  let SUBESTACOES = [];
+  let tipo = 'inicial';
+  const MAX_COLAB = 6;
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  fetch('/api/subestacoes').then(r=>r.json()).then(({data}) => {
+    SUBESTACOES = data;
+    addColab();
+    addOS();
+    addTrajeto();
+  });
+
+  // Define data e dia da semana automático
+  const hoje = new Date();
+  document.getElementById('data').value = hoje.toISOString().split('T')[0];
+  const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  document.getElementById('diaSemana').value = dias[hoje.getDay()];
+
+  // Horário por guarda
+  document.getElementById('guarda').addEventListener('change', function() {
+    const horarios = {'Manhã':'07h x 16h','Tarde':'14h x 23h','Noite':'23h x 07h','A/B':'07h x 19h','B/C':'14h x 02h','C/D':'19h x 07h','D/A':'23h x 11h'};
+    document.getElementById('horario').value = horarios[this.value] || '';
+  });
+  document.getElementById('horario').value = '07h x 16h';
+
+  // ── Tipo inicial/final ────────────────────────────────────────────────────
+  function setTipo(t) {
+    tipo = t;
+    document.getElementById('tabInicial').className = 'type-tab' + (t==='inicial'?' active-inicial':'');
+    document.getElementById('tabFinal').className   = 'type-tab' + (t==='final'  ?' active-final':'');
+    // Ajusta label do botão
+    document.getElementById('btnSubmit').textContent = t === 'inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
+    // Mostra/oculta status por OS
+    document.querySelectorAll('.os-status-wrap').forEach(el => {
+      el.style.display = t === 'final' ? '' : 'none';
+    });
+  }
+
+  // ── Colaboradores ─────────────────────────────────────────────────────────
+  function addColab() {
+    const list = document.getElementById('colabList');
+    if (list.children.length >= MAX_COLAB) return;
+    const idx = list.children.length;
+    const wrap = document.createElement('div');
+    wrap.className = 'colab-wrap';
+    wrap.innerHTML = `
+      <div class="colab-row">
+        <input type="number" inputmode="numeric" placeholder="${idx===0?'Responsável':'Colaborador '+(idx+1)}"
+          oninput="lookupColab(this)" class="colab-mat"/>
+        ${idx>0?'<button class="btn-remove" onclick="removeColab(this)">✕</button>':''}
+      </div>
+      <div class="colab-hint"></div>
+    `;
+    list.appendChild(wrap);
+    document.getElementById('btnAddColab').style.display = list.children.length >= MAX_COLAB ? 'none' : '';
+  }
+
+  function removeColab(btn) {
+    btn.closest('.colab-wrap').remove();
+    document.getElementById('btnAddColab').style.display = '';
+  }
+
+  async function lookupColab(inp) {
+    const mat = inp.value.trim();
+    const hint = inp.closest('.colab-wrap').querySelector('.colab-hint');
+    if (mat.length >= 4) {
+      const {data} = await fetch('/api/colaborador/'+mat).then(r=>r.json());
+      if (data) { inp.className='colab-mat ok'; hint.className='colab-hint ok'; hint.textContent='✓ '+data.nome; }
+      else       { inp.className='colab-mat err';hint.className='colab-hint err';hint.textContent='✗ Matrícula não encontrada'; }
+    } else { inp.className='colab-mat'; hint.className='colab-hint'; hint.textContent=''; }
+  }
+
+  function getColabs() {
+    return [...document.querySelectorAll('.colab-mat')].map(i=>i.value.trim()).filter(Boolean);
+  }
+
+  // ── OS / Atividades ───────────────────────────────────────────────────────
+  let osCount = 0;
+  function addOS() {
+    osCount++;
+    const n = osCount;
+    const list = document.getElementById('osList');
+    const subOptions = SUBESTACOES.map(s=>`<option value="${s}">${s}</option>`).join('');
+    const item = document.createElement('div');
+    item.className = 'os-item';
+    item.id = 'os-'+n;
+    item.innerHTML = `
+      <div class="os-item-header">
+        <span class="os-item-num">🧰 Atividade ${n}</span>
+        ${n>1?'<button class="btn-remove" onclick="removeOS('+n+')">✕ Remover</button>':''}
+      </div>
+      <div class="field">
+        <label>Nº da Ordem de Serviço</label>
+        <input type="text" class="os-num-input" placeholder="Ex: 3257260658" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label>Subestação</label>
+        <select class="os-sub-input">${subOptions}</select>
+      </div>
+      <div class="field">
+        <label>Descrição da atividade</label>
+        <textarea class="os-desc-input" placeholder="Descreva o que será/foi feito..."></textarea>
+      </div>
+      <div class="os-status-wrap field" style="display:${tipo==='final'?'':'none'}">
+        <label>Status</label>
+        <select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">
+          <option value="Andamento">Andamento</option>
+          <option value="Concluído">Concluído</option>
+          <option value="Cancelado">Cancelado</option>
+        </select>
+      </div>
+    `;
+    list.appendChild(item);
+  }
+
+  function removeOS(n) { document.getElementById('os-'+n)?.remove(); }
+
+  function updateStatusStyle(sel) {
+    sel.className = 'os-status-input status-select status-'+sel.value;
+  }
+
+  function getOSList() {
+    return [...document.querySelectorAll('.os-item')].map(item => ({
+      os:      item.querySelector('.os-num-input').value.trim(),
+      unidade: item.querySelector('.os-sub-input').value,
+      servico: item.querySelector('.os-desc-input').value.trim(),
+      status:  item.querySelector('.os-status-input')?.value || (tipo==='inicial'?'Andamento':'Andamento'),
+    })).filter(o => o.servico || o.os);
+  }
+
+  // ── Trajeto ───────────────────────────────────────────────────────────────
+  let trajetoCount = 0;
+  const TIPOS_TRAJETO = ['Saída da base','Chegada na base','Saída para SE','Chegada na SE','Deslocamento'];
+
+  function addTrajeto() {
+    trajetoCount++;
+    const n = trajetoCount;
+    const subOptions = SUBESTACOES.map(s=>`<option value="${s}">${s}</option>`).join('');
+    const tipoOptions = TIPOS_TRAJETO.map(t=>`<option>${t}</option>`).join('');
+    const list = document.getElementById('trajetoList');
+    const item = document.createElement('div');
+    item.className = 'trajeto-item';
+    item.id = 'traj-'+n;
+    item.innerHTML = `
+      <div class="trajeto-row">
+        <select class="traj-tipo">${tipoOptions}</select>
+        <input type="time" class="traj-hora" style="max-width:110px"/>
+        <button class="btn-remove" onclick="removeTrajeto(${n})">✕</button>
+      </div>
+      <div class="trajeto-row traj-se-row">
+        <select class="traj-se" style="flex:1">${subOptions}</select>
+        <span style="font-size:.75rem;color:var(--muted);white-space:nowrap">SE</span>
+      </div>
+    `;
+    // Mostra/oculta campo SE conforme o tipo
+    const tipoSel = item.querySelector('.traj-tipo');
+    const seRow   = item.querySelector('.traj-se-row');
+    const toggleSe = () => {
+      seRow.style.display = tipoSel.value.includes('SE') || tipoSel.value === 'Deslocamento' ? '' : 'none';
+    };
+    tipoSel.addEventListener('change', toggleSe);
+    toggleSe();
+    // Hora atual como default
+    item.querySelector('.traj-hora').value = new Date().toTimeString().slice(0,5);
+    list.appendChild(item);
+  }
+
+  function removeTrajeto(n) { document.getElementById('traj-'+n)?.remove(); }
+
+  function getTrajetoStr() {
+    const items = [...document.querySelectorAll('.trajeto-item')].map(item => {
+      const tipo = item.querySelector('.traj-tipo').value;
+      const hora = item.querySelector('.traj-hora').value;
+      const se   = item.querySelector('.traj-se');
+      const seVal = se && se.closest('.traj-se-row').style.display !== 'none' ? se.value : '';
+      return `${tipo}${seVal ? ' ' + seVal : ''}${hora ? ' ' + hora : ''}`;
+    }).filter(Boolean);
+    return items.join(' | ');
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+  async function submeter() {
+    const btn = document.getElementById('btnSubmit');
+    const osList = getOSList();
+    const colabs = getColabs();
+
+    if (!colabs.length)  { showResult('Informe pelo menos um colaborador.', 'err'); return; }
+    if (!osList.length)  { showResult('Adicione pelo menos uma atividade.', 'err'); return; }
+    if (osList.some(o=>!o.servico)) { showResult('Preencha a descrição de todas as atividades.', 'err'); return; }
+
+    btn.disabled = true; btn.textContent = '⏳ Registrando...';
+
+    // Busca nomes dos colaboradores
+    const membros = [];
+    for (const mat of colabs) {
+      const {data} = await fetch('/api/colaborador/'+mat).then(r=>r.json()).catch(()=>({data:null}));
+      if (!data) { showResult(`Matrícula ${mat} não encontrada. Corrija e tente novamente.`, 'err'); btn.disabled=false; btn.textContent = tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão'; return; }
+      membros.push(data.nome);
+    }
+
+    const dataInput = document.getElementById('data').value;
+    const [y,m,d] = dataInput.split('-');
+    const dataFmt = `${d}/${m}/${y}`;
+    const trajeto = getTrajetoStr();
+
+    const payload = {
+      tipo,
+      guarda:     document.getElementById('guarda').value,
+      horario:    document.getElementById('horario').value,
+      dia_semana: document.getElementById('diaSemana').value,
+      data:       dataFmt,
+      equipe:     membros.join(', '),
+      telefone:   document.getElementById('telefone').value.trim(),
+      veiculo:    document.getElementById('veiculo').value.trim(),
+      trajeto,
+      ordens:     osList,
+    };
+
+    try {
+      const res = await fetch('/api/atividade', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      }).then(r=>r.json());
+
+      if (!res.ok) throw new Error(res.error || 'Erro desconhecido');
+
+      const registradas = res.registradas || [];
+      showResult(
+        `✅ ${tipo==='inicial'?'Início':'Conclusão'} registrado!\n` +
+        `Equipe: ${membros.join(', ')}\n` +
+        registradas.map(r=>`• ${r.unidade} — ${r.os} — ${r.status}`).join('\n'),
+        'ok'
+      );
+    } catch(err) {
+      showResult('❌ Erro: ' + err.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = tipo==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
+    }
+  }
+
+  function showResult(msg, type) {
+    const el = document.getElementById('result');
+    el.textContent = msg; el.style.display = 'block'; el.className = 'result ' + type;
+    el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+</script>
+</body>
+</html>
