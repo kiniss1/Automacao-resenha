@@ -12,6 +12,7 @@
       --green-bg:#052e16;--orange-bg:#431407;--gray-bg:#1e293b;
     }
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+    body.light{--bg:#f1f5f9;--surface:#ffffff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--green-bg:#dcfce7;--orange-bg:#ffedd5;--gray-bg:#f1f5f9;}
 
     header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
     .header-left h1{font-size:1.2rem;font-weight:700}
@@ -78,10 +79,12 @@
     <h1>🔧 Operação</h1>
     <span>OOMC — Check-in / Check-out de Colaboradores</span>
   </div>
-  <div class="nav-links">
+  <div style="display:flex;align-items:center;gap:8px">
+    <button id="btnTema" onclick="toggleTema()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:.8rem;cursor:pointer">🌙 Escuro</button>
+    <div class="nav-links">
     <a href="/" class="nav-link">🔧 Manutenção</a>
     <a href="/manutencao.html" class="nav-link active">⚙️ Operação</a>
-  </div>
+  </div></div>
 </header>
 
 <div class="stats-bar">
@@ -153,6 +156,17 @@
     btn.style.borderColor = hidden ? 'var(--border)' : 'var(--primary)';
     btn.style.color = hidden ? 'var(--muted)' : 'var(--primary)';
     localStorage.setItem('qrVisible', hidden ? '1' : '0');
+  }
+
+  function toggleTema(){
+    const isLight = document.body.classList.toggle('light');
+    const btn = document.getElementById('btnTema');
+    btn.textContent = isLight ? '🌑 Escuro' : '🌙 Escuro';
+    localStorage.setItem('tema_op', isLight ? 'light' : 'dark');
+  }
+  if(localStorage.getItem('tema_op')==='light'){
+    document.body.classList.add('light');
+    document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('btnTema');if(b)b.textContent='🌑 Escuro';});
   }
 
   async function init() {
