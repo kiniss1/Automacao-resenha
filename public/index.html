@@ -215,6 +215,13 @@
   }
   let _debounce, _unidades = new Set(), _currentId = null, _currentOs = null;
 
+  function toggleCollapse(id){
+    const card = document.getElementById('card-'+id);
+    if (!card) return;
+    const isCollapsed = card.classList.toggle('collapsed');
+    card.querySelector('.btn-collapse').textContent = isCollapsed ? '+' : '−';
+  }
+
   function e(s){ return String(s||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 
   function toast(msg, type='ok'){
@@ -296,8 +303,14 @@
       const active=os.status===s;
       return '<button class="btn-status'+(active?' active-'+s:'')+'" onclick="event.stopPropagation();updateStatus('+os.id+',\''+s+'\')" '+(active?'disabled':'')+'>'+s+'</button>';
     }).join('');
-    return '<div class="os-card" id="card-'+os.id+'" onclick="openModal('+os.id+')">'+
-      '<div class="card-header"><div class="unidade">'+e(os.unidade)+'</div><div class="os-num">'+e(displayOs(os.os))+'</div></div>'+
+    return '<div class="os-card" id="card-'+os.id+'">'+
+      '<div class="card-header-row">'+
+        '<div class="card-header" onclick="openModal('+os.id+')" style="flex:1;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
+          '<div class="unidade">'+e(os.unidade)+'</div>'+
+          (displayOs(os.os)?'<div class="os-num">'+e(displayOs(os.os))+'</div>':'')+
+        '</div>'+
+        '<button class="btn-collapse" onclick="toggleCollapse('+os.id+')" title="Minimizar">−</button>'+
+      '</div>'+
       '<div class="card-servico">'+principal+'</div>'+
       (os.equipe  ?'<div class="card-row">👷 '+e(os.equipe)+'</div>':'')+
       (os.veiculo ?'<div class="card-row">🚔 '+e(os.veiculo)+'</div>':'')+
