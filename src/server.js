@@ -192,6 +192,58 @@ function startServer() {
     } catch(err) { res.status(500).send(err.message); }
   });
 
+  // ── Registro de atividade via formulário web ──────────────────────────────
+  app.post('/api/atividade', (req, res) => {
+    try {
+      const { tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, trajeto, ordens } = req.body;
+
+      if (!ordens || !ordens.length) return res.status(400).json({ ok: false, error: 'Nenhuma atividade informada.' });
+
+      const registradas = [];
+
+      for (const o of ordens) {
+        if (!o.servico) continue;
+
+        // Gera ID estável (número da OS ou hash do texto)
+        let osId = o.os && o.os.trim() ? o.os.trim() : null;
+        if (!osId) {
+          const norm = (o.servico || '').toLowerCase().replace(/[^a-z0-9\s]/g,'').trim().replace(/\s+/g,' ');
+          const prefixo = norm.split(' ').slice(0,3).join('-').toUpperCase().substring(0,20);
+          const h = norm.split('').reduce((h,c) => (((h<<5)+h)+c.charCodeAt(0))|0, 5381);
+          osId = prefixo + '-' + Math.abs(h).toString(36).toUpperCase();
+        }
+
+        // Monta serviço com trajeto se houver
+        const servicoFinal = trajeto ? o.servico + ' | Trajeto: ' + trajeto : o.servico;
+        const status = tipo === 'final' ? (o.status || 'Concluído') : 'Andamento';
+
+        db.inserirOS({
+          os:          osId,
+          unidade:     o.unidade || '—',
+          equipe,
+          veiculo:     veiculo || null,
+          servico:     servicoFinal,
+          status,
+          data:        data || null,
+          guarda:      guarda || null,
+          horario:     horario || null,
+          dia_semana:  dia_semana || null,
+          telefone:    telefone || null,
+          subestacoes: o.unidade || null,
+          saida_base:  null,
+          chegada_base: null,
+        });
+
+        registradas.push({ os: osId, unidade: o.unidade, status });
+      }
+
+      res.json({ ok: true, registradas });
+    } catch (err) {
+      console.error('[API] POST /api/atividade:', err.message);
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
   app.get('/api/bot-status', (_req, res) => {
     res.json({ ready: state.isReady(), hasQR: !!state.getQR() });
   });
