@@ -12,6 +12,7 @@
       --green-bg:#052e16;--red-bg:#450a0a;--orange-bg:#431407;--gray-bg:#1e293b;
     }
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px;display:flex;justify-content:center}
+    body.light{--bg:#f1f5f9;--surface:#ffffff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--green-bg:#dcfce7;--orange-bg:#ffedd5;--gray-bg:#f1f5f9;--red-bg:#fee2e2;}
     .page{width:100%;max-width:520px;display:flex;flex-direction:column;gap:0}
 
     /* Header */
@@ -89,16 +90,15 @@
     .result.err {background:var(--red-bg);   border:1px solid #7f1d1d; color:var(--red);  display:block}
     .result.warn{background:var(--orange-bg);border:1px solid #7c2d12; color:var(--orange);display:block}
 
-    .nav-back{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--muted);font-size:.82rem;text-decoration:none;transition:color .15s}
-    .nav-back:hover{color:var(--text)}
   </style>
 </head>
 <body>
 <div class="page">
 
-  <a href="/" class="nav-back">← Voltar ao Painel</a>
-
   <div class="page-header">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button id="btnTema" onclick="toggleTema()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer">🌙 Escuro</button>
+    </div>
     <h1>⚡ Registro de Atividade</h1>
     <p>OOMC — Manutenção Alta Tensão</p>
   </div>
@@ -120,10 +120,7 @@
           <option value="Manhã">Manhã</option>
           <option value="Tarde">Tarde</option>
           <option value="Noite">Noite</option>
-          <option value="A/B">A/B</option>
-          <option value="B/C">B/C</option>
-          <option value="C/D">C/D</option>
-          <option value="D/A">D/A</option>
+          <option value="Técnicos da Guarda">Técnicos da Guarda</option>
         </select>
       </div>
       <div class="field">
@@ -202,6 +199,17 @@
   const MAX_COLAB = 6;
 
   // ── Init ──────────────────────────────────────────────────────────────────
+  function toggleTema(){
+    const isLight = document.body.classList.toggle('light');
+    const btn = document.getElementById('btnTema');
+    btn.textContent = isLight ? '🌑 Escuro' : '🌙 Escuro';
+    localStorage.setItem('tema_atv', isLight ? 'light' : 'dark');
+  }
+  if(localStorage.getItem('tema_atv')==='light'){
+    document.body.classList.add('light');
+    document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('btnTema');if(b)b.textContent='🌑 Escuro';});
+  }
+
   fetch('/api/subestacoes').then(r=>r.json()).then(({data}) => {
     SUBESTACOES = data;
     addColab();
@@ -217,7 +225,7 @@
 
   // Horário por guarda
   document.getElementById('guarda').addEventListener('change', function() {
-    const horarios = {'Manhã':'07h x 16h','Tarde':'14h x 23h','Noite':'23h x 07h','A/B':'07h x 19h','B/C':'14h x 02h','C/D':'19h x 07h','D/A':'23h x 11h'};
+    const horarios = {'Manhã':'07h x 16h','Tarde':'14h x 23h','Noite':'23h x 07h','Técnicos da Guarda':''};
     document.getElementById('horario').value = horarios[this.value] || '';
   });
   document.getElementById('horario').value = '07h x 16h';
