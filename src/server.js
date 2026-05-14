@@ -201,8 +201,15 @@ function startServer() {
 
       const registradas = [];
 
-      console.log('[ATIVIDADE] Recebido', ordens.length, 'ordens, tipo:', tipo);
+      // Deduplica ordens pelo código de OS antes de processar
+      const ordensDedup = [];
+      const osVistas = new Set();
       for (const o of ordens) {
+        const key = (o.os || '').trim() || (o.servico || '').substring(0, 30);
+        if (!osVistas.has(key)) { osVistas.add(key); ordensDedup.push(o); }
+      }
+      console.log('[ATIVIDADE] Recebido', ordens.length, 'ordens,', ordensDedup.length, 'únicas, tipo:', tipo);
+      for (const o of ordensDedup) {
         if (!o.servico && !o.descricao_inicial && !o.descricao_final) continue;
 
         let osId = o.os && o.os.trim() ? o.os.trim() : null;
