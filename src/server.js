@@ -244,6 +244,50 @@ function startServer() {
     }
   });
 
+  // ── APR upload/serve ──────────────────────────────────────────────────────
+  const multer = require('multer');
+  const APR_DIR = process.env.APR_DIR || '/data/apr';
+  require('fs').mkdirSync(APR_DIR, { recursive: true });
+
+  const storage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, APR_DIR),
+    filename: (req, _file, cb) => cb(null, 'apr_' + req.params.id + '.jpg'),
+  });
+  const upload = multer({
+    storage,
+    limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
+    fileFilter: (_req, file, cb) => {
+      cb(null, file.mimetype.startsWith('image/'));
+    },
+  });
+
+  app.post('/api/os/:id/apr', upload.single('apr'), (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado.' });
+      const aprPath = req.file.path;
+      db.updateAprPath(id, aprPath);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  app.get('/api/os/:id/apr', (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const os = db.listarOS().find(o => o.id === id);
+      if (!os || !os.apr_path) return res.status(404).json({ ok: false, error: 'APR não encontrada.' });
+      const fs = require('fs');
+      if (!fs.existsSync(os.apr_path)) return res.status(404).json({ ok: false, error: 'Arquivo não encontrado.' });
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      fs.createReadStream(os.apr_path).pipe(res);
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
   app.get('/api/bot-status', (_req, res) => {
     res.json({ ready: state.isReady(), hasQR: !!state.getQR() });
   });
