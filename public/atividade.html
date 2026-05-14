@@ -335,16 +335,21 @@
     if(os.veiculo) document.getElementById('veiculo').value=os.veiculo;
     if(os.telefone) document.getElementById('telefone').value=os.telefone;
 
-    // Preenche colaboradores se lista estiver vazia / padrão
+    // Preenche colaboradores — mostra como texto fixo (nomes, não matrícula)
     if(os.equipe){
       var list=document.getElementById('colabList');
       list.innerHTML='';
+      document.getElementById('btnAddColab').style.display='none';
       var nomes=os.equipe.split(',').map(function(n){return n.trim();}).filter(Boolean);
-      nomes.forEach(function(nome,i){
+      nomes.forEach(function(nome){
         var wrap=document.createElement('div');
         wrap.className='colab-wrap';
-        wrap.innerHTML='<div class="colab-row"><input class="colab-mat ok" readonly value="'+nome+'" style="opacity:.7"/></div>'+
-          '<div class="colab-hint ok">✓ '+nome+'</div>';
+        wrap.style.marginBottom='4px';
+        wrap.innerHTML=
+          '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.9rem;color:var(--text);display:flex;align-items:center;gap:8px">'+
+            '<span style="color:var(--green);font-size:.85rem">✓</span>'+
+            '<span>'+nome+'</span>'+
+          '</div>';
         list.appendChild(wrap);
       });
     }
@@ -354,15 +359,30 @@
     if(os.servico&&os.servico.includes('Trajeto:')){
       trajetoStr=os.servico.split('Trajeto:')[1].trim().split(' | ')[0];
     }
-    if(trajetoStr){
-      var tList=document.getElementById('trajetoList');
-      // Mostra trajeto do início como somente leitura
-      var div=document.createElement('div');
-      div.className='trajeto-locked';
-      div.id='trajetoInicial';
-      div.innerHTML='<strong style="font-size:.72rem;color:var(--muted)">IDA (registrado no início)</strong><br>'+trajetoStr.replace(/ \| /g,'<br>');
-      tList.insertBefore(div,tList.firstChild);
-    }
+    // Sempre mostra o bloco do trajeto inicial (mesmo sem dados)
+    var tList=document.getElementById('trajetoList');
+    var div=document.createElement('div');
+    div.className='trajeto-locked';
+    div.id='trajetoInicial';
+    div.innerHTML=
+      '<div style="font-size:.7rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">'+
+        '📍 Trajeto da Ida (registrado no início)'+
+      '</div>'+
+      (trajetoStr
+        ? trajetoStr.split(' | ').map(function(t,i){
+            return '<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text)">'+
+              '<span style="color:var(--muted);font-size:.7rem;margin-right:6px">'+(i+1)+'.</span>'+t+
+            '</div>';
+          }).join('')
+        : '<span style="color:var(--muted);font-size:.82rem">Nenhum trajeto registrado no início</span>'
+      );
+    tList.insertBefore(div,tList.firstChild);
+    // Add visual separator before new points
+    var sep=document.createElement('div');
+    sep.style.cssText='font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px';
+    sep.textContent='↩ Trajeto de Retorno — adicione abaixo';
+    sep.id='trajetoRetornoLabel';
+    tList.appendChild(sep);
 
     // Trava todos os campos preenchidos
     lockAll();
