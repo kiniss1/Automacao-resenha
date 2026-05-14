@@ -30,7 +30,8 @@
 
     .card{background:var(--surface);border:1px solid var(--border);padding:18px 24px;display:flex;flex-direction:column;gap:12px;border-top:none}
     .card:last-of-type{border-radius:0 0 14px 14px}
-    .section-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding-bottom:6px;border-bottom:1px solid var(--border)}
+    .section-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .locked-badge{font-size:.65rem;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-weight:500}
 
     .field{display:flex;flex-direction:column;gap:5px}
     .field label{font-size:.78rem;font-weight:600;color:var(--muted)}
@@ -39,16 +40,26 @@
     .field textarea{resize:none;height:68px}
     .field-row{display:flex;gap:10px}
     .field-row .field{flex:1}
-    .field input[readonly],.field textarea[readonly]{opacity:.55;cursor:not-allowed}
 
-    /* Busca de OS no modo Final */
-    .os-lookup-box{background:var(--bg);border:2px solid var(--orange);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
-    .os-lookup-box h3{font-size:.85rem;font-weight:700;color:var(--orange)}
-    .os-lookup-input{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px;font-size:1rem;outline:none;width:100%;transition:border-color .15s;font-family:inherit}
-    .os-lookup-input:focus{border-color:var(--primary)}
-    .os-lookup-input.ok{border-color:var(--green)}
-    .os-lookup-input.err{border-color:var(--red)}
-    .os-found-info{background:var(--green-bg);border:1px solid #14532d;border-radius:8px;padding:10px 12px;font-size:.82rem;color:var(--green);line-height:1.6}
+    /* Locked fields */
+    .locked input,.locked select,.locked textarea{
+      opacity:.6;cursor:not-allowed;pointer-events:none;
+      border-color:var(--border)!important;background:var(--bg)!important;
+    }
+    .locked{opacity:.85}
+
+    /* OS Lookup */
+    .lookup-card{background:var(--surface);border:2px solid var(--orange);border-left:4px solid var(--orange);padding:18px 24px;display:flex;flex-direction:column;gap:12px;border-top:none}
+    .lookup-title{font-size:.85rem;font-weight:700;color:var(--orange);display:flex;align-items:center;gap:6px}
+    .lookup-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px;font-size:1.1rem;outline:none;width:100%;transition:border-color .15s;font-family:monospace;font-weight:600;letter-spacing:.05em}
+    .lookup-input:focus{border-color:var(--orange)}
+    .lookup-input.ok{border-color:var(--green);color:var(--green)}
+    .lookup-input.err{border-color:var(--red)}
+    .lookup-result{border-radius:8px;padding:10px 12px;font-size:.82rem;line-height:1.7}
+    .lookup-result.ok{background:var(--green-bg);border:1px solid #14532d;color:var(--green)}
+    .lookup-result.err{background:var(--red-bg);border:1px solid #7f1d1d;color:var(--red)}
+    .btn-load{background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px;font-size:.9rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s}
+    .btn-load:hover{opacity:.88}
 
     /* Colaboradores */
     .colab-wrap{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
@@ -76,8 +87,9 @@
     .trajeto-item select{flex:1;min-width:140px}
     .trajeto-item input[type=time]{width:100px}
     .trajeto-item select.sub-sel{flex:0 0 90px}
+    .trajeto-locked{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:6px;border-left:3px solid var(--border)}
 
-    /* Status select */
+    /* Status */
     .status-select{appearance:none;cursor:pointer;font-weight:600}
     .status-Andamento{border-color:var(--orange)!important;color:var(--orange)!important;background:var(--orange-bg)!important}
     .status-Concluído{border-color:var(--green)!important;color:var(--green)!important;background:var(--green-bg)!important}
@@ -88,13 +100,12 @@
     .btn-submit:hover{opacity:.88}
     .btn-submit:disabled{opacity:.4;cursor:default}
 
-    /* Result */
     #resultArea{display:flex;flex-direction:column;gap:10px;margin-top:4px}
     .result-msg{border-radius:10px;padding:13px 16px;font-size:.88rem;line-height:1.7;white-space:pre-wrap}
     .result-msg.ok {background:var(--green-bg);border:1px solid #14532d;color:var(--green)}
     .result-msg.err{background:var(--red-bg);border:1px solid #7f1d1d;color:var(--red)}
 
-    /* APR cards */
+    /* APR */
     .apr-card{background:var(--surface);border:1px solid var(--orange);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
     .apr-card.done{border-color:var(--green)}
     .apr-card-title{font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:space-between}
@@ -113,102 +124,91 @@
     .btn-apr-send:hover{opacity:.88}
     .btn-apr-send:disabled{opacity:.4;cursor:default}
     .apr-done-msg{text-align:center;color:var(--green);font-size:.85rem;padding:8px}
-
     .btn-tema{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer}
   </style>
 </head>
 <body>
 <div class="page">
-
   <div class="page-header">
-    <div class="page-header-top">
-      <button class="btn-tema" id="btnTema" onclick="toggleTema()">🌙 Escuro</button>
-    </div>
+    <div class="page-header-top"><button class="btn-tema" id="btnTema" onclick="toggleTema()">🌙 Escuro</button></div>
     <h1>⚡ Registro de Atividade</h1>
     <p>OOMC — Manutenção Alta Tensão</p>
   </div>
 
   <div class="type-tabs">
-    <button class="type-tab active-inicial" id="tabInicial" onclick="setTipo('inicial')">▶ Início da Atividade</button>
-    <button class="type-tab" id="tabFinal" onclick="setTipo('final')">◀ Final da Atividade</button>
+    <button class="type-tab active-inicial" id="tabInicial" onclick="setTipo('inicial')">▶ Início</button>
+    <button class="type-tab" id="tabFinal" onclick="setTipo('final')">◀ Final</button>
+  </div>
+
+  <!-- LOOKUP (só no Final) -->
+  <div class="lookup-card" id="lookupCard" style="display:none">
+    <div class="lookup-title">🔍 Digite o número da OS para carregar a atividade</div>
+    <input type="text" class="lookup-input" id="lookupInput" inputmode="numeric"
+      placeholder="Ex: 3257260621" oninput="onLookupInput(this.value)"/>
+    <div id="lookupResult" style="display:none"></div>
   </div>
 
   <!-- Resenha -->
-  <div class="card">
-    <div class="section-label">📋 Resenha</div>
-    <div class="field-row">
-      <div class="field">
-        <label>⚙️ Guarda</label>
-        <select id="guarda" onchange="autoHorario()">
-          <option>Manhã</option><option>Tarde</option><option>Noite</option><option>Técnicos da Guarda</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>⏰ Horário</label>
-        <input type="text" id="horario" placeholder="07h x 16h"/>
-      </div>
+  <div class="card" id="cardResenha">
+    <div class="section-label">
+      📋 Resenha
+      <span class="locked-badge" id="resenhaLockBadge" style="display:none">🔒 Preenchido do início</span>
     </div>
     <div class="field-row">
-      <div class="field">
-        <label>📆 Dia da semana</label>
+      <div class="field"><label>⚙️ Guarda</label>
+        <select id="guarda" onchange="autoHorario()">
+          <option>Manhã</option><option>Tarde</option><option>Noite</option><option>Técnicos da Guarda</option>
+        </select></div>
+      <div class="field"><label>⏰ Horário</label><input type="text" id="horario" placeholder="07h x 16h"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>📆 Dia</label>
         <select id="diaSemana">
           <option>Segunda-feira</option><option>Terça-feira</option><option>Quarta-feira</option>
           <option>Quinta-feira</option><option>Sexta-feira</option><option>Sábado</option><option>Domingo</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>📅 Data</label>
-        <input type="date" id="data"/>
-      </div>
+        </select></div>
+      <div class="field"><label>📅 Data</label><input type="date" id="data"/></div>
     </div>
   </div>
 
   <!-- Equipe -->
-  <div class="card">
-    <div class="section-label">👷 Equipe</div>
-    <div class="field">
-      <label>Colaboradores (matrícula)</label>
+  <div class="card" id="cardEquipe">
+    <div class="section-label">
+      👷 Equipe
+      <span class="locked-badge" id="equipeLockBadge" style="display:none">🔒 Preenchido do início</span>
+    </div>
+    <div class="field"><label>Colaboradores (matrícula)</label>
       <div id="colabList"></div>
       <button class="btn-add" id="btnAddColab" onclick="addColab()">+ Adicionar colaborador</button>
     </div>
     <div class="field-row">
-      <div class="field">
-        <label>📱 Telefone</label>
-        <input type="tel" id="telefone" placeholder="Ex: 98980-0372"/>
-      </div>
-      <div class="field">
-        <label>🚔 Veículo</label>
-        <input type="text" id="veiculo" placeholder="Ex: 4679-5"/>
-      </div>
+      <div class="field"><label>📱 Telefone</label><input type="tel" id="telefone" placeholder="Ex: 98980-0372"/></div>
+      <div class="field"><label>🚔 Veículo</label><input type="text" id="veiculo" placeholder="Ex: 4679-5"/></div>
     </div>
   </div>
 
-  <!-- Atividades (Início) -->
+  <!-- Atividades Início -->
   <div class="card" id="cardOsInicial">
-    <div class="section-label">🧰 Atividades / Ordens de Serviço</div>
+    <div class="section-label">🧰 Atividades</div>
     <div id="osList"></div>
     <button class="btn-add" onclick="addOS()">+ Adicionar atividade</button>
   </div>
 
-  <!-- Atividades (Final) — busca por OS -->
+  <!-- Atividades Final -->
   <div class="card" id="cardOsFinal" style="display:none">
     <div class="section-label">🧰 Finalizar Atividades</div>
-    <div class="os-lookup-box">
-      <h3>🔍 Digite o número da OS para carregar</h3>
-      <input type="text" class="os-lookup-input" id="osLookupInput"
-        inputmode="numeric" placeholder="Ex: 3257260621"
-        oninput="lookupOS(this.value)"/>
-      <div id="osLookupInfo" style="display:none" class="os-found-info"></div>
-    </div>
     <div id="osListFinal"></div>
-    <button class="btn-add" id="btnAddOsFinal" style="display:none" onclick="addOSFinal()">+ Adicionar outra OS</button>
+    <button class="btn-add" id="btnAddOsFinal" style="display:none" onclick="addOutraOS()">+ Carregar outra OS</button>
   </div>
 
   <!-- Trajeto -->
-  <div class="card">
-    <div class="section-label">🗺️ Trajeto</div>
+  <div class="card" id="cardTrajeto">
+    <div class="section-label">
+      🗺️ Trajeto
+      <span class="locked-badge" id="trajetoLockBadge" style="display:none">🔒 + adicione retorno</span>
+    </div>
     <div id="trajetoList"></div>
-    <button class="btn-add" onclick="addTrajeto()">+ Adicionar ponto de trajeto</button>
+    <button class="btn-add" id="btnAddTrajeto" onclick="addTrajeto()">+ Adicionar ponto</button>
   </div>
 
   <!-- Submit -->
@@ -216,436 +216,433 @@
     <button class="btn-submit" id="btnSubmit" onclick="submeter()">▶ Registrar Início</button>
     <div id="resultArea"></div>
   </div>
-
 </div>
+
 <script>
-  var SUBESTACOES = [];
-  var tipo = 'inicial';
-  var MAX_COLAB = 6;
-  var osCount = 0;
-  var trajetoCount = 0;
-  var TIPOS_TRAJETO = ['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
-  var _osFinais = {}; // osCode -> {id, data} from API
-  var _aprFiles = {};
+  var SUBESTACOES=[], tipo='inicial', MAX_COLAB=6, osCount=0, trajetoCount=0;
+  var TIPOS_TRAJETO=['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
+  var _osFinaisPendente=null, _osFinaisCarregados={}, _aprFiles={};
+  var _lookupTimer=null, _finalLocked=false;
 
   // ── Tema ──────────────────────────────────────────────────────────────────
   function toggleTema(){
-    var isLight = document.body.classList.toggle('light');
-    document.getElementById('btnTema').textContent = isLight ? '🌑 Escuro' : '🌙 Escuro';
-    localStorage.setItem('tema_atv', isLight ? 'light' : 'dark');
+    var l=document.body.classList.toggle('light');
+    document.getElementById('btnTema').textContent=l?'🌑 Escuro':'🌙 Escuro';
+    localStorage.setItem('tema_atv',l?'light':'dark');
   }
-  if (localStorage.getItem('tema_atv') === 'light') document.body.classList.add('light');
+  if(localStorage.getItem('tema_atv')==='light') document.body.classList.add('light');
 
   // ── Init ──────────────────────────────────────────────────────────────────
   function autoHorario(){
-    var h = {'Manhã':'07h x 16h','Tarde':'14h x 23h','Noite':'23h x 07h','Técnicos da Guarda':''};
-    document.getElementById('horario').value = h[document.getElementById('guarda').value] || '';
+    var h={'Manhã':'07h x 16h','Tarde':'14h x 23h','Noite':'23h x 07h','Técnicos da Guarda':''};
+    document.getElementById('horario').value=h[document.getElementById('guarda').value]||'';
   }
+  var hoje=new Date();
+  document.getElementById('data').value=hoje.toISOString().split('T')[0];
+  var DIAS=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  document.getElementById('diaSemana').value=DIAS[hoje.getDay()];
+  document.getElementById('horario').value='07h x 16h';
 
-  var hoje = new Date();
-  document.getElementById('data').value = hoje.toISOString().split('T')[0];
-  var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  document.getElementById('diaSemana').value = dias[hoje.getDay()];
-  document.getElementById('horario').value = '07h x 16h';
+  fetch('/api/subestacoes').then(function(r){return r.json();}).then(function(res){
+    SUBESTACOES=res.data||[];
+    addColab(); addOS(); addTrajeto();
+  }).catch(function(){addColab();addOS();addTrajeto();});
 
-  fetch('/api/subestacoes').then(function(r){ return r.json(); }).then(function(res){
-    SUBESTACOES = res.data || [];
-    addColab();
-    addOS();
-    addTrajeto();
-  }).catch(function(){ addColab(); addOS(); addTrajeto(); });
-
-  // ── Tipo inicial/final ────────────────────────────────────────────────────
-  function setTipo(t) {
-    tipo = t;
-    document.getElementById('tabInicial').className = 'type-tab' + (t==='inicial' ? ' active-inicial' : '');
-    document.getElementById('tabFinal').className   = 'type-tab' + (t==='final'   ? ' active-final'   : '');
-    document.getElementById('btnSubmit').textContent = t==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
-    document.getElementById('cardOsInicial').style.display = t==='inicial' ? '' : 'none';
-    document.getElementById('cardOsFinal').style.display   = t==='final'   ? '' : 'none';
-    // Reset final OS list when switching
-    if (t === 'final') {
-      document.getElementById('osListFinal').innerHTML = '';
-      document.getElementById('osLookupInput').value = '';
-      document.getElementById('osLookupInput').className = 'os-lookup-input';
-      document.getElementById('osLookupInfo').style.display = 'none';
-      _osFinais = {};
+  // ── Tipo ──────────────────────────────────────────────────────────────────
+  function setTipo(t){
+    tipo=t;
+    document.getElementById('tabInicial').className='type-tab'+(t==='inicial'?' active-inicial':'');
+    document.getElementById('tabFinal').className='type-tab'+(t==='final'?' active-final':'');
+    document.getElementById('btnSubmit').textContent=t==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';
+    document.getElementById('cardOsInicial').style.display=t==='inicial'?'':'none';
+    document.getElementById('cardOsFinal').style.display=t==='final'?'':'none';
+    document.getElementById('lookupCard').style.display=t==='final'?'':'none';
+    if(t==='final'){
+      // Reset
+      document.getElementById('lookupInput').value='';
+      document.getElementById('lookupInput').className='lookup-input';
+      document.getElementById('lookupResult').style.display='none';
+      document.getElementById('osListFinal').innerHTML='';
+      document.getElementById('btnAddOsFinal').style.display='none';
+      document.getElementById('resultArea').innerHTML='';
+      _osFinaisCarregados={}; _finalLocked=false;
+      unlockAll();
     }
-    // Reset result area
-    document.getElementById('resultArea').innerHTML = '';
   }
 
-  // ── Busca OS pelo número no modo Final ────────────────────────────────────
-  var _lookupTimer = null;
-  function lookupOS(val) {
+  // ── Lock/unlock fields ────────────────────────────────────────────────────
+  function lockAll(){
+    ['cardResenha','cardEquipe'].forEach(function(id){
+      document.getElementById(id).classList.add('locked');
+    });
+    document.getElementById('resenhaLockBadge').style.display='';
+    document.getElementById('equipeLockBadge').style.display='';
+    document.getElementById('trajetoLockBadge').style.display='';
+    // Lock existing trajeto items
+    document.querySelectorAll('.trajeto-item').forEach(function(el){
+      el.querySelectorAll('select,input').forEach(function(f){ f.disabled=true; });
+      el.querySelector('.btn-remove').style.display='none';
+    });
+    _finalLocked=true;
+  }
+  function unlockAll(){
+    ['cardResenha','cardEquipe'].forEach(function(id){
+      document.getElementById(id).classList.remove('locked');
+    });
+    document.getElementById('resenhaLockBadge').style.display='none';
+    document.getElementById('equipeLockBadge').style.display='none';
+    document.getElementById('trajetoLockBadge').style.display='none';
+  }
+
+  // ── OS Lookup ─────────────────────────────────────────────────────────────
+  function onLookupInput(val){
     clearTimeout(_lookupTimer);
-    var inp = document.getElementById('osLookupInput');
-    var info = document.getElementById('osLookupInfo');
-    if (!val || val.length < 3) {
-      inp.className = 'os-lookup-input';
-      info.style.display = 'none';
-      return;
-    }
-    _lookupTimer = setTimeout(function(){
-      fetch('/api/os').then(function(r){ return r.json(); }).then(function(res){
-        var os = res.data.find(function(o){ return o.os === val.trim(); });
-        if (os) {
-          inp.className = 'os-lookup-input ok';
-          info.style.display = 'block';
-          info.innerHTML =
-            '<strong>' + os.os + '</strong> — ' + (os.unidade||'') + '<br>' +
-            '👷 ' + (os.equipe||'—') + '<br>' +
-            '📆 ' + (os.data||'—') + '<br>' +
-            '📝 ' + ((os.descricao_inicial||os.servico||'—').split(' | ')[0]) + '<br>' +
-            '<span style="font-size:.72rem;opacity:.8">Clique em "Carregar" para preencher o formulário</span>';
-          // Auto-load button
-          info.innerHTML += '<button onclick="carregarOS()" style="margin-top:8px;background:var(--green);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:.82rem;font-weight:600;cursor:pointer;width:100%">✅ Carregar atividade</button>';
-          _osFinais['_pending'] = os;
+    var inp=document.getElementById('lookupInput');
+    var res=document.getElementById('lookupResult');
+    if(!val||val.trim().length<3){inp.className='lookup-input';res.style.display='none';return;}
+    _lookupTimer=setTimeout(function(){
+      fetch('/api/os').then(function(r){return r.json();}).then(function(data){
+        var os=data.data.find(function(o){return o.os===val.trim();});
+        if(os){
+          inp.className='lookup-input ok';
+          _osFinaisPendente=os;
+          var planejado=(os.descricao_inicial||os.servico||'—').split(' | ')[0];
+          res.className='lookup-result ok';
+          res.style.display='block';
+          res.innerHTML=
+            '<strong>OS '+os.os+'</strong> — '+(os.unidade||'')+'<br>'+
+            '👷 '+(os.equipe||'—')+'<br>'+
+            '📆 '+(os.dia_semana||'')+(os.data?' — '+os.data:'')+'<br>'+
+            '🚔 '+(os.veiculo||'—')+'<br>'+
+            '📝 '+planejado+'<br>'+
+            (os.servico&&os.servico.includes('Trajeto:')?'🗺️ '+os.servico.split('Trajeto:')[1].trim()+'<br>':'')+
+            '<button class="btn-load" onclick="carregarOS()" style="margin-top:8px">✅ Carregar esta atividade</button>';
         } else {
-          inp.className = 'os-lookup-input err';
-          info.style.display = 'block';
-          info.innerHTML = '❌ OS não encontrada. Verifique o número.';
-          info.style.background = 'var(--red-bg)';
-          info.style.borderColor = '#7f1d1d';
-          info.style.color = 'var(--red)';
+          inp.className='lookup-input err';
+          res.className='lookup-result err';
+          res.style.display='block';
+          res.textContent='❌ OS "'+val.trim()+'" não encontrada. Verifique o número.';
         }
       }).catch(function(){});
-    }, 500);
+    },600);
   }
 
-  function carregarOS() {
-    var os = _osFinais['_pending'];
-    if (!os) return;
-    // Preenche campos gerais da resenha com dados da OS
-    if (os.guarda)     document.getElementById('guarda').value = os.guarda;
-    if (os.horario)    document.getElementById('horario').value = os.horario;
-    if (os.dia_semana) document.getElementById('diaSemana').value = os.dia_semana;
-    if (os.data) {
-      var parts = os.data.split('/');
-      if (parts.length === 3) document.getElementById('data').value = parts[2]+'-'+parts[1]+'-'+parts[0];
+  function carregarOS(){
+    var os=_osFinaisPendente;
+    if(!os) return;
+
+    // Preenche campos gerais e trava
+    if(os.guarda) document.getElementById('guarda').value=os.guarda;
+    if(os.horario) document.getElementById('horario').value=os.horario;
+    if(os.dia_semana) document.getElementById('diaSemana').value=os.dia_semana;
+    if(os.data){var p=os.data.split('/');if(p.length===3)document.getElementById('data').value=p[2]+'-'+p[1]+'-'+p[0];}
+    if(os.veiculo) document.getElementById('veiculo').value=os.veiculo;
+    if(os.telefone) document.getElementById('telefone').value=os.telefone;
+
+    // Preenche colaboradores se lista estiver vazia / padrão
+    if(os.equipe){
+      var list=document.getElementById('colabList');
+      list.innerHTML='';
+      var nomes=os.equipe.split(',').map(function(n){return n.trim();}).filter(Boolean);
+      nomes.forEach(function(nome,i){
+        var wrap=document.createElement('div');
+        wrap.className='colab-wrap';
+        wrap.innerHTML='<div class="colab-row"><input class="colab-mat ok" readonly value="'+nome+'" style="opacity:.7"/></div>'+
+          '<div class="colab-hint ok">✓ '+nome+'</div>';
+        list.appendChild(wrap);
+      });
     }
-    if (os.veiculo)   document.getElementById('veiculo').value = os.veiculo;
-    if (os.telefone)  document.getElementById('telefone').value = os.telefone;
 
-    // Adiciona OS na lista final
+    // Preenche trajeto da ida e trava
+    var trajetoStr='';
+    if(os.servico&&os.servico.includes('Trajeto:')){
+      trajetoStr=os.servico.split('Trajeto:')[1].trim().split(' | ')[0];
+    }
+    if(trajetoStr){
+      var tList=document.getElementById('trajetoList');
+      // Mostra trajeto do início como somente leitura
+      var div=document.createElement('div');
+      div.className='trajeto-locked';
+      div.id='trajetoInicial';
+      div.innerHTML='<strong style="font-size:.72rem;color:var(--muted)">IDA (registrado no início)</strong><br>'+trajetoStr.replace(/ \| /g,'<br>');
+      tList.insertBefore(div,tList.firstChild);
+    }
+
+    // Trava todos os campos preenchidos
+    lockAll();
+
+    // Adiciona card de OS final
     adicionarOSFinalCard(os);
+    _osFinaisCarregados[os.os]=os;
 
-    // Limpa campo de busca para permitir adicionar outra OS
-    document.getElementById('osLookupInput').value = '';
-    document.getElementById('osLookupInput').className = 'os-lookup-input';
-    document.getElementById('osLookupInfo').style.display = 'none';
-    document.getElementById('btnAddOsFinal').style.display = '';
-    _osFinais[os.os] = os;
-    delete _osFinais['_pending'];
+    // Limpa busca
+    document.getElementById('lookupInput').value='';
+    document.getElementById('lookupInput').className='lookup-input';
+    document.getElementById('lookupResult').style.display='none';
+    document.getElementById('btnAddOsFinal').style.display='';
+    _osFinaisPendente=null;
   }
 
-  function adicionarOSFinalCard(os) {
-    var list = document.getElementById('osListFinal');
-    var idx = list.children.length;
-    var card = document.createElement('div');
-    card.className = 'os-item';
-    card.id = 'os-final-' + os.os.replace(/[^a-z0-9]/gi, '_');
-    var planejado = (os.descricao_inicial || os.servico || '').split(' | ')[0];
-    var subOpts = SUBESTACOES.map(function(s){ return '<option value="'+s+'"'+(s===os.unidade?' selected':'')+'>'+s+'</option>'; }).join('');
-    card.innerHTML =
-      '<div class="os-item-header">' +
-        '<span class="os-item-num">🧰 OS ' + os.os + ' — ' + (os.unidade||'') + '</span>' +
-        '<button class="btn-remove" onclick="this.closest(\'.os-item\').remove()">✕</button>' +
-      '</div>' +
-      '<input type="hidden" class="os-code" value="' + os.os + '"/>' +
-      '<input type="hidden" class="os-db-id" value="' + os.id + '"/>' +
-      '<div class="field">' +
-        '<label style="color:var(--muted)">📋 O que foi planejado (somente leitura)</label>' +
-        '<textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none">' + planejado + '</textarea>' +
-      '</div>' +
-      '<div class="field">' +
-        '<label style="color:var(--green)">✅ O que foi feito</label>' +
-        '<textarea class="os-feito-input" placeholder="Descreva o que foi executado..." rows="3"></textarea>' +
-      '</div>' +
-      '<div class="field">' +
-        '<label>Status</label>' +
-        '<select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">' +
-          '<option value="Andamento">Andamento</option>' +
-          '<option value="Concluído">Concluído</option>' +
-          '<option value="Etapa Concluída">Etapa Concluída</option>' +
-          '<option value="Cancelado">Cancelado</option>' +
-        '</select>' +
+  function adicionarOSFinalCard(os){
+    var list=document.getElementById('osListFinal');
+    var planejado=(os.descricao_inicial||os.servico||'—').split(' | ')[0];
+    var card=document.createElement('div');
+    card.className='os-item';
+    card.id='osf-'+os.os.replace(/[^a-z0-9]/gi,'_');
+    card.innerHTML=
+      '<div class="os-item-header">'+
+        '<span class="os-item-num">🧰 OS '+os.os+' — '+(os.unidade||'')+'</span>'+
+        '<button class="btn-remove" onclick="removerOSFinal(\''+os.os.replace(/'/g,"\\'")+'\')" >✕</button>'+
+      '</div>'+
+      '<input type="hidden" class="os-code" value="'+os.os+'"/>'+
+      '<input type="hidden" class="os-db-id" value="'+os.id+'"/>'+
+      '<div class="field">'+
+        '<label style="color:var(--muted)">📋 O que foi planejado</label>'+
+        '<textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none">'+planejado+'</textarea>'+
+      '</div>'+
+      '<div class="field">'+
+        '<label style="color:var(--green)">✅ O que foi feito <span style="color:var(--red)">*</span></label>'+
+        '<textarea class="os-feito-input" placeholder="Descreva o que foi executado..." rows="3"></textarea>'+
+      '</div>'+
+      '<div class="field">'+
+        '<label>Status</label>'+
+        '<select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">'+
+          '<option value="Andamento">Andamento</option>'+
+          '<option value="Concluído">Concluído</option>'+
+          '<option value="Etapa Concluída">Etapa Concluída</option>'+
+          '<option value="Cancelado">Cancelado</option>'+
+        '</select>'+
       '</div>';
     list.appendChild(card);
-    // Scroll to new card
-    card.scrollIntoView({behavior:'smooth', block:'nearest'});
+    card.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
-  function addOSFinal() {
-    // Shows lookup box again
-    document.getElementById('osLookupInput').focus();
-    document.getElementById('osLookupInput').scrollIntoView({behavior:'smooth'});
+  function removerOSFinal(osCode){
+    var card=document.getElementById('osf-'+osCode.replace(/[^a-z0-9]/gi,'_'));
+    if(card) card.remove();
+    delete _osFinaisCarregados[osCode];
+  }
+
+  function addOutraOS(){
+    document.getElementById('lookupInput').focus();
+    document.getElementById('lookupCard').scrollIntoView({behavior:'smooth'});
   }
 
   // ── Colaboradores ─────────────────────────────────────────────────────────
-  function addColab() {
-    var list = document.getElementById('colabList');
-    if (list.children.length >= MAX_COLAB) return;
-    var idx = list.children.length;
-    var wrap = document.createElement('div');
-    wrap.className = 'colab-wrap';
-    wrap.innerHTML =
-      '<div class="colab-row">' +
-        '<input type="number" inputmode="numeric" placeholder="' + (idx===0?'Responsável':'Colaborador '+(idx+1)) + '"' +
-          ' class="colab-mat" oninput="lookupColab(this)"/>' +
-        (idx > 0 ? '<button class="btn-remove" onclick="removeColab(this)">✕</button>' : '') +
-      '</div>' +
+  function addColab(){
+    var list=document.getElementById('colabList');
+    if(list.children.length>=MAX_COLAB) return;
+    var idx=list.children.length;
+    var wrap=document.createElement('div'); wrap.className='colab-wrap';
+    wrap.innerHTML=
+      '<div class="colab-row">'+
+        '<input type="number" inputmode="numeric" placeholder="'+(idx===0?'Responsável':'Colaborador '+(idx+1))+
+          '" class="colab-mat" oninput="lookupColab(this)"/>'+
+        (idx>0?'<button class="btn-remove" onclick="removeColab(this)">✕</button>':'')+
+      '</div>'+
       '<div class="colab-hint"></div>';
     list.appendChild(wrap);
-    if (list.children.length >= MAX_COLAB) document.getElementById('btnAddColab').style.display = 'none';
+    if(list.children.length>=MAX_COLAB) document.getElementById('btnAddColab').style.display='none';
   }
-
-  function removeColab(btn) { btn.closest('.colab-wrap').remove(); document.getElementById('btnAddColab').style.display = ''; }
-
-  function lookupColab(inp) {
-    var mat = inp.value.trim();
-    var hint = inp.closest('.colab-wrap').querySelector('.colab-hint');
-    if (mat.length >= 4) {
-      fetch('/api/colaborador/' + mat).then(function(r){ return r.json(); }).then(function(res){
-        if (res.data) { inp.className='colab-mat ok'; hint.className='colab-hint ok'; hint.textContent='✓ '+res.data.nome; }
-        else           { inp.className='colab-mat err'; hint.className='colab-hint err'; hint.textContent='✗ Matrícula não encontrada'; }
+  function removeColab(btn){btn.closest('.colab-wrap').remove();document.getElementById('btnAddColab').style.display='';}
+  function lookupColab(inp){
+    var mat=inp.value.trim(), hint=inp.closest('.colab-wrap').querySelector('.colab-hint');
+    if(mat.length>=4){
+      fetch('/api/colaborador/'+mat).then(function(r){return r.json();}).then(function(res){
+        if(res.data){inp.className='colab-mat ok';hint.className='colab-hint ok';hint.textContent='✓ '+res.data.nome;}
+        else{inp.className='colab-mat err';hint.className='colab-hint err';hint.textContent='✗ Matrícula não encontrada';}
       }).catch(function(){});
-    } else { inp.className='colab-mat'; hint.className='colab-hint'; hint.textContent=''; }
+    } else {inp.className='colab-mat';hint.className='colab-hint';hint.textContent='';}
   }
-
-  function getColabs() {
-    return Array.from(document.querySelectorAll('.colab-mat')).map(function(i){ return i.value.trim(); }).filter(Boolean);
+  function getColabs(){
+    return Array.from(document.querySelectorAll('.colab-mat')).map(function(i){return i.value.trim();}).filter(Boolean);
   }
 
   // ── OS Início ─────────────────────────────────────────────────────────────
-  function addOS() {
+  function addOS(){
     osCount++;
-    var n = osCount;
-    var list = document.getElementById('osList');
-    var subOptions = SUBESTACOES.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
-    var item = document.createElement('div');
-    item.className = 'os-item';
-    item.id = 'os-' + n;
-    item.innerHTML =
-      '<div class="os-item-header">' +
-        '<span class="os-item-num">🧰 Atividade ' + n + '</span>' +
-        (n > 1 ? '<button class="btn-remove" onclick="removeOS('+n+')">✕ Remover</button>' : '') +
-      '</div>' +
-      '<div class="field"><label>Nº da Ordem de Serviço</label>' +
-        '<input type="text" class="os-num-input" placeholder="Ex: 3257260658" inputmode="numeric"/></div>' +
-      '<div class="field"><label>Subestação</label>' +
-        '<select class="os-sub-input">' + subOptions + '</select></div>' +
-      '<div class="field">' +
-        '<label>📝 O que vai ser feito</label>' +
-        '<textarea class="os-inicial-input" placeholder="Descreva o que será executado..."></textarea></div>';
+    var n=osCount, list=document.getElementById('osList');
+    var subOpts=SUBESTACOES.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+    var item=document.createElement('div'); item.className='os-item'; item.id='os-'+n;
+    item.innerHTML=
+      '<div class="os-item-header">'+
+        '<span class="os-item-num">🧰 Atividade '+n+'</span>'+
+        (n>1?'<button class="btn-remove" onclick="removeOS('+n+')">✕ Remover</button>':'')+
+      '</div>'+
+      '<div class="field"><label>Nº da OS</label><input type="text" class="os-num-input" placeholder="Ex: 3257260658" inputmode="numeric"/></div>'+
+      '<div class="field"><label>Subestação</label><select class="os-sub-input">'+subOpts+'</select></div>'+
+      '<div class="field"><label>📝 O que vai ser feito</label><textarea class="os-inicial-input" placeholder="Descreva o que será executado..."></textarea></div>';
     list.appendChild(item);
   }
+  function removeOS(n){var el=document.getElementById('os-'+n);if(el)el.remove();}
+  function updateStatusStyle(sel){sel.className='os-status-input status-select status-'+sel.value;}
 
-  function removeOS(n) { var el = document.getElementById('os-'+n); if(el) el.remove(); }
-
-  function updateStatusStyle(sel) { sel.className = 'os-status-input status-select status-' + sel.value; }
-
-  function getOSListInicial() {
+  function getOSListInicial(){
     return Array.from(document.querySelectorAll('#osList .os-item')).map(function(item){
-      var os      = item.querySelector('.os-num-input').value.trim();
-      var unidade = item.querySelector('.os-sub-input').value;
-      var desc    = (item.querySelector('.os-inicial-input') || {}).value || '';
-      return { os:os, unidade:unidade, servico:desc.trim(), descricao_inicial:desc.trim(), status:'Andamento' };
-    }).filter(function(o){ return o.servico || o.os; });
+      var os=(item.querySelector('.os-num-input')||{}).value||'';
+      var unidade=(item.querySelector('.os-sub-input')||{}).value||'';
+      var desc=((item.querySelector('.os-inicial-input')||{}).value||'').trim();
+      return {os:os,unidade:unidade,servico:desc,descricao_inicial:desc,status:'Andamento'};
+    }).filter(function(o){return o.servico||o.os;});
   }
-
-  function getOSListFinal() {
+  function getOSListFinal(){
     return Array.from(document.querySelectorAll('#osListFinal .os-item')).map(function(item){
-      var os     = (item.querySelector('.os-code') || {}).value || '';
-      var dbId   = (item.querySelector('.os-db-id') || {}).value || '';
-      var feito  = (item.querySelector('.os-feito-input') || {}).value || '';
-      var status = (item.querySelector('.os-status-input') || {}).value || 'Andamento';
-      var unidade = os && _osFinais[os] ? (_osFinais[os].unidade || '') : '';
-      return { os:os, dbId:dbId, unidade:unidade, servico:feito.trim(), descricao_final:feito.trim(), status:status };
-    }).filter(function(o){ return o.os; });
+      var os=(item.querySelector('.os-code')||{}).value||'';
+      var feito=((item.querySelector('.os-feito-input')||{}).value||'').trim();
+      var status=(item.querySelector('.os-status-input')||{}).value||'Andamento';
+      var osData=_osFinaisCarregados[os]||{};
+      return {os:os,unidade:osData.unidade||'',servico:feito,descricao_final:feito,status:status};
+    }).filter(function(o){return o.os;});
   }
 
   // ── Trajeto ───────────────────────────────────────────────────────────────
-  function addTrajeto() {
+  function addTrajeto(){
     trajetoCount++;
-    var n = trajetoCount;
-    var subOpts = SUBESTACOES.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
-    var tipoOpts = TIPOS_TRAJETO.map(function(t){ return '<option>'+t+'</option>'; }).join('');
-    var now = new Date().toTimeString().slice(0,5);
-    var item = document.createElement('div');
-    item.className = 'trajeto-item';
-    item.id = 'traj-' + n;
-    item.innerHTML =
-      '<select class="traj-tipo" onchange="toggleSeSel(this)">' + tipoOpts + '</select>' +
-      '<select class="sub-sel traj-se">' + subOpts + '</select>' +
-      '<input type="time" class="traj-hora" value="' + now + '"/>' +
+    var n=trajetoCount;
+    var subOpts=SUBESTACOES.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+    var tipoOpts=TIPOS_TRAJETO.map(function(t){return '<option>'+t+'</option>';}).join('');
+    var now=new Date().toTimeString().slice(0,5);
+    var item=document.createElement('div'); item.className='trajeto-item'; item.id='traj-'+n;
+    item.innerHTML=
+      '<select class="traj-tipo" onchange="toggleSeSel(this)">'+tipoOpts+'</select>'+
+      '<select class="sub-sel traj-se">'+subOpts+'</select>'+
+      '<input type="time" class="traj-hora" value="'+now+'"/>'+
       '<button class="btn-remove" onclick="removeTrajeto('+n+')">✕</button>';
     document.getElementById('trajetoList').appendChild(item);
     toggleSeSel(item.querySelector('.traj-tipo'));
+    // If in final mode and locked, lock this new item too
+    if(_finalLocked){
+      item.querySelectorAll('select,input').forEach(function(f){f.disabled=true;});
+      item.querySelector('.btn-remove').style.display='none';
+    }
   }
-
-  function toggleSeSel(sel) {
-    var seEl = sel.closest('.trajeto-item').querySelector('.traj-se');
-    seEl.style.display = sel.value.includes('SE') ? '' : 'none';
+  function toggleSeSel(sel){
+    var seEl=sel.closest('.trajeto-item').querySelector('.traj-se');
+    seEl.style.display=sel.value.includes('SE')?'':'none';
   }
-
-  function removeTrajeto(n) { var el = document.getElementById('traj-'+n); if(el) el.remove(); }
-
-  function getTrajetoStr() {
+  function removeTrajeto(n){var el=document.getElementById('traj-'+n);if(el)el.remove();}
+  function getTrajetoStr(){
     return Array.from(document.querySelectorAll('.trajeto-item')).map(function(item){
-      var t2   = item.querySelector('.traj-tipo').value;
-      var hora = item.querySelector('.traj-hora').value;
-      var seEl = item.querySelector('.traj-se');
-      var se   = (seEl && seEl.style.display !== 'none') ? seEl.value : '';
-      return t2 + (se ? ' ' + se : '') + (hora ? ' ' + hora : '');
+      var t2=item.querySelector('.traj-tipo').value;
+      var hora=item.querySelector('.traj-hora').value;
+      var seEl=item.querySelector('.traj-se');
+      var se=(seEl&&seEl.style.display!=='none')?seEl.value:'';
+      return t2+(se?' '+se:'')+(hora?' '+hora:'');
     }).filter(Boolean).join(' | ');
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
-  async function submeter() {
-    var btn = document.getElementById('btnSubmit');
-    var colabs = getColabs();
-    var osList = tipo === 'inicial' ? getOSListInicial() : getOSListFinal();
+  async function submeter(){
+    var btn=document.getElementById('btnSubmit');
+    var colabs=getColabs();
+    var osList=tipo==='inicial'?getOSListInicial():getOSListFinal();
 
-    if (!colabs.length) { showMsg('Informe pelo menos um colaborador.', 'err'); return; }
-    if (!osList.length) { showMsg(tipo==='final' ? 'Carregue pelo menos uma OS para finalizar.' : 'Adicione pelo menos uma atividade.', 'err'); return; }
-    if (tipo === 'inicial' && osList.some(function(o){ return !o.descricao_inicial; })) {
-      showMsg('Preencha "O que vai ser feito" em todas as atividades.', 'err'); return;
-    }
-    if (tipo === 'final' && osList.some(function(o){ return !o.descricao_final; })) {
-      showMsg('Preencha "O que foi feito" em todas as atividades.', 'err'); return;
-    }
+    if(!colabs.length){showMsg('Informe pelo menos um colaborador.','err');return;}
+    if(!osList.length){showMsg(tipo==='final'?'Carregue pelo menos uma OS para finalizar.':'Adicione pelo menos uma atividade.','err');return;}
+    if(tipo==='inicial'&&osList.some(function(o){return !o.descricao_inicial;})){showMsg('Preencha "O que vai ser feito".','err');return;}
+    if(tipo==='final'&&osList.some(function(o){return !o.descricao_final;})){showMsg('Preencha "O que foi feito" em todas as atividades.','err');return;}
 
-    btn.disabled = true; btn.textContent = '⏳ Registrando...';
+    btn.disabled=true; btn.textContent='⏳ Registrando...';
 
-    // Resolve nomes
-    var membros = [];
-    for (var i = 0; i < colabs.length; i++) {
-      try {
-        var r1 = await fetch('/api/colaborador/' + colabs[i]).then(function(r){ return r.json(); });
-        if (!r1.data) { showMsg('Matrícula ' + colabs[i] + ' não encontrada.', 'err'); btn.disabled=false; btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão'; return; }
+    var membros=[];
+    for(var i=0;i<colabs.length;i++){
+      try{
+        var r1=await fetch('/api/colaborador/'+colabs[i]).then(function(r){return r.json();});
+        if(!r1.data){showMsg('Matrícula '+colabs[i]+' não encontrada.','err');btn.disabled=false;btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';return;}
         membros.push(r1.data.nome);
-      } catch(e) { showMsg('Erro ao validar matrícula.', 'err'); btn.disabled=false; return; }
+      }catch(e){showMsg('Erro ao validar matrícula.','err');btn.disabled=false;return;}
     }
 
-    var dataVal = document.getElementById('data').value;
-    var dp = dataVal.split('-');
-    var dataFmt = dp[2]+'/'+dp[1]+'/'+dp[0];
-
-    var payload = {
-      tipo:       tipo,
-      guarda:     document.getElementById('guarda').value,
-      horario:    document.getElementById('horario').value,
-      dia_semana: document.getElementById('diaSemana').value,
-      data:       dataFmt,
-      equipe:     membros.join(', '),
-      telefone:   document.getElementById('telefone').value.trim(),
-      veiculo:    document.getElementById('veiculo').value.trim(),
-      trajeto:    getTrajetoStr(),
-      ordens:     osList,
+    var dp=document.getElementById('data').value.split('-');
+    var payload={
+      tipo:tipo,
+      guarda:document.getElementById('guarda').value,
+      horario:document.getElementById('horario').value,
+      dia_semana:document.getElementById('diaSemana').value,
+      data:dp[2]+'/'+dp[1]+'/'+dp[0],
+      equipe:membros.join(', '),
+      telefone:document.getElementById('telefone').value.trim(),
+      veiculo:document.getElementById('veiculo').value.trim(),
+      trajeto:getTrajetoStr(),
+      ordens:osList,
     };
 
-    try {
-      var result = await fetch('/api/atividade', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      }).then(function(r){ return r.json(); });
+    try{
+      var result=await fetch('/api/atividade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
+      if(!result.ok) throw new Error(result.error||'Erro desconhecido');
+      showMsg('✅ '+(tipo==='inicial'?'Início':'Conclusão')+' registrado!\nEquipe: '+membros.join(', '),'ok');
+      mostrarCardsAPR(result.registradas||[]);
+    }catch(e){showMsg('❌ Erro: '+e.message,'err');}
 
-      if (!result.ok) throw new Error(result.error || 'Erro desconhecido');
-
-      showMsg('✅ ' + (tipo==='inicial'?'Início':'Conclusão') + ' registrado!\nEquipe: ' + membros.join(', '), 'ok');
-      mostrarCardsAPR(result.registradas || []);
-    } catch(e) {
-      showMsg('❌ Erro: ' + e.message, 'err');
-    }
-    btn.disabled = false;
-    btn.textContent = tipo==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
+    btn.disabled=false;
+    btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';
   }
 
-  function showMsg(msg, type) {
-    var area = document.getElementById('resultArea');
-    var div = document.createElement('div');
-    div.className = 'result-msg ' + type;
-    div.textContent = msg;
-    area.insertBefore(div, area.firstChild);
-    div.scrollIntoView({behavior:'smooth', block:'nearest'});
+  function showMsg(msg,type){
+    var area=document.getElementById('resultArea');
+    var div=document.createElement('div'); div.className='result-msg '+type; div.textContent=msg;
+    area.insertBefore(div,area.firstChild);
+    div.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
-  // ── APR por OS ────────────────────────────────────────────────────────────
-  function mostrarCardsAPR(registradas) {
-    var area = document.getElementById('resultArea');
-    registradas.forEach(function(r, i) {
-      var osCode = r.os || '';
-      var label  = osCode.match(/^\d{6,}$/) ? 'OS ' + osCode : 'Atividade ' + (i+1);
-      var card = document.createElement('div');
-      card.className = 'apr-card';
-      card.id = 'aprCard_' + i;
-      card.innerHTML =
-        '<div class="apr-card-title">📎 APR — ' + label +
-          '<span class="apr-status pendente" id="aprStatus_'+i+'">pendente</span></div>' +
-        '<p style="font-size:.75rem;color:var(--muted)">' + (r.unidade||'') + ' — ' + (r.servico||'').substring(0,60) + '</p>' +
-        '<div class="apr-sides">' +
-          '<div><div class="apr-side-title">Frente <span style="color:var(--red)">*</span></div>' +
-            '<img class="apr-preview" id="aprPrevF_'+i+'"/>' +
-            '<div class="apr-upload-row">' +
-              '<label class="apr-lbl" id="aprLFC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'frente\',this)"/>📸 Câmera</label>' +
-              '<label class="apr-lbl" id="aprLFG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'frente\',this)"/>🖼️ Galeria</label>' +
-            '</div></div>' +
-          '<div><div class="apr-side-title">Verso <span style="color:var(--red)">*</span></div>' +
-            '<img class="apr-preview" id="aprPrevV_'+i+'"/>' +
-            '<div class="apr-upload-row">' +
-              '<label class="apr-lbl" id="aprLVC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'verso\',this)"/>📸 Câmera</label>' +
-              '<label class="apr-lbl" id="aprLVG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'verso\',this)"/>🖼️ Galeria</label>' +
-            '</div></div>' +
-        '</div>' +
-        '<button class="btn-apr-send" id="btnApr_'+i+'" disabled style="display:none" onclick="enviarAprCard('+i+',\''+osCode.replace(/'/g,"\\'")+'\')" >📤 Enviar APR</button>';
+  // ── APR ───────────────────────────────────────────────────────────────────
+  function mostrarCardsAPR(registradas){
+    var area=document.getElementById('resultArea');
+    registradas.forEach(function(r,i){
+      var osCode=r.os||'';
+      var label=osCode.match(/^\d{6,}$/)?'OS '+osCode:'Atividade '+(i+1);
+      var card=document.createElement('div'); card.className='apr-card'; card.id='aprCard_'+i;
+      card.innerHTML=
+        '<div class="apr-card-title">📎 APR — '+label+
+          '<span class="apr-status pendente" id="aprStatus_'+i+'">pendente</span></div>'+
+        '<p style="font-size:.75rem;color:var(--muted)">'+(r.unidade||'')+' — '+(r.servico||'').substring(0,60)+'</p>'+
+        '<div class="apr-sides">'+
+          '<div><div class="apr-side-title">Frente <span style="color:var(--red)">*</span></div>'+
+            '<img class="apr-preview" id="aprPrevF_'+i+'"/>'+
+            '<div class="apr-upload-row">'+
+              '<label class="apr-lbl" id="aprLFC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'frente\',this)"/>📸</label>'+
+              '<label class="apr-lbl" id="aprLFG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'frente\',this)"/>🖼️</label>'+
+            '</div></div>'+
+          '<div><div class="apr-side-title">Verso <span style="color:var(--red)">*</span></div>'+
+            '<img class="apr-preview" id="aprPrevV_'+i+'"/>'+
+            '<div class="apr-upload-row">'+
+              '<label class="apr-lbl" id="aprLVC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'verso\',this)"/>📸</label>'+
+              '<label class="apr-lbl" id="aprLVG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'verso\',this)"/>🖼️</label>'+
+            '</div></div>'+
+        '</div>'+
+        '<button class="btn-apr-send" id="btnApr_'+i+'" disabled style="display:none" onclick="enviarAprCard('+i+',\''+osCode.replace(/'/g,"\\'")+'\')">📤 Enviar APR (Frente + Verso)</button>';
       area.appendChild(card);
     });
   }
 
-  function previewAprCard(idx, side, input) {
-    var file = input.files[0];
-    if (!file) return;
-    _aprFiles[idx + '_' + side] = file;
-    var img = document.getElementById(side==='frente' ? 'aprPrevF_'+idx : 'aprPrevV_'+idx);
-    if (img) { img.src = URL.createObjectURL(file); img.style.display = 'block'; }
+  function previewAprCard(idx,side,input){
+    var file=input.files[0]; if(!file) return;
+    _aprFiles[idx+'_'+side]=file;
+    var img=document.getElementById(side==='frente'?'aprPrevF_'+idx:'aprPrevV_'+idx);
+    if(img){img.src=URL.createObjectURL(file);img.style.display='block';}
     input.closest('label').classList.add('done');
-    // Show send button only when BOTH frente AND verso are selected
-    if (_aprFiles[idx+'_frente'] && _aprFiles[idx+'_verso']) {
-      var btn = document.getElementById('btnApr_'+idx);
-      btn.style.display = 'block'; btn.disabled = false;
+    if(_aprFiles[idx+'_frente']&&_aprFiles[idx+'_verso']){
+      var btn=document.getElementById('btnApr_'+idx);
+      btn.style.display='block'; btn.disabled=false;
     }
   }
 
-  async function enviarAprCard(idx, osCode) {
-    var btn = document.getElementById('btnApr_'+idx);
-    btn.disabled = true; btn.textContent = '⏳ Enviando...';
-    try {
-      var res = await fetch('/api/os').then(function(r){ return r.json(); });
-      var os = res.data.find(function(o){ return o.os === osCode; });
-      if (!os) throw new Error('OS não encontrada: ' + osCode);
-
-      if (_aprFiles[idx+'_frente']) {
-        var fd1 = new FormData(); fd1.append('apr', _aprFiles[idx+'_frente']);
-        await fetch('/api/os/'+os.id+'/apr', {method:'POST', body:fd1});
-      }
-      if (_aprFiles[idx+'_verso']) {
-        var fd2 = new FormData(); fd2.append('apr', _aprFiles[idx+'_verso']);
-        await fetch('/api/os/'+os.id+'/apr-verso', {method:'POST', body:fd2});
-      }
-
+  async function enviarAprCard(idx,osCode){
+    var btn=document.getElementById('btnApr_'+idx);
+    btn.disabled=true; btn.textContent='⏳ Enviando...';
+    try{
+      var res=await fetch('/api/os').then(function(r){return r.json();});
+      var os=res.data.find(function(o){return o.os===osCode;});
+      if(!os) throw new Error('OS não encontrada: '+osCode);
+      if(_aprFiles[idx+'_frente']){var fd1=new FormData();fd1.append('apr',_aprFiles[idx+'_frente']);await fetch('/api/os/'+os.id+'/apr',{method:'POST',body:fd1});}
+      if(_aprFiles[idx+'_verso']){var fd2=new FormData();fd2.append('apr',_aprFiles[idx+'_verso']);await fetch('/api/os/'+os.id+'/apr-verso',{method:'POST',body:fd2});}
       document.getElementById('aprCard_'+idx).classList.add('done');
-      var st = document.getElementById('aprStatus_'+idx);
-      if (st) { st.textContent = '✓ enviada'; st.className = 'apr-status enviada'; }
-      btn.style.display = 'none';
-      var done = document.createElement('p');
-      done.className = 'apr-done-msg';
-      done.textContent = '✅ APR enviada com sucesso';
+      var st=document.getElementById('aprStatus_'+idx);
+      if(st){st.textContent='✓ enviada';st.className='apr-status enviada';}
+      btn.style.display='none';
+      var done=document.createElement('p');done.className='apr-done-msg';done.textContent='✅ APR enviada com sucesso';
       document.getElementById('aprCard_'+idx).appendChild(done);
-    } catch(e) {
-      alert('Erro ao enviar APR: ' + e.message);
-      btn.disabled = false; btn.textContent = '📤 Enviar APR';
-    }
+    }catch(e){alert('Erro: '+e.message);btn.disabled=false;btn.textContent='📤 Enviar APR';}
   }
 </script>
 </body>
