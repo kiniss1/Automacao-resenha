@@ -188,18 +188,48 @@
 
   <!-- APR -->
   <div class="card">
-    <div class="section-label">📎 APR — Análise Preliminar de Risco</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div id="aprPreviewWrap" style="display:none">
-        <img id="aprPreview" src="" style="width:100%;border-radius:8px;border:1px solid var(--border);display:block"/>
-        <p id="aprFileName" style="font-size:.72rem;color:var(--muted);margin-top:4px"></p>
+    <div class="section-label">📎 APR — Análise Preliminar de Risco <span style="color:var(--red)">*</span></div>
+
+    <!-- FRENTE -->
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <p style="font-size:.78rem;font-weight:600;color:var(--muted)">Frente</p>
+      <div id="aprFrentePreviewWrap" style="display:none">
+        <img id="aprFrentePreview" src="" style="width:100%;border-radius:8px;border:1px solid var(--green);display:block"/>
+        <p id="aprFrenteFileName" style="font-size:.72rem;color:var(--green);margin-top:4px"></p>
       </div>
-      <label style="border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s;display:block" id="aprLabel">
-        <input type="file" id="aprFile" accept="image/*" style="display:none" onchange="previewApr(this)"/>
-        <div style="font-size:1.4rem;margin-bottom:5px">📷</div>
-        <p style="font-size:.82rem;color:var(--muted)">Toque para anexar foto da APR</p>
-        <p style="font-size:.72rem;color:var(--muted);margin-top:3px">(opcional)</p>
-      </label>
+      <div style="display:flex;gap:10px">
+        <label style="flex:1;border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s;display:block" id="aprFrenteLabelCamera">
+          <input type="file" id="aprFrenteCamera" accept="image/*" capture="environment" style="display:none" onchange="previewAprSide('frente',this)"/>
+          <div style="font-size:1.2rem;margin-bottom:3px">📸</div>
+          <p style="font-size:.75rem;color:var(--muted);font-weight:600">Câmera</p>
+        </label>
+        <label style="flex:1;border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s;display:block" id="aprFrenteLabelGaleria">
+          <input type="file" id="aprFrenteGaleria" accept="image/*" style="display:none" onchange="previewAprSide('frente',this)"/>
+          <div style="font-size:1.2rem;margin-bottom:3px">🖼️</div>
+          <p style="font-size:.75rem;color:var(--muted);font-weight:600">Galeria</p>
+        </label>
+      </div>
+    </div>
+
+    <!-- VERSO -->
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+      <p style="font-size:.78rem;font-weight:600;color:var(--muted)">Verso</p>
+      <div id="aprVersoPreviewWrap" style="display:none">
+        <img id="aprVersoPreview" src="" style="width:100%;border-radius:8px;border:1px solid var(--green);display:block"/>
+        <p id="aprVersoFileName" style="font-size:.72rem;color:var(--green);margin-top:4px"></p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <label style="flex:1;border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s;display:block" id="aprVersoLabelCamera">
+          <input type="file" id="aprVersoCamera" accept="image/*" capture="environment" style="display:none" onchange="previewAprSide('verso',this)"/>
+          <div style="font-size:1.2rem;margin-bottom:3px">📸</div>
+          <p style="font-size:.75rem;color:var(--muted);font-weight:600">Câmera</p>
+        </label>
+        <label style="flex:1;border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s;display:block" id="aprVersoLabelGaleria">
+          <input type="file" id="aprVersoGaleria" accept="image/*" style="display:none" onchange="previewAprSide('verso',this)"/>
+          <div style="font-size:1.2rem;margin-bottom:3px">🖼️</div>
+          <p style="font-size:.75rem;color:var(--muted);font-weight:600">Galeria</p>
+        </label>
+      </div>
     </div>
   </div>
 
@@ -355,7 +385,7 @@
 
   // ── Trajeto ───────────────────────────────────────────────────────────────
   let trajetoCount = 0;
-  const TIPOS_TRAJETO = ['Saída da base','Chegada na base','Saída para SE','Chegada na SE','Deslocamento'];
+  const TIPOS_TRAJETO = ['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
 
   function addTrajeto() {
     trajetoCount++;
@@ -410,6 +440,8 @@
     const colabs = getColabs();
 
     if (!colabs.length)  { showResult('Informe pelo menos um colaborador.', 'err'); return; }
+    if (!getAprFile('frente')) { showResult('📎 APR obrigatória — anexe a foto da FRENTE.', 'err'); return; }
+    if (!getAprFile('verso'))  { showResult('📎 APR obrigatória — anexe a foto do VERSO.', 'err'); return; }
     if (!osList.length)  { showResult('Adicione pelo menos uma atividade.', 'err'); return; }
     if (osList.some(o=>!o.servico)) { showResult('Preencha a descrição de todas as atividades.', 'err'); return; }
 
@@ -470,28 +502,54 @@
     }
   }
 
-  function previewApr(input) {
+  function previewAprSide(side, input) {
     const file = input.files[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    document.getElementById('aprPreview').src = url;
-    document.getElementById('aprFileName').textContent = file.name;
-    document.getElementById('aprPreviewWrap').style.display = 'block';
-    document.getElementById('aprLabel').querySelector('p').textContent = '✓ Foto selecionada — toque para trocar';
-    document.getElementById('aprLabel').style.borderColor = 'var(--green)';
+    const prefix = side === 'frente' ? 'aprFrente' : 'aprVerso';
+    document.getElementById(prefix+'Preview').src = url;
+    document.getElementById(prefix+'FileName').textContent = '✓ ' + (input.id.includes('Camera') ? 'Foto tirada' : file.name);
+    document.getElementById(prefix+'PreviewWrap').style.display = 'block';
+    // Destaca label ativo
+    [prefix+'LabelCamera', prefix+'LabelGaleria'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.style.borderColor='var(--border)';
+    });
+    const lbl = input.id.includes('Camera')
+      ? document.getElementById(prefix+'LabelCamera')
+      : document.getElementById(prefix+'LabelGaleria');
+    if(lbl) lbl.style.borderColor = 'var(--green)';
+  }
+
+  function getAprFile(side) {
+    const camera  = document.getElementById(side==='frente'?'aprFrenteCamera':'aprVersoCamera');
+    const galeria = document.getElementById(side==='frente'?'aprFrenteGaleria':'aprVersoGaleria');
+    if (camera?.files[0])  return camera.files[0];
+    if (galeria?.files[0]) return galeria.files[0];
+    return null;
   }
 
   async function uploadAprForOS(osId) {
-    const input = document.getElementById('aprFile');
-    if (!input.files[0]) return;
-    const fd = new FormData();
-    fd.append('apr', input.files[0]);
-    // Busca o ID numérico da OS pelo código
+    const frenteFile = getAprFile('frente');
+    const versoFile  = getAprFile('verso');
+    if (!frenteFile && !versoFile) return;
     try {
       const {data} = await fetch('/api/os').then(r=>r.json());
       const os = data.find(o => o.os === osId);
       if (!os) return;
-      await fetch('/api/os/'+os.id+'/apr', { method:'POST', body:fd });
+      // Upload frente
+      if (frenteFile) {
+        const fd = new FormData();
+        fd.append('apr', frenteFile);
+        fd.append('side', 'frente');
+        await fetch('/api/os/'+os.id+'/apr', { method:'POST', body:fd });
+      }
+      // Upload verso
+      if (versoFile) {
+        const fd = new FormData();
+        fd.append('apr', versoFile);
+        fd.append('side', 'verso');
+        await fetch('/api/os/'+os.id+'/apr-verso', { method:'POST', body:fd });
+      }
     } catch(e) { console.error('APR upload error:', e); }
   }
 
