@@ -220,6 +220,7 @@
 
 <script>
   var SUBESTACOES=[], tipo='inicial', MAX_COLAB=6, osCount=0, trajetoCount=0;
+  var _membrosFinais=[]; // nomes já resolvidos no modo final
   var TIPOS_TRAJETO=['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
   var _osFinaisPendente=null, _osFinaisCarregados={}, _aprFiles={};
   var _lookupTimer=null, _finalLocked=false;
@@ -265,7 +266,7 @@
       document.getElementById('osListFinal').innerHTML='';
       document.getElementById('btnAddOsFinal').style.display='none';
       document.getElementById('resultArea').innerHTML='';
-      _osFinaisCarregados={}; _finalLocked=false;
+      _osFinaisCarregados={}; _finalLocked=false; _membrosFinais=[];
       unlockAll();
     }
   }
@@ -334,6 +335,9 @@
     if(os.data){var p=os.data.split('/');if(p.length===3)document.getElementById('data').value=p[2]+'-'+p[1]+'-'+p[0];}
     if(os.veiculo) document.getElementById('veiculo').value=os.veiculo;
     if(os.telefone) document.getElementById('telefone').value=os.telefone;
+
+    // Armazena nomes já resolvidos para não precisar validar matrícula
+    _membrosFinais = os.equipe ? os.equipe.split(',').map(function(n){return n.trim();}).filter(Boolean) : [];
 
     // Preenche colaboradores — mostra como texto fixo (nomes, não matrícula)
     if(os.equipe){
@@ -549,7 +553,8 @@
     var colabs=getColabs();
     var osList=tipo==='inicial'?getOSListInicial():getOSListFinal();
 
-    if(!colabs.length){showMsg('Informe pelo menos um colaborador.','err');return;}
+    if(tipo==='inicial' && !colabs.length){showMsg('Informe pelo menos um colaborador.','err');return;}
+    if(tipo==='final' && _membrosFinais.length===0 && !colabs.length){showMsg('Carregue uma OS primeiro.','err');return;}
     if(!osList.length){showMsg(tipo==='final'?'Carregue pelo menos uma OS para finalizar.':'Adicione pelo menos uma atividade.','err');return;}
     if(tipo==='inicial'&&osList.some(function(o){return !o.descricao_inicial;})){showMsg('Preencha "O que vai ser feito".','err');return;}
     if(tipo==='final'&&osList.some(function(o){return !o.descricao_final;})){showMsg('Preencha "O que foi feito" em todas as atividades.','err');return;}
@@ -557,12 +562,19 @@
     btn.disabled=true; btn.textContent='⏳ Registrando...';
 
     var membros=[];
-    for(var i=0;i<colabs.length;i++){
-      try{
-        var r1=await fetch('/api/colaborador/'+colabs[i]).then(function(r){return r.json();});
-        if(!r1.data){showMsg('Matrícula '+colabs[i]+' não encontrada.','err');btn.disabled=false;btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';return;}
-        membros.push(r1.data.nome);
-      }catch(e){showMsg('Erro ao validar matrícula.','err');btn.disabled=false;return;}
+    // No modo Final com OS carregada, usa os nomes já resolvidos
+    if(tipo==='final' && _membrosFinais.length>0){
+      membros = _membrosFinais.slice();
+    } else {
+      // Modo Inicial — valida matrículas normalmente
+      if(!colabs.length){showMsg('Informe pelo menos um colaborador.','err');btn.disabled=false;btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';return;}
+      for(var i=0;i<colabs.length;i++){
+        try{
+          var r1=await fetch('/api/colaborador/'+colabs[i]).then(function(r){return r.json();});
+          if(!r1.data){showMsg('Matrícula '+colabs[i]+' não encontrada.','err');btn.disabled=false;btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';return;}
+          membros.push(r1.data.nome);
+        }catch(e){showMsg('Erro ao validar matrícula.','err');btn.disabled=false;return;}
+      }
     }
 
     var dp=document.getElementById('data').value.split('-');
