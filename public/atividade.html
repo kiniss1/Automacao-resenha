@@ -386,8 +386,9 @@
     if(!trajetoStr && os.servico && os.servico.includes('Trajeto:')){
       trajetoStr = os.servico.split('Trajeto:')[1].trim();
     }
-    // Sempre mostra o bloco do trajeto inicial (mesmo sem dados)
+    // Adiciona bloco do trajeto inicial só uma vez
     var tList=document.getElementById('trajetoList');
+    if(!document.getElementById('trajetoInicial')){
     var div=document.createElement('div');
     div.className='trajeto-locked';
     div.id='trajetoInicial';
@@ -410,19 +411,23 @@
         : '<div style="padding:8px 0;color:var(--muted);font-size:.82rem;font-style:italic">Nenhum trajeto registrado no início</div>'
       );
     tList.insertBefore(div,tList.firstChild);
-    // Add visual separator before new points
-    var sep=document.createElement('div');
-    sep.style.cssText='font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px';
-    sep.textContent='↩ Trajeto de Retorno — adicione abaixo';
-    sep.id='trajetoRetornoLabel';
-    tList.appendChild(sep);
+    if(!document.getElementById('trajetoRetornoLabel')){
+      var sep=document.createElement('div');
+      sep.style.cssText='font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px';
+      sep.textContent='↩ Trajeto de Retorno — adicione abaixo';
+      sep.id='trajetoRetornoLabel';
+      tList.appendChild(sep);
+    }
+    } // end if !trajetoInicial
 
     // Trava todos os campos preenchidos
     lockAll();
 
-    // Adiciona card de OS final
-    adicionarOSFinalCard(os);
-    _osFinaisCarregados[os.os]=os;
+    // Adiciona card de OS final apenas se ainda não estiver na lista
+    if(!_osFinaisCarregados[os.os]){
+      adicionarOSFinalCard(os);
+      _osFinaisCarregados[os.os]=os;
+    }
 
     // Limpa busca
     document.getElementById('lookupInput').value='';
@@ -453,10 +458,10 @@
         '<label style="color:var(--green)">✅ O que foi feito <span style="color:var(--red)">*</span></label>'+
         '<textarea class="os-feito-input" placeholder="Descreva o que foi executado..." rows="3"></textarea>'+
       '</div>'+
-      '<div class="field">'+
-        '<label>Status</label>'+
-        '<select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">'+
-          '<option value="Andamento">Andamento</option>'+
+      '<div class="field" style="background:var(--orange-bg);border:1px solid var(--orange);border-radius:8px;padding:10px 12px">'+
+        '<label style="color:var(--orange);font-size:.82rem;font-weight:700">⚠️ OBRIGATÓRIO — Selecione o status</label>'+
+        '<select class="os-status-input status-select" onchange="updateStatusStyle(this)" style="margin-top:6px">'+
+          '<option value="" disabled selected>-- Selecione o status --</option>'+
           '<option value="Concluído">Concluído</option>'+
           '<option value="Etapa Concluída">Etapa Concluída</option>'+
           '<option value="Cancelado">Cancelado</option>'+
@@ -641,7 +646,7 @@
     if(tipo==='inicial'&&osList.some(function(o){return !o.descricao_inicial;})){showMsg('Preencha "O que vai ser feito".','err');return;}
     // Status is always Andamento for inicial — no need to validate
     if(tipo==='final'&&osList.some(function(o){return !o.descricao_final;})){showMsg('Preencha "O que foi feito" em todas as atividades.','err');return;}
-    if(tipo==='final'&&osList.some(function(o){return o.status==='Andamento';})){showMsg('⚠️ Atualize o Status em todas as atividades antes de finalizar.','err');return;}
+    if(tipo==='final'&&osList.some(function(o){return !o.status||o.status==='Andamento'||o.status==='';})){showMsg('⚠️ Selecione o Status de todas as atividades antes de finalizar.','err');return;}
 
     btn.disabled=true; btn.textContent='⏳ Registrando...';
     console.log('[SUBMIT] tipo:', tipo, 'ordens:', osList.length, JSON.stringify(osList.map(function(o){return o.os;})));
