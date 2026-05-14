@@ -34,8 +34,8 @@ async function processarMensagem(msg) {
     const chat = await msg.getChat();
     console.log(`[MSG] Chat: "${chat.name}" | isGroup: ${chat.isGroup}`);
     if (!chat.isGroup || chat.name !== GRUPO_NOME) return;
-    if (msg.fromMe && msg.body.startsWith('✅')) return;
-    if (msg.fromMe && msg.body.startsWith('⚠️')) return;
+    // Ignora TODAS as mensagens enviadas pelo próprio bot
+    if (msg.fromMe) return;
 
     const resultado = parseOS(msg.body);
     if (!resultado) return; // mensagem comum, não é resenha
@@ -204,8 +204,8 @@ function startBot() {
     }, 10000);
   });
 
+  // Só escuta mensagens de OUTROS — nunca processa mensagens do próprio bot
   client.on('message', processarMensagem);
-  client.on('message_create', (msg) => { if (msg.fromMe) processarMensagem(msg); });
 
   client.initialize();
 }
