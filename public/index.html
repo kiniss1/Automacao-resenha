@@ -63,6 +63,7 @@
     .stat-card.s-orange .num{color:var(--orange)}
     .stat-card.s-green  .num{color:var(--green)}
     .stat-card.s-gray   .num{color:var(--gray)}
+    .stat-card.s-red    .num{color:var(--red)}
     .stat-card.s-violet .num{color:var(--violet)}
 
     /* ── Filters ────────────────────────────────────────────────────────── */
@@ -110,7 +111,7 @@
     .card-accent.Andamento{background:var(--orange)}
     .card-accent.Concluído{background:var(--green)}
     .card-accent.Etapa\ Concluída{background:var(--violet)}
-    .card-accent.Cancelado{background:var(--gray)}
+    .card-accent.Cancelado{background:var(--red)}
 
     .card-inner{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 
@@ -157,7 +158,7 @@
     }
     .badge.Andamento{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border)}
     .badge.Concluído{background:var(--green-bg); color:var(--green); border:1px solid var(--green-border)}
-    .badge.Cancelado{background:var(--gray-bg);  color:var(--gray);  border:1px solid var(--gray-border)}
+    .badge.Cancelado{background:var(--red-bg);   color:var(--red);   border:1px solid var(--red-border)}
     .badge.Etapa\ Concluída{background:var(--violet-bg);color:var(--violet);border:1px solid var(--violet-border)}
 
     /* Card footer */
@@ -175,7 +176,7 @@
     .btn-status:disabled{opacity:.3;cursor:default}
     .btn-status.active-Andamento{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange)}
     .btn-status.active-Concluído{background:var(--green-bg); border-color:var(--green-border); color:var(--green)}
-    .btn-status.active-Cancelado{background:var(--gray-bg);  border-color:var(--gray-border);  color:var(--gray)}
+    .btn-status.active-Cancelado{background:var(--red-bg);   border-color:var(--red-border);   color:var(--red)}
     .btn-status.active-Etapa\ Concluída{background:var(--violet-bg);border-color:var(--violet-border);color:var(--violet)}
 
     /* APR badge */
@@ -234,7 +235,7 @@
     .modal-btn:disabled{opacity:.3;cursor:default}
     .modal-btn.active-Andamento{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange)}
     .modal-btn.active-Concluído{background:var(--green-bg); border-color:var(--green-border); color:var(--green)}
-    .modal-btn.active-Cancelado{background:var(--gray-bg);  border-color:var(--gray-border);  color:var(--gray)}
+    .modal-btn.active-Cancelado{background:var(--red-bg);   border-color:var(--red-border);   color:var(--red)}
     .modal-btn.active-Etapa\ Concluída{background:var(--violet-bg);border-color:var(--violet-border);color:var(--violet)}
     .modal-btn.btn-delete{border-color:var(--red-border);color:var(--red);flex:0 0 100%}
     .modal-btn.btn-delete:hover{background:var(--red-bg)}
@@ -307,7 +308,7 @@
   <div class="stat-card s-orange"> <div class="num" id="sAndamento">–</div>  <div class="lbl">Andamento</div></div>
   <div class="stat-card s-violet"> <div class="num" id="sEtapa">–</div>      <div class="lbl">Etapa Concluída</div></div>
   <div class="stat-card s-green">  <div class="num" id="sConcluido">–</div>  <div class="lbl">Concluído</div></div>
-  <div class="stat-card s-gray">   <div class="num" id="sCancelado">–</div>  <div class="lbl">Cancelado</div></div>
+  <div class="stat-card s-red">    <div class="num" id="sCancelado">–</div>  <div class="lbl">Cancelado</div></div>
 </div>
 
 <div class="filters">
@@ -366,6 +367,10 @@
       <div class="modal-section">
         <div class="modal-section-title">Atividade</div>
         <div class="modal-desc" id="mServico">—</div>
+      </div>
+      <div class="modal-section" id="mTrajetoSection" style="display:none">
+        <div class="modal-section-title">🗺️ Trajeto</div>
+        <div class="modal-desc" id="mTrajeto">—</div>
       </div>
 
       <!-- APR frente e verso -->
@@ -567,6 +572,9 @@
     document.getElementById('mTel').textContent     =os.telefone  ||'—';
     document.getElementById('mVeiculo').textContent =os.veiculo   ||'—';
     document.getElementById('mServico').textContent =partes.join('\n')||'—';
+    var trajetoSection=document.getElementById('mTrajetoSection');
+    var trajetoEl=document.getElementById('mTrajeto');
+    if(os.trajeto){trajetoSection.style.display='';trajetoEl.textContent=os.trajeto.replace(/ \| /g,'\n');}else{trajetoSection.style.display='none';}
 
     document.getElementById('modalFooter').innerHTML=
       STATUS.map(s=>{
