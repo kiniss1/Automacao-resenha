@@ -81,6 +81,7 @@
     .status-Cancelado{border-color:var(--gray)!important;  color:var(--gray)!important;  background:var(--gray-bg)!important}
 
     /* Submit */
+    #aprLabel:hover{border-color:var(--primary)}
     .btn-submit{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s;margin-top:4px}
     .btn-submit:hover{opacity:.88}
     .btn-submit:disabled{opacity:.4;cursor:default}
@@ -183,6 +184,23 @@
     <div class="section-label">🗺️ Trajeto (saída/chegada base e deslocamentos)</div>
     <div class="trajeto-list" id="trajetoList"></div>
     <button class="btn-add" onclick="addTrajeto()">+ Adicionar ponto de trajeto</button>
+  </div>
+
+  <!-- APR -->
+  <div class="card">
+    <div class="section-label">📎 APR — Análise Preliminar de Risco</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div id="aprPreviewWrap" style="display:none">
+        <img id="aprPreview" src="" style="width:100%;border-radius:8px;border:1px solid var(--border);display:block"/>
+        <p id="aprFileName" style="font-size:.72rem;color:var(--muted);margin-top:4px"></p>
+      </div>
+      <label style="border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s;display:block" id="aprLabel">
+        <input type="file" id="aprFile" accept="image/*" style="display:none" onchange="previewApr(this)"/>
+        <div style="font-size:1.4rem;margin-bottom:5px">📷</div>
+        <p style="font-size:.82rem;color:var(--muted)">Toque para anexar foto da APR</p>
+        <p style="font-size:.72rem;color:var(--muted);margin-top:3px">(opcional)</p>
+      </label>
+    </div>
   </div>
 
   <!-- Submit -->
@@ -433,6 +451,11 @@
       if (!res.ok) throw new Error(res.error || 'Erro desconhecido');
 
       const registradas = res.registradas || [];
+      // Upload APR para cada OS registrada
+      for (const r of registradas) {
+        await uploadAprForOS(r.os).catch(()=>{});
+      }
+
       showResult(
         `✅ ${tipo==='inicial'?'Início':'Conclusão'} registrado!\n` +
         `Equipe: ${membros.join(', ')}\n` +
@@ -445,6 +468,31 @@
       btn.disabled = false;
       btn.textContent = tipo==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
     }
+  }
+
+  function previewApr(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    document.getElementById('aprPreview').src = url;
+    document.getElementById('aprFileName').textContent = file.name;
+    document.getElementById('aprPreviewWrap').style.display = 'block';
+    document.getElementById('aprLabel').querySelector('p').textContent = '✓ Foto selecionada — toque para trocar';
+    document.getElementById('aprLabel').style.borderColor = 'var(--green)';
+  }
+
+  async function uploadAprForOS(osId) {
+    const input = document.getElementById('aprFile');
+    if (!input.files[0]) return;
+    const fd = new FormData();
+    fd.append('apr', input.files[0]);
+    // Busca o ID numérico da OS pelo código
+    try {
+      const {data} = await fetch('/api/os').then(r=>r.json());
+      const os = data.find(o => o.os === osId);
+      if (!os) return;
+      await fetch('/api/os/'+os.id+'/apr', { method:'POST', body:fd });
+    } catch(e) { console.error('APR upload error:', e); }
   }
 
   function showResult(msg, type) {
