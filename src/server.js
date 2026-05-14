@@ -275,14 +275,30 @@ function startServer() {
 
   app.get('/api/os/:id/apr', (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      const os = db.listarOS().find(o => o.id === id);
-      if (!os || !os.apr_path) return res.status(404).json({ ok: false, error: 'APR não encontrada.' });
-      const fs = require('fs');
-      if (!fs.existsSync(os.apr_path)) return res.status(404).json({ ok: false, error: 'Arquivo não encontrado.' });
-      res.setHeader('Content-Type', 'image/jpeg');
-      res.setHeader('Cache-Control', 'private, max-age=3600');
-      fs.createReadStream(os.apr_path).pipe(res);
+      const id  = parseInt(req.params.id, 10);
+      const fs  = require('fs');
+      const path = require('path');
+
+      // Tenta o caminho salvo no banco primeiro
+      const os = db.buscarPorId(id);
+      if (os && os.apr_path && fs.existsSync(os.apr_path)) {
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        return fs.createReadStream(os.apr_path).pipe(res);
+      }
+
+      // Fallback: tenta o caminho padrão baseado no ID
+      const APR_DIR = process.env.APR_DIR || '/data/apr';
+      const fallback = path.join(APR_DIR, 'apr_' + id + '.jpg');
+      if (fs.existsSync(fallback)) {
+        // Atualiza o banco com o caminho correto
+        db.updateAprPath(id, fallback);
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        return fs.createReadStream(fallback).pipe(res);
+      }
+
+      res.status(404).json({ ok: false, error: 'APR não encontrada.' });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
