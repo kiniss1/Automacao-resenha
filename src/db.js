@@ -38,6 +38,7 @@ async function init() {
     'ALTER TABLE ordens_servico ADD COLUMN apr_verso_path TEXT',
     'ALTER TABLE ordens_servico ADD COLUMN descricao_inicial TEXT',
     'ALTER TABLE ordens_servico ADD COLUMN descricao_final TEXT',
+    'ALTER TABLE ordens_servico ADD COLUMN trajeto TEXT',
   ];
   for (const m of migrations) {
     try { db.run(m); } catch(e) { /* coluna já existe */ }
@@ -73,21 +74,24 @@ function all(sql, params = []) {
 function inserirOS(d) {
   run(`
     INSERT INTO ordens_servico
-      (os, unidade, equipe, veiculo, servico, status, data, guarda, horario, dia_semana, telefone, subestacoes, saida_base, chegada_base, descricao_inicial, descricao_final)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      (os, unidade, equipe, veiculo, servico, status, data, guarda, horario, dia_semana, telefone, subestacoes, saida_base, chegada_base, descricao_inicial, descricao_final, trajeto)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(os) DO UPDATE SET
       unidade=excluded.unidade, equipe=excluded.equipe, veiculo=excluded.veiculo,
-      servico=excluded.servico, status=excluded.status, data=excluded.data,
+      servico=CASE WHEN servico IS NULL OR servico='' THEN excluded.servico ELSE servico END,
+      status=excluded.status, data=excluded.data,
       guarda=excluded.guarda, horario=excluded.horario, dia_semana=excluded.dia_semana,
       telefone=excluded.telefone, subestacoes=excluded.subestacoes,
       saida_base=excluded.saida_base, chegada_base=excluded.chegada_base,
       descricao_final=CASE WHEN excluded.descricao_final IS NOT NULL THEN excluded.descricao_final ELSE descricao_final END,
       descricao_inicial=CASE WHEN descricao_inicial IS NULL THEN excluded.descricao_inicial ELSE descricao_inicial END,
+      trajeto=CASE WHEN excluded.trajeto IS NOT NULL THEN excluded.trajeto ELSE trajeto END,
       atualizado_em=datetime('now','localtime')
   `, [d.os, d.unidade, d.equipe, d.veiculo, d.servico, d.status, d.data,
       d.guarda, d.horario, d.dia_semana, d.telefone, d.subestacoes,
       d.saida_base || null, d.chegada_base || null,
-      d.descricao_inicial || null, d.descricao_final || null]);
+      d.descricao_inicial || null, d.descricao_final || null,
+      d.trajeto || null]);
 }
 
 function listarOS({ status, unidade, search, dataDe, dataAte } = {}) {
