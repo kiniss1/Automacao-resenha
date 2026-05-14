@@ -595,7 +595,8 @@
   var _lastSubmitTime=0;
   async function submeter(){
     var now=Date.now();
-    if(_submitting || now-_lastSubmitTime < 3000) return; // bloqueia por 3s entre envios
+    if(_submitting){ showMsg('⚠️ Aguarde, já existe um envio em andamento.','err'); return; }
+    if(now-_lastSubmitTime < 3000){ showMsg('⚠️ Aguarde 3 segundos antes de tentar novamente.','err'); return; }
     _submitting=true;
     _lastSubmitTime=now;
     var btn=document.getElementById('btnSubmit');
@@ -613,15 +614,6 @@
       showMsg('⚠️ Atividades: preencha "O que foi feito" em todas as atividades.','err');return;
     }
     if(tipo==='final'&&osList.some(function(o){return !o.status||o.status==='Andamento'||o.status==='';})){showMsg('⚠️ Selecione o Status de todas as atividades antes de finalizar.','err');return;}
-
-    // Validate trajeto has at least one point if button was clicked
-    var trajetoItems=document.querySelectorAll('.trajeto-item');
-    var trajetoErros=[];
-    Array.from(trajetoItems).forEach(function(item,i){
-      var hora=item.querySelector('.traj-hora').value;
-      if(!hora) trajetoErros.push('Ponto '+(i+1)+': horário obrigatório');
-    });
-    if(trajetoErros.length){showMsg('⚠️ Trajeto incompleto:\n'+trajetoErros.join('\n'),'err');return;}
 
     btn.disabled=true; btn.textContent='⏳ Registrando...';
     console.log('[SUBMIT] tipo:', tipo, 'ordens:', osList.length, JSON.stringify(osList.map(function(o){return o.os;})));
@@ -664,7 +656,10 @@
       if(!result.ok) throw new Error(result.error||'Erro desconhecido');
       showMsg('✅ '+(tipo==='inicial'?'Início':'Conclusão')+' registrado!\nEquipe: '+membros.join(', '),'ok');
       mostrarCardsAPR(result.registradas||[]);
-    }catch(e){showMsg('❌ Erro: '+e.message,'err');}
+    }catch(e){
+      console.error('[SUBMIT] Erro:', e);
+      showMsg('❌ Erro ao registrar: '+e.message,'err');
+    }
 
     btn.disabled=false;
     btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';
