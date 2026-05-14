@@ -9,103 +9,116 @@
     :root{
       --bg:#0f1117;--surface:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892a4;
       --primary:#4f6ef7;--green:#22c55e;--red:#ef4444;--orange:#f97316;--gray:#94a3b8;
-      --green-bg:#052e16;--red-bg:#450a0a;--orange-bg:#431407;--gray-bg:#1e293b;
+      --green-bg:#052e16;--orange-bg:#431407;--gray-bg:#1e293b;--red-bg:#450a0a;
+      --violet:#a5b4fc;--violet-bg:#1e1b4b;
     }
+    body.light{--bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--green-bg:#dcfce7;--orange-bg:#ffedd5;--gray-bg:#f1f5f9;--red-bg:#fee2e2}
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px;display:flex;justify-content:center}
-    body.light{--bg:#f1f5f9;--surface:#ffffff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--green-bg:#dcfce7;--orange-bg:#ffedd5;--gray-bg:#f1f5f9;--red-bg:#fee2e2;}
     .page{width:100%;max-width:520px;display:flex;flex-direction:column;gap:0}
 
-    /* Header */
-    .page-header{background:var(--surface);border:1px solid var(--border);border-radius:14px 14px 0 0;padding:20px 24px;text-align:center;border-bottom:none}
-    .page-header h1{font-size:1.15rem;font-weight:700}
-    .page-header p{font-size:.78rem;color:var(--muted);margin-top:3px}
+    .page-header{background:var(--surface);border:1px solid var(--border);border-radius:14px 14px 0 0;padding:16px 24px;border-bottom:none}
+    .page-header-top{display:flex;justify-content:flex-end;margin-bottom:8px}
+    .page-header h1{font-size:1.1rem;font-weight:700;text-align:center}
+    .page-header p{font-size:.78rem;color:var(--muted);text-align:center;margin-top:3px}
 
-    /* Type selector */
-    .type-tabs{display:flex;background:var(--surface);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 24px 16px}
-    .type-tab{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px;font-size:.88rem;cursor:pointer;font-weight:600;transition:all .15s}
+    .type-tabs{display:flex;background:var(--surface);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 24px 14px}
+    .type-tab{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px;font-size:.85rem;cursor:pointer;font-weight:600;transition:all .15s}
     .type-tab:first-child{border-radius:8px 0 0 8px}
     .type-tab:last-child{border-radius:0 8px 8px 0;border-left:none}
     .type-tab.active-inicial{background:#052e16;border-color:var(--green);color:var(--green)}
     .type-tab.active-final{background:var(--orange-bg);border-color:var(--orange);color:var(--orange)}
 
-    /* Card sections */
-    .card{background:var(--surface);border:1px solid var(--border);padding:20px 24px;display:flex;flex-direction:column;gap:14px;border-top:none}
+    .card{background:var(--surface);border:1px solid var(--border);padding:18px 24px;display:flex;flex-direction:column;gap:12px;border-top:none}
     .card:last-of-type{border-radius:0 0 14px 14px}
-    .section-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:2px}
+    .section-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding-bottom:6px;border-bottom:1px solid var(--border)}
 
     .field{display:flex;flex-direction:column;gap:5px}
-    .field label{font-size:.78rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:5px}
-    .field input,.field select,.field textarea{
-      background:var(--bg);border:1px solid var(--border);color:var(--text);
-      border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;width:100%;
-      transition:border-color .15s;font-family:inherit;
-    }
+    .field label{font-size:.78rem;font-weight:600;color:var(--muted)}
+    .field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;width:100%;transition:border-color .15s;font-family:inherit}
     .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
     .field textarea{resize:none;height:68px}
     .field-row{display:flex;gap:10px}
     .field-row .field{flex:1}
 
     /* Colaboradores */
-    .colab-list{display:flex;flex-direction:column;gap:6px}
     .colab-wrap{display:flex;flex-direction:column;gap:2px}
     .colab-row{display:flex;gap:6px;align-items:center}
-    .colab-row input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;transition:border-color .15s}
-    .colab-row input:focus{border-color:var(--primary)}
-    .colab-row input.ok{border-color:var(--green)}
-    .colab-row input.err{border-color:var(--red)}
+    .colab-mat{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;transition:border-color .15s}
+    .colab-mat:focus{border-color:var(--primary)}
+    .colab-mat.ok{border-color:var(--green)}
+    .colab-mat.err{border-color:var(--red)}
     .colab-hint{font-size:.72rem;padding-left:2px;min-height:14px}
     .colab-hint.ok{color:var(--green)}
     .colab-hint.err{color:var(--red)}
     .btn-remove{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:8px 10px;font-size:.8rem;cursor:pointer;flex-shrink:0}
     .btn-remove:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
-    .btn-add{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:7px;font-size:.8rem;cursor:pointer;transition:all .15s;text-align:center;width:100%}
+    .btn-add{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:7px;font-size:.8rem;cursor:pointer;width:100%;text-align:center;transition:all .15s}
     .btn-add:hover{border-color:var(--primary);color:var(--primary)}
 
-    /* OS List */
-    .os-list{display:flex;flex-direction:column;gap:10px}
-    .os-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;position:relative}
+    /* OS items */
+    .os-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
     .os-item-header{display:flex;justify-content:space-between;align-items:center}
     .os-item-num{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase}
 
     /* Trajeto */
-    .trajeto-list{display:flex;flex-direction:column;gap:8px}
-    .trajeto-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
-    .trajeto-row{display:flex;gap:8px;align-items:center}
-    .trajeto-row input,.trajeto-row select{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.88rem;outline:none}
-    .trajeto-row input:focus,.trajeto-row select:focus{border-color:var(--primary)}
+    .trajeto-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .trajeto-item select,.trajeto-item input{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.85rem;outline:none}
+    .trajeto-item select{flex:1;min-width:140px}
+    .trajeto-item input[type=time]{width:100px}
+    .trajeto-item select.sub-sel{flex:0 0 90px}
 
-    /* Status badges */
+    /* Status select */
     .status-select{appearance:none;cursor:pointer;font-weight:600}
     .status-Andamento{border-color:var(--orange)!important;color:var(--orange)!important;background:var(--orange-bg)!important}
-    .status-Concluído{border-color:var(--green)!important; color:var(--green)!important; background:var(--green-bg)!important}
-    .status-Cancelado{border-color:var(--gray)!important;  color:var(--gray)!important;  background:var(--gray-bg)!important}
-    .status-Etapa\ Concluída{border-color:#a5b4fc!important;color:#a5b4fc!important;background:#1e1b4b!important}
+    .status-Concluído{border-color:var(--green)!important;color:var(--green)!important;background:var(--green-bg)!important}
+    .status-Etapa\ Concluída{border-color:var(--violet)!important;color:var(--violet)!important;background:var(--violet-bg)!important}
+    .status-Cancelado{border-color:var(--gray)!important;color:var(--gray)!important;background:var(--gray-bg)!important}
 
-    /* Submit */
-    #aprLabel:hover{border-color:var(--primary)}
     .btn-submit{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s;margin-top:4px}
     .btn-submit:hover{opacity:.88}
     .btn-submit:disabled{opacity:.4;cursor:default}
 
-    .result{border-radius:10px;padding:14px 16px;font-size:.88rem;line-height:1.7;display:none;white-space:pre-wrap;margin-top:4px}
-    .result.ok  {background:var(--green-bg); border:1px solid #14532d; color:var(--green);display:block}
-    .result.err {background:var(--red-bg);   border:1px solid #7f1d1d; color:var(--red);  display:block}
-    .result.warn{background:var(--orange-bg);border:1px solid #7c2d12; color:var(--orange);display:block}
+    /* Result */
+    #resultArea{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+    .result-msg{border-radius:10px;padding:13px 16px;font-size:.88rem;line-height:1.7;white-space:pre-wrap}
+    .result-msg.ok {background:var(--green-bg);border:1px solid #14532d;color:var(--green)}
+    .result-msg.err{background:var(--red-bg);border:1px solid #7f1d1d;color:var(--red)}
 
+    /* APR cards */
+    .apr-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+    .apr-card.done{border-color:var(--green)}
+    .apr-card-title{font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+    .apr-status{font-size:.72rem;font-weight:500}
+    .apr-status.pendente{color:var(--orange)}
+    .apr-status.enviada{color:var(--green)}
+    .apr-sides{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .apr-side-title{font-size:.72rem;color:var(--muted);margin-bottom:4px}
+    .apr-preview{width:100%;border-radius:6px;border:1px solid var(--green);display:none;margin-bottom:6px}
+    .apr-upload-row{display:flex;gap:6px}
+    .apr-lbl{flex:1;border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:.72rem;color:var(--muted);transition:border-color .15s}
+    .apr-lbl:hover{border-color:var(--primary);color:var(--primary)}
+    .apr-lbl.done{border-color:var(--green);border-style:solid;color:var(--green)}
+    .apr-lbl input{display:none}
+    .btn-apr-send{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.82rem;font-weight:600;cursor:pointer;width:100%;transition:opacity .15s}
+    .btn-apr-send:hover{opacity:.88}
+    .btn-apr-send:disabled{opacity:.4;cursor:default}
+    .apr-done-msg{text-align:center;color:var(--green);font-size:.85rem;padding:8px}
+
+    /* Theme button */
+    .btn-tema{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer}
   </style>
 </head>
 <body>
 <div class="page">
 
   <div class="page-header">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-      <button id="btnTema" onclick="toggleTema()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer">🌙 Escuro</button>
+    <div class="page-header-top">
+      <button class="btn-tema" id="btnTema" onclick="toggleTema()">🌙 Escuro</button>
     </div>
     <h1>⚡ Registro de Atividade</h1>
     <p>OOMC — Manutenção Alta Tensão</p>
   </div>
 
-  <!-- Tipo -->
   <div class="type-tabs">
     <button class="type-tab active-inicial" id="tabInicial" onclick="setTipo('inicial')">▶ Início da Atividade</button>
     <button class="type-tab" id="tabFinal" onclick="setTipo('final')">◀ Final da Atividade</button>
@@ -114,15 +127,14 @@
   <!-- Resenha -->
   <div class="card">
     <div class="section-label">📋 Resenha</div>
-
     <div class="field-row">
       <div class="field">
         <label>⚙️ Guarda</label>
-        <select id="guarda">
-          <option value="Manhã">Manhã</option>
-          <option value="Tarde">Tarde</option>
-          <option value="Noite">Noite</option>
-          <option value="Técnicos da Guarda">Técnicos da Guarda</option>
+        <select id="guarda" onchange="autoHorario()">
+          <option>Manhã</option>
+          <option>Tarde</option>
+          <option>Noite</option>
+          <option>Técnicos da Guarda</option>
         </select>
       </div>
       <div class="field">
@@ -130,7 +142,6 @@
         <input type="text" id="horario" placeholder="07h x 16h"/>
       </div>
     </div>
-
     <div class="field-row">
       <div class="field">
         <label>📆 Dia da semana</label>
@@ -154,13 +165,11 @@
   <!-- Equipe -->
   <div class="card">
     <div class="section-label">👷 Equipe</div>
-
     <div class="field">
       <label>Colaboradores (matrícula)</label>
-      <div class="colab-list" id="colabList"></div>
+      <div id="colabList"></div>
       <button class="btn-add" id="btnAddColab" onclick="addColab()">+ Adicionar colaborador</button>
     </div>
-
     <div class="field-row">
       <div class="field">
         <label>📱 Telefone</label>
@@ -173,109 +182,105 @@
     </div>
   </div>
 
-  <!-- Atividades (OS) -->
+  <!-- Atividades -->
   <div class="card">
     <div class="section-label">🧰 Atividades / Ordens de Serviço</div>
-    <div class="os-list" id="osList"></div>
+    <div id="osList"></div>
     <button class="btn-add" onclick="addOS()">+ Adicionar atividade</button>
   </div>
 
   <!-- Trajeto -->
   <div class="card">
-    <div class="section-label">🗺️ Trajeto (saída/chegada base e deslocamentos)</div>
-    <div class="trajeto-list" id="trajetoList"></div>
+    <div class="section-label">🗺️ Trajeto</div>
+    <div id="trajetoList"></div>
     <button class="btn-add" onclick="addTrajeto()">+ Adicionar ponto de trajeto</button>
   </div>
 
   <!-- Submit -->
   <div class="card">
-    <button class="btn-submit" id="btnSubmit" onclick="submeter()">✅ Registrar Atividade</button>
-    <div class="result" id="result" style="display:none"></div>
+    <button class="btn-submit" id="btnSubmit" onclick="submeter()">▶ Registrar Início</button>
+    <div id="resultArea"></div>
   </div>
 
 </div>
-
 <script>
-  let SUBESTACOES = [];
-  let tipo = 'inicial';
-  const MAX_COLAB = 6;
+  var SUBESTACOES = [];
+  var tipo = 'inicial';
+  var MAX_COLAB = 6;
+  var osCount = 0;
+  var trajetoCount = 0;
+  var TIPOS_TRAJETO = ['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
 
   // ── Init ──────────────────────────────────────────────────────────────────
   function toggleTema(){
-    const isLight = document.body.classList.toggle('light');
-    const btn = document.getElementById('btnTema');
-    btn.textContent = isLight ? '🌑 Escuro' : '🌙 Escuro';
+    var isLight = document.body.classList.toggle('light');
+    document.getElementById('btnTema').textContent = isLight ? '🌑 Escuro' : '🌙 Escuro';
     localStorage.setItem('tema_atv', isLight ? 'light' : 'dark');
   }
-  if(localStorage.getItem('tema_atv')==='light'){
+  if (localStorage.getItem('tema_atv') === 'light') {
     document.body.classList.add('light');
-    document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('btnTema');if(b)b.textContent='🌑 Escuro';});
   }
 
-  fetch('/api/subestacoes').then(r=>r.json()).then(({data}) => {
-    SUBESTACOES = data;
+  function autoHorario(){
+    var h = {'Manhã':'07h x 16h','Tarde':'14h x 23h','Noite':'23h x 07h','Técnicos da Guarda':''};
+    document.getElementById('horario').value = h[document.getElementById('guarda').value] || '';
+  }
+
+  // Data e dia automático
+  var hoje = new Date();
+  document.getElementById('data').value = hoje.toISOString().split('T')[0];
+  var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  document.getElementById('diaSemana').value = dias[hoje.getDay()];
+  document.getElementById('horario').value = '07h x 16h';
+
+  // Carrega subestações
+  fetch('/api/subestacoes').then(function(r){ return r.json(); }).then(function(res){
+    SUBESTACOES = res.data || [];
     addColab();
     addOS();
     addTrajeto();
-  });
-
-  // Define data e dia da semana automático
-  const hoje = new Date();
-  document.getElementById('data').value = hoje.toISOString().split('T')[0];
-  const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  document.getElementById('diaSemana').value = dias[hoje.getDay()];
-
-  // Horário por guarda
-  document.getElementById('guarda').addEventListener('change', function() {
-    const horarios = {'Manhã':'07h x 16h','Tarde':'14h x 23h','Noite':'23h x 07h','Técnicos da Guarda':''};
-    document.getElementById('horario').value = horarios[this.value] || '';
-  });
-  document.getElementById('horario').value = '07h x 16h';
+  }).catch(function(){ addColab(); addOS(); addTrajeto(); });
 
   // ── Tipo inicial/final ────────────────────────────────────────────────────
   function setTipo(t) {
     tipo = t;
-    document.getElementById('tabInicial').className = 'type-tab' + (t==='inicial'?' active-inicial':'');
-    document.getElementById('tabFinal').className   = 'type-tab' + (t==='final'  ?' active-final':'');
-    document.getElementById('btnSubmit').textContent = t === 'inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
+    document.getElementById('tabInicial').className = 'type-tab' + (t==='inicial' ? ' active-inicial' : '');
+    document.getElementById('tabFinal').className   = 'type-tab' + (t==='final'   ? ' active-final'   : '');
+    document.getElementById('btnSubmit').textContent = t==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
+    document.querySelectorAll('.os-status-wrap').forEach(function(el){ el.style.display = t==='final' ? '' : 'none'; });
+    document.querySelectorAll('.os-inicial-field').forEach(function(el){ el.style.display = t==='inicial' ? '' : 'none'; });
+    document.querySelectorAll('.os-final-field').forEach(function(el){ el.style.display = t==='final' ? '' : 'none'; });
 
-    document.querySelectorAll('.os-status-wrap').forEach(el => { el.style.display = t==='final' ? '' : 'none'; });
-    document.querySelectorAll('.os-inicial-field').forEach(el => { el.style.display = t==='inicial' ? '' : 'none'; });
-    document.querySelectorAll('.os-final-field').forEach(el => { el.style.display = t==='final' ? '' : 'none'; });
-
-    // No final, carrega o que foi planejado para cada OS
     if (t === 'final') {
-      document.querySelectorAll('.os-item').forEach(item => {
-        const osNum = item.querySelector('.os-num-input').value.trim();
+      document.querySelectorAll('.os-item').forEach(function(item){
+        var osNum = item.querySelector('.os-num-input').value.trim();
         if (!osNum) return;
-        fetch('/api/os').then(r=>r.json()).then(({data}) => {
-          const os = data.find(o => o.os === osNum);
-          const planejado = item.querySelector('.os-planejado-input');
-          if (os && planejado) {
-            planejado.value = os.descricao_inicial || os.servico || '—';
-          }
-        }).catch(()=>{});
+        fetch('/api/os').then(function(r){ return r.json(); }).then(function(res){
+          var os = res.data.find(function(o){ return o.os === osNum; });
+          var planejado = item.querySelector('.os-planejado-input');
+          if (os && planejado) planejado.value = os.descricao_inicial || os.servico || '—';
+        }).catch(function(){});
       });
     }
   }
 
   // ── Colaboradores ─────────────────────────────────────────────────────────
   function addColab() {
-    const list = document.getElementById('colabList');
+    var list = document.getElementById('colabList');
     if (list.children.length >= MAX_COLAB) return;
-    const idx = list.children.length;
-    const wrap = document.createElement('div');
+    var idx = list.children.length;
+    var wrap = document.createElement('div');
     wrap.className = 'colab-wrap';
-    wrap.innerHTML = `
-      <div class="colab-row">
-        <input type="number" inputmode="numeric" placeholder="${idx===0?'Responsável':'Colaborador '+(idx+1)}"
-          oninput="lookupColab(this)" class="colab-mat"/>
-        ${idx>0?'<button class="btn-remove" onclick="removeColab(this)">✕</button>':''}
-      </div>
-      <div class="colab-hint"></div>
-    `;
+    wrap.style.marginBottom = '6px';
+    wrap.innerHTML =
+      '<div class="colab-row">' +
+        '<input type="number" inputmode="numeric" placeholder="' + (idx===0?'Responsável':'Colaborador '+(idx+1)) + '"' +
+          ' class="colab-mat" oninput="lookupColab(this)"/>' +
+        (idx > 0 ? '<button class="btn-remove" onclick="removeColab(this)">✕</button>' : '') +
+      '</div>' +
+      '<div class="colab-hint"></div>';
     list.appendChild(wrap);
-    document.getElementById('btnAddColab').style.display = list.children.length >= MAX_COLAB ? 'none' : '';
+    if (list.children.length >= MAX_COLAB) document.getElementById('btnAddColab').style.display = 'none';
   }
 
   function removeColab(btn) {
@@ -283,171 +288,163 @@
     document.getElementById('btnAddColab').style.display = '';
   }
 
-  async function lookupColab(inp) {
-    const mat = inp.value.trim();
-    const hint = inp.closest('.colab-wrap').querySelector('.colab-hint');
+  function lookupColab(inp) {
+    var mat = inp.value.trim();
+    var hint = inp.closest('.colab-wrap').querySelector('.colab-hint');
     if (mat.length >= 4) {
-      const {data} = await fetch('/api/colaborador/'+mat).then(r=>r.json());
-      if (data) { inp.className='colab-mat ok'; hint.className='colab-hint ok'; hint.textContent='✓ '+data.nome; }
-      else       { inp.className='colab-mat err';hint.className='colab-hint err';hint.textContent='✗ Matrícula não encontrada'; }
-    } else { inp.className='colab-mat'; hint.className='colab-hint'; hint.textContent=''; }
+      fetch('/api/colaborador/' + mat).then(function(r){ return r.json(); }).then(function(res){
+        if (res.data) {
+          inp.className = 'colab-mat ok';
+          hint.className = 'colab-hint ok';
+          hint.textContent = '✓ ' + res.data.nome;
+        } else {
+          inp.className = 'colab-mat err';
+          hint.className = 'colab-hint err';
+          hint.textContent = '✗ Matrícula não encontrada';
+        }
+      }).catch(function(){});
+    } else {
+      inp.className = 'colab-mat';
+      hint.className = 'colab-hint';
+      hint.textContent = '';
+    }
   }
 
   function getColabs() {
-    return [...document.querySelectorAll('.colab-mat')].map(i=>i.value.trim()).filter(Boolean);
+    return Array.from(document.querySelectorAll('.colab-mat')).map(function(i){ return i.value.trim(); }).filter(Boolean);
   }
 
   // ── OS / Atividades ───────────────────────────────────────────────────────
-  let osCount = 0;
   function addOS() {
     osCount++;
-    const n = osCount;
-    const list = document.getElementById('osList');
-    const subOptions = SUBESTACOES.map(s=>`<option value="${s}">${s}</option>`).join('');
-    const item = document.createElement('div');
+    var n = osCount;
+    var list = document.getElementById('osList');
+    var subOptions = SUBESTACOES.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
+    var item = document.createElement('div');
     item.className = 'os-item';
-    item.id = 'os-'+n;
-    item.innerHTML = `
-      <div class="os-item-header">
-        <span class="os-item-num">🧰 Atividade ${n}</span>
-        ${n>1?'<button class="btn-remove" onclick="removeOS('+n+')">✕ Remover</button>':''}
-      </div>
-      <div class="field">
-        <label>Nº da Ordem de Serviço</label>
-        <input type="text" class="os-num-input" placeholder="Ex: 3257260658" inputmode="numeric"/>
-      </div>
-      <div class="field">
-        <label>Subestação</label>
-        <select class="os-sub-input">${subOptions}</select>
-      </div>
-      <div class="field os-inicial-field">
-        <label>📝 O que vai ser feito</label>
-        <textarea class="os-inicial-input" placeholder="Descreva o que será executado..."></textarea>
-      </div>
-      <div class="field os-final-field" style="display:none">
-        <label style="color:var(--muted)">📋 O que foi planejado <span style="font-size:.7rem">(somente leitura)</span></label>
-        <textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none" placeholder="—"></textarea>
-        <label style="color:var(--green);margin-top:4px">✅ O que foi feito</label>
-        <textarea class="os-feito-input" placeholder="Descreva o que foi executado..."></textarea>
-      </div>
-      <div class="os-status-wrap field" style="display:${tipo==='final'?'':'none'}">
-        <label>Status</label>
-        <select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">
-          <option value="Andamento">Andamento</option>
-          <option value="Concluído">Concluído</option>
-          <option value="Etapa Concluída">Etapa Concluída</option>
-          <option value="Cancelado">Cancelado</option>
-        </select>
-      </div>
-    `;
+    item.id = 'os-' + n;
+    item.style.marginBottom = '8px';
+    item.innerHTML =
+      '<div class="os-item-header">' +
+        '<span class="os-item-num">🧰 Atividade ' + n + '</span>' +
+        (n > 1 ? '<button class="btn-remove" onclick="removeOS('+n+')">✕ Remover</button>' : '') +
+      '</div>' +
+      '<div class="field"><label>Nº da Ordem de Serviço</label>' +
+        '<input type="text" class="os-num-input" placeholder="Ex: 3257260658" inputmode="numeric"/></div>' +
+      '<div class="field"><label>Subestação</label>' +
+        '<select class="os-sub-input">' + subOptions + '</select></div>' +
+      '<div class="field os-inicial-field">' +
+        '<label>📝 O que vai ser feito</label>' +
+        '<textarea class="os-inicial-input" placeholder="Descreva o que será executado..."></textarea></div>' +
+      '<div class="field os-final-field" style="display:none">' +
+        '<label style="color:var(--muted)">📋 O que foi planejado (somente leitura)</label>' +
+        '<textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none" placeholder="—"></textarea>' +
+        '<label style="color:var(--green);margin-top:4px">✅ O que foi feito</label>' +
+        '<textarea class="os-feito-input" placeholder="Descreva o que foi executado..."></textarea></div>' +
+      '<div class="os-status-wrap field" style="display:none">' +
+        '<label>Status</label>' +
+        '<select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">' +
+          '<option value="Andamento">Andamento</option>' +
+          '<option value="Concluído">Concluído</option>' +
+          '<option value="Etapa Concluída">Etapa Concluída</option>' +
+          '<option value="Cancelado">Cancelado</option>' +
+        '</select></div>';
     list.appendChild(item);
   }
 
-  function removeOS(n) { document.getElementById('os-'+n)?.remove(); }
+  function removeOS(n) { var el = document.getElementById('os-'+n); if(el) el.remove(); }
 
   function updateStatusStyle(sel) {
-    sel.className = 'os-status-input status-select status-'+sel.value;
+    sel.className = 'os-status-input status-select status-' + sel.value;
   }
 
   function getOSList() {
-    return [...document.querySelectorAll('.os-item')].map(item => {
-      const os      = item.querySelector('.os-num-input').value.trim();
-      const unidade = item.querySelector('.os-sub-input').value;
-      const status  = item.querySelector('.os-status-input')?.value || 'Andamento';
-
+    return Array.from(document.querySelectorAll('.os-item')).map(function(item){
+      var os      = item.querySelector('.os-num-input').value.trim();
+      var unidade = item.querySelector('.os-sub-input').value;
+      var status  = (item.querySelector('.os-status-input') || {}).value || 'Andamento';
       if (tipo === 'inicial') {
-        const desc = item.querySelector('.os-inicial-input')?.value.trim() || '';
-        return { os, unidade, servico: desc, descricao_inicial: desc, status };
+        var desc = (item.querySelector('.os-inicial-input') || {}).value || '';
+        return { os:os, unidade:unidade, servico:desc.trim(), descricao_inicial:desc.trim(), status:status };
       } else {
-        const feito = item.querySelector('.os-feito-input')?.value.trim() || '';
-        return { os, unidade, servico: feito, descricao_final: feito, status };
+        var feito = (item.querySelector('.os-feito-input') || {}).value || '';
+        return { os:os, unidade:unidade, servico:feito.trim(), descricao_final:feito.trim(), status:status };
       }
-    }).filter(o => o.servico || o.os);
+    }).filter(function(o){ return o.servico || o.os; });
   }
 
   // ── Trajeto ───────────────────────────────────────────────────────────────
-  let trajetoCount = 0;
-  const TIPOS_TRAJETO = ['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
-
   function addTrajeto() {
     trajetoCount++;
-    const n = trajetoCount;
-    const subOptions = SUBESTACOES.map(s=>`<option value="${s}">${s}</option>`).join('');
-    const tipoOptions = TIPOS_TRAJETO.map(t=>`<option>${t}</option>`).join('');
-    const list = document.getElementById('trajetoList');
-    const item = document.createElement('div');
+    var n = trajetoCount;
+    var subOpts = SUBESTACOES.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
+    var tipoOpts = TIPOS_TRAJETO.map(function(t){ return '<option>'+t+'</option>'; }).join('');
+    var now = new Date().toTimeString().slice(0,5);
+    var item = document.createElement('div');
     item.className = 'trajeto-item';
-    item.id = 'traj-'+n;
-    item.innerHTML = `
-      <div class="trajeto-row">
-        <select class="traj-tipo">${tipoOptions}</select>
-        <input type="time" class="traj-hora" style="max-width:110px"/>
-        <button class="btn-remove" onclick="removeTrajeto(${n})">✕</button>
-      </div>
-      <div class="trajeto-row traj-se-row">
-        <select class="traj-se" style="flex:1">${subOptions}</select>
-        <span style="font-size:.75rem;color:var(--muted);white-space:nowrap">SE</span>
-      </div>
-    `;
-    // Mostra/oculta campo SE conforme o tipo
-    const tipoSel = item.querySelector('.traj-tipo');
-    const seRow   = item.querySelector('.traj-se-row');
-    const toggleSe = () => {
-      seRow.style.display = tipoSel.value.includes('SE') || tipoSel.value === 'Deslocamento' ? '' : 'none';
-    };
-    tipoSel.addEventListener('change', toggleSe);
-    toggleSe();
-    // Hora atual como default
-    item.querySelector('.traj-hora').value = new Date().toTimeString().slice(0,5);
-    list.appendChild(item);
+    item.id = 'traj-' + n;
+    item.style.marginBottom = '6px';
+    item.innerHTML =
+      '<select class="traj-tipo" onchange="toggleSeSel(this)">' + tipoOpts + '</select>' +
+      '<select class="sub-sel traj-se">' + subOpts + '</select>' +
+      '<input type="time" class="traj-hora" value="' + now + '"/>' +
+      '<button class="btn-remove" onclick="removeTrajeto('+n+')">✕</button>';
+    document.getElementById('trajetoList').appendChild(item);
   }
 
-  function removeTrajeto(n) { document.getElementById('traj-'+n)?.remove(); }
+  function toggleSeSel(sel) {
+    var seEl = sel.closest('.trajeto-item').querySelector('.traj-se');
+    seEl.style.display = sel.value.includes('SE') ? '' : 'none';
+  }
+
+  function removeTrajeto(n) { var el = document.getElementById('traj-'+n); if(el) el.remove(); }
 
   function getTrajetoStr() {
-    const items = [...document.querySelectorAll('.trajeto-item')].map(item => {
-      const tipo = item.querySelector('.traj-tipo').value;
-      const hora = item.querySelector('.traj-hora').value;
-      const se   = item.querySelector('.traj-se');
-      const seVal = se && se.closest('.traj-se-row').style.display !== 'none' ? se.value : '';
-      return `${tipo}${seVal ? ' ' + seVal : ''}${hora ? ' ' + hora : ''}`;
-    }).filter(Boolean);
-    return items.join(' | ');
+    return Array.from(document.querySelectorAll('.trajeto-item')).map(function(item){
+      var tipo2 = item.querySelector('.traj-tipo').value;
+      var hora  = item.querySelector('.traj-hora').value;
+      var seEl  = item.querySelector('.traj-se');
+      var se    = (seEl && seEl.style.display !== 'none') ? seEl.value : '';
+      return tipo2 + (se ? ' ' + se : '') + (hora ? ' ' + hora : '');
+    }).filter(Boolean).join(' | ');
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
   async function submeter() {
-    const btn = document.getElementById('btnSubmit');
-    const osList = getOSList();
-    const colabs = getColabs();
+    var btn = document.getElementById('btnSubmit');
+    var osList = getOSList();
+    var colabs = getColabs();
 
-    if (!colabs.length)  { showResult('Informe pelo menos um colaborador.', 'err'); return; }
-
-    if (!osList.length) { showResult('Adicione pelo menos uma atividade.', 'err'); return; }
-    if (tipo === 'inicial' && osList.some(o=>!o.descricao_inicial)) {
-      showResult('Preencha "O que vai ser feito" em todas as atividades.', 'err'); return;
+    if (!colabs.length) { showMsg('Informe pelo menos um colaborador.', 'err'); return; }
+    if (!osList.length) { showMsg('Adicione pelo menos uma atividade.', 'err'); return; }
+    if (tipo === 'inicial' && osList.some(function(o){ return !o.descricao_inicial; })) {
+      showMsg('Preencha "O que vai ser feito" em todas as atividades.', 'err'); return;
     }
-    if (tipo === 'final' && osList.some(o=>!o.descricao_final)) {
-      showResult('Preencha "O que foi feito" em todas as atividades.', 'err'); return;
+    if (tipo === 'final' && osList.some(function(o){ return !o.descricao_final; })) {
+      showMsg('Preencha "O que foi feito" em todas as atividades.', 'err'); return;
     }
 
-    btn.disabled = true; btn.textContent = '⏳ Registrando...';
+    btn.disabled = true;
+    btn.textContent = '⏳ Registrando...';
 
     // Busca nomes dos colaboradores
-    const membros = [];
-    for (const mat of colabs) {
-      const {data} = await fetch('/api/colaborador/'+mat).then(r=>r.json()).catch(()=>({data:null}));
-      if (!data) { showResult(`Matrícula ${mat} não encontrada. Corrija e tente novamente.`, 'err'); btn.disabled=false; btn.textContent = tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão'; return; }
-      membros.push(data.nome);
+    var membros = [];
+    for (var i = 0; i < colabs.length; i++) {
+      var mat = colabs[i];
+      try {
+        var res = await fetch('/api/colaborador/' + mat).then(function(r){ return r.json(); });
+        if (!res.data) { showMsg('Matrícula ' + mat + ' não encontrada.', 'err'); btn.disabled=false; btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão'; return; }
+        membros.push(res.data.nome);
+      } catch(e) { showMsg('Erro ao validar matrícula.', 'err'); btn.disabled=false; return; }
     }
 
-    const dataInput = document.getElementById('data').value;
-    const [y,m,d] = dataInput.split('-');
-    const dataFmt = `${d}/${m}/${y}`;
-    const trajeto = getTrajetoStr();
+    var dataVal = document.getElementById('data').value;
+    var parts = dataVal.split('-');
+    var dataFmt = parts[2]+'/'+parts[1]+'/'+parts[0];
+    var trajeto = getTrajetoStr();
 
-    const payload = {
-      tipo,
+    var payload = {
+      tipo:       tipo,
       guarda:     document.getElementById('guarda').value,
       horario:    document.getElementById('horario').value,
       dia_semana: document.getElementById('diaSemana').value,
@@ -455,141 +452,126 @@
       equipe:     membros.join(', '),
       telefone:   document.getElementById('telefone').value.trim(),
       veiculo:    document.getElementById('veiculo').value.trim(),
-      trajeto,
+      trajeto:    trajeto,
       ordens:     osList,
     };
 
     try {
-      const res = await fetch('/api/atividade', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
+      var result = await fetch('/api/atividade', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify(payload)
-      }).then(r=>r.json());
+      }).then(function(r){ return r.json(); });
 
-      if (!res.ok) throw new Error(res.error || 'Erro desconhecido');
+      if (!result.ok) throw new Error(result.error || 'Erro desconhecido');
 
-      const registradas = res.registradas || [];
-      showResult(
-        `✅ ${tipo==='inicial'?'Início':'Conclusão'} registrado!\n` +
-        `Equipe: ${membros.join(', ')}`,
-        'ok'
-      );
-      // Mostra cards de APR para cada OS
-      mostrarCardsAPR(registradas);
-    } catch(err) {
-      showResult('❌ Erro: ' + err.message, 'err');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = tipo==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
+      showMsg('✅ ' + (tipo==='inicial'?'Início':'Conclusão') + ' registrado!\nEquipe: ' + membros.join(', '), 'ok');
+      mostrarCardsAPR(result.registradas || []);
+
+    } catch(e) {
+      showMsg('❌ Erro: ' + e.message, 'err');
     }
+
+    btn.disabled = false;
+    btn.textContent = tipo==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
   }
 
-  // ── APR por OS ───────────────────────────────────────────────────────────
+  function showMsg(msg, type) {
+    var area = document.getElementById('resultArea');
+    var div = document.createElement('div');
+    div.className = 'result-msg ' + type;
+    div.textContent = msg;
+    area.insertBefore(div, area.firstChild);
+  }
+
+  // ── APR por OS ────────────────────────────────────────────────────────────
+  var _aprFiles = {}; // { 'idx_frente': File, 'idx_verso': File }
+
   function mostrarCardsAPR(registradas) {
-    const result = document.getElementById('result');
-    const cardsHtml = registradas.map((r, i) => {
-      const label = r.os && !r.os.includes('-') || r.os.match(/^\d{6,}$/)
-        ? 'OS ' + r.os
-        : 'Atividade ' + (i + 1);
-      return '<div id="aprCard_'+i+'" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:10px;display:flex;flex-direction:column;gap:10px">'+
-        '<p style="font-size:.85rem;font-weight:600">📎 APR — '+label+' <span style="font-size:.72rem;color:var(--orange);font-weight:normal">pendente</span></p>'+
-        '<p style="font-size:.75rem;color:var(--muted)">'+r.unidade+' — '+(r.servico||'').substring(0,60)+'</p>'+
-        aprUploadUI(i, r.osId || r.os)+
-      '</div>';
-    }).join('');
-    result.innerHTML += cardsHtml;
+    var area = document.getElementById('resultArea');
+    registradas.forEach(function(r, i) {
+      var osCode = r.os || '';
+      var label  = osCode.match(/^\d{6,}$/) ? 'OS ' + osCode : 'Atividade ' + (i+1);
+      var card = document.createElement('div');
+      card.className = 'apr-card';
+      card.id = 'aprCard_' + i;
+      card.innerHTML =
+        '<div class="apr-card-title">' +
+          '📎 APR — ' + label +
+          '<span class="apr-status pendente" id="aprStatus_'+i+'">pendente</span>' +
+        '</div>' +
+        '<p style="font-size:.75rem;color:var(--muted)">' + (r.unidade||'') + ' — ' + (r.servico||'').substring(0,60) + '</p>' +
+        '<div class="apr-sides">' +
+          '<div>' +
+            '<div class="apr-side-title">Frente</div>' +
+            '<img class="apr-preview" id="aprPrevF_'+i+'" src=""/>' +
+            '<div class="apr-upload-row">' +
+              '<label class="apr-lbl" id="aprLFC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'frente\',this)"/>📸</label>' +
+              '<label class="apr-lbl" id="aprLFG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'frente\',this)"/>🖼️</label>' +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="apr-side-title">Verso <span style="font-size:.65rem;opacity:.6">(opcional)</span></div>' +
+            '<img class="apr-preview" id="aprPrevV_'+i+'" src=""/>' +
+            '<div class="apr-upload-row">' +
+              '<label class="apr-lbl" id="aprLVC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'verso\',this)"/>📸</label>' +
+              '<label class="apr-lbl" id="aprLVG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'verso\',this)"/>🖼️</label>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn-apr-send" id="btnApr_'+i+'" disabled onclick="enviarAprCard('+i+',\''+osCode.replace(/'/g,"\\'")+'\')" style="display:none">📤 Enviar APR</button>';
+      area.appendChild(card);
+    });
   }
-
-  function aprUploadUI(idx, osCode) {
-    return '<div id="aprUploadWrap_'+idx+'">'+
-      '<div id="aprPreview_'+idx+'" style="display:none;margin-bottom:8px">'+
-        '<p style="font-size:.72rem;color:var(--muted);margin-bottom:4px">Frente</p>'+
-        '<img id="aprPreviewFImg_'+idx+'" src="" style="width:100%;border-radius:6px;border:1px solid var(--green)"/>'+
-        '<p style="font-size:.72rem;color:var(--muted);margin-top:8px;margin-bottom:4px">Verso</p>'+
-        '<img id="aprPreviewVImg_'+idx+'" src="" style="width:100%;border-radius:6px;border:1px solid var(--border);opacity:.4" id="aprPreviewVImg_'+idx+'"/>'+
-      '</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-        '<div>'+
-          '<p style="font-size:.72rem;color:var(--muted);margin-bottom:4px">Frente</p>'+
-          '<div style="display:flex;gap:6px">'+
-            '<label style="flex:1;border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:.72rem;color:var(--muted)" id="aprFL_'+idx+'">'+
-              '<input type="file" accept="image/*" capture="environment" style="display:none" onchange="previewAprCard('+idx+','frente',this)"/>📸 Câmera</label>'+
-            '<label style="flex:1;border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:.72rem;color:var(--muted)" id="aprFG_'+idx+'">'+
-              '<input type="file" accept="image/*" style="display:none" onchange="previewAprCard('+idx+','frente',this)"/>🖼️ Galeria</label>'+
-          '</div>'+
-        '</div>'+
-        '<div>'+
-          '<p style="font-size:.72rem;color:var(--muted);margin-bottom:4px">Verso</p>'+
-          '<div style="display:flex;gap:6px">'+
-            '<label style="flex:1;border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:.72rem;color:var(--muted)" id="aprVL_'+idx+'">'+
-              '<input type="file" accept="image/*" capture="environment" style="display:none" onchange="previewAprCard('+idx+','verso',this)"/>📸 Câmera</label>'+
-            '<label style="flex:1;border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:.72rem;color:var(--muted)" id="aprVG_'+idx+'">'+
-              '<input type="file" accept="image/*" style="display:none" onchange="previewAprCard('+idx+','verso',this)"/>🖼️ Galeria</label>'+
-          '</div>'+
-        '</div>'+
-      '</div>'+
-      '<button onclick="enviarAprCard('+idx+',''+osCode+'')" id="btnAprCard_'+idx+'" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.82rem;cursor:pointer;font-weight:600;width:100%;display:none">📤 Enviar APR</button>'+
-    '</div>';
-  }
-
-  const _aprFiles = {}; // {idx: {frente: File, verso: File}}
 
   function previewAprCard(idx, side, input) {
-    const file = input.files[0];
+    var file = input.files[0];
     if (!file) return;
-    if (!_aprFiles[idx]) _aprFiles[idx] = {};
-    _aprFiles[idx][side] = file;
-    const url = URL.createObjectURL(file);
-    const imgId = side === 'frente' ? 'aprPreviewFImg_'+idx : 'aprPreviewVImg_'+idx;
-    const img = document.getElementById(imgId);
-    if (img) { img.src = url; img.style.opacity = '1'; }
-    document.getElementById('aprPreview_'+idx).style.display = 'block';
-    // Marca label
-    const lIds = side==='frente' ? ['aprFL_'+idx,'aprFG_'+idx] : ['aprVL_'+idx,'aprVG_'+idx];
-    lIds.forEach(id => { const el=document.getElementById(id); if(el) el.style.borderColor='var(--border)'; });
-    const active = input.id || (input.closest('label')?.id) || lIds[0];
-    // Show send button if frente selected
-    if (_aprFiles[idx]?.frente) document.getElementById('btnAprCard_'+idx).style.display='block';
+    _aprFiles[idx + '_' + side] = file;
+    var imgId = side === 'frente' ? 'aprPrevF_'+idx : 'aprPrevV_'+idx;
+    var img = document.getElementById(imgId);
+    if (img) { img.src = URL.createObjectURL(file); img.style.display = 'block'; }
+    // Mark label
+    var lblId = input.closest('label').id;
+    if (lblId) document.getElementById(lblId).classList.add('done');
+    // Show send button if frente is selected
+    if (_aprFiles[idx + '_frente']) {
+      var btn = document.getElementById('btnApr_'+idx);
+      btn.style.display = 'block';
+      btn.disabled = false;
+    }
   }
 
   async function enviarAprCard(idx, osCode) {
-    const btn = document.getElementById('btnAprCard_'+idx);
+    var btn = document.getElementById('btnApr_'+idx);
     btn.disabled = true; btn.textContent = '⏳ Enviando...';
     try {
-      const {data} = await fetch('/api/os').then(r=>r.json());
-      const os = data.find(o => o.os === osCode);
+      var res = await fetch('/api/os').then(function(r){ return r.json(); });
+      var os = res.data.find(function(o){ return o.os === osCode; });
       if (!os) throw new Error('OS não encontrada: ' + osCode);
 
-      if (_aprFiles[idx]?.frente) {
-        const fd = new FormData(); fd.append('apr', _aprFiles[idx].frente);
-        await fetch('/api/os/'+os.id+'/apr', {method:'POST', body:fd});
+      if (_aprFiles[idx + '_frente']) {
+        var fd1 = new FormData(); fd1.append('apr', _aprFiles[idx + '_frente']);
+        await fetch('/api/os/'+os.id+'/apr', {method:'POST', body:fd1});
       }
-      if (_aprFiles[idx]?.verso) {
-        const fd = new FormData(); fd.append('apr', _aprFiles[idx].verso);
-        await fetch('/api/os/'+os.id+'/apr-verso', {method:'POST', body:fd});
+      if (_aprFiles[idx + '_verso']) {
+        var fd2 = new FormData(); fd2.append('apr', _aprFiles[idx + '_verso']);
+        await fetch('/api/os/'+os.id+'/apr-verso', {method:'POST', body:fd2});
       }
 
-      // Atualiza card visualmente
-      const card = document.getElementById('aprCard_'+idx);
-      if (card) {
-        card.style.borderColor = 'var(--green)';
-        card.querySelector('p span').textContent = '✓ enviada';
-        card.querySelector('p span').style.color = 'var(--green)';
-        document.getElementById('aprUploadWrap_'+idx).innerHTML =
-          '<p style="font-size:.8rem;color:var(--green);text-align:center;padding:8px">✅ APR enviada com sucesso</p>';
-      }
+      var card = document.getElementById('aprCard_'+idx);
+      if (card) card.classList.add('done');
+      var status = document.getElementById('aprStatus_'+idx);
+      if (status) { status.textContent = '✓ enviada'; status.className = 'apr-status enviada'; }
+      btn.style.display = 'none';
+      var doneMsg = document.createElement('p');
+      doneMsg.className = 'apr-done-msg';
+      doneMsg.textContent = '✅ APR enviada com sucesso';
+      document.getElementById('aprCard_'+idx).appendChild(doneMsg);
     } catch(e) {
-      btn.disabled=false; btn.textContent='📤 Enviar APR';
-      alert('Erro: '+e.message);
+      alert('Erro ao enviar APR: ' + e.message);
+      btn.disabled = false; btn.textContent = '📤 Enviar APR';
     }
-  }
-
-
-
-  function showResult(msg, type) {
-    const el = document.getElementById('result');
-    el.textContent = msg; el.style.display = 'block'; el.className = 'result ' + type;
-    el.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
 </script>
 </body>
