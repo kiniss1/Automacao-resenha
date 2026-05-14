@@ -365,7 +365,12 @@
 
       <div class="modal-section">
         <div class="modal-section-title">Atividade</div>
+        <div class="modal-section-title" style="font-size:.7rem;color:var(--muted);margin-top:4px;border:none;padding:0 0 2px">📝 O que foi planejado</div>
         <div class="modal-desc" id="mServico">—</div>
+        <div id="mFinalSection" style="display:none;margin-top:10px">
+          <div class="modal-section-title" style="font-size:.7rem;color:var(--green);border:none;padding:0 0 2px">✅ O que foi feito</div>
+          <div class="modal-desc" id="mDescFinal" style="border-left-color:var(--green)">—</div>
+        </div>
       </div>
 
 
@@ -574,7 +579,15 @@
     document.getElementById('mEquipe').textContent  =os.equipe    ||'—';
     document.getElementById('mTel').textContent     =os.telefone  ||'—';
     document.getElementById('mVeiculo').textContent =os.veiculo   ||'—';
-    document.getElementById('mServico').textContent =partes.join('\n')||'—';
+    document.getElementById('mServico').textContent =(os.descricao_inicial||partes[0]||'—');
+    const finalSection=document.getElementById('mFinalSection');
+    const descFinalEl=document.getElementById('mDescFinal');
+    if(os.descricao_final){
+      finalSection.style.display='';
+      descFinalEl.textContent=os.descricao_final;
+    } else {
+      finalSection.style.display='none';
+    }
 
 
     document.getElementById('modalFooter').innerHTML=
