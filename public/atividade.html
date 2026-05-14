@@ -208,7 +208,7 @@
       <span class="locked-badge" id="trajetoLockBadge" style="display:none">📋 Ida registrada acima — adicione o retorno</span>
     </div>
     <div id="trajetoList"></div>
-    <button class="btn-add" id="btnAddTrajeto" onclick="addTrajeto()">+ Adicionar ponto</button>
+    <button class="btn-add" id="btnAddTrajeto" onclick="addTrajeto()">+ Adicionar Trajeto</button>
   </div>
 
   <!-- Submit -->
@@ -246,8 +246,8 @@
 
   fetch('/api/subestacoes').then(function(r){return r.json();}).then(function(res){
     SUBESTACOES=res.data||[];
-    addColab(); addOS(); addTrajeto();
-  }).catch(function(){addColab();addOS();addTrajeto();});
+    addColab(); addOS();
+  }).catch(function(){addColab();addOS();});
 
   // ── Tipo ──────────────────────────────────────────────────────────────────
   function setTipo(t){
@@ -306,14 +306,26 @@
           var planejado=(os.descricao_inicial||os.servico||'—').split(' | ')[0];
           res.className='lookup-result ok';
           res.style.display='block';
-          res.innerHTML=
-            '<strong>OS '+os.os+'</strong> — '+(os.unidade||'')+'<br>'+
-            '👷 '+(os.equipe||'—')+'<br>'+
-            '📆 '+(os.dia_semana||'')+(os.data?' — '+os.data:'')+'<br>'+
-            '🚔 '+(os.veiculo||'—')+'<br>'+
-            '📝 '+planejado+'<br>'+
-            (os.servico&&os.servico.includes('Trajeto:')?'🗺️ '+os.servico.split('Trajeto:')[1].trim()+'<br>':'')+
-            '<button class="btn-load" onclick="carregarOS()" style="margin-top:8px">✅ Carregar esta atividade</button>';
+          // Bloqueia se Concluído
+          if(os.status==='Concluído'){
+            inp.className='lookup-input err';
+            res.className='lookup-result err';
+            res.style.display='block';
+            res.innerHTML='⚠️ OS <strong>'+os.os+'</strong> já tem status <strong>Concluído</strong>.<br>Não é possível registrar nova conclusão.';
+          } else {
+            res.className='lookup-result ok';
+            res.style.display='block';
+            var statusBadge = os.status==='Andamento'
+              ? '<span style="background:var(--orange-bg);color:var(--orange);border-radius:4px;padding:1px 7px;font-size:.75rem;font-weight:600">'+os.status+'</span>'
+              : '<span style="background:var(--violet-bg);color:var(--violet);border-radius:4px;padding:1px 7px;font-size:.75rem;font-weight:600">'+os.status+'</span>';
+            res.innerHTML=
+              '<strong>OS '+os.os+'</strong> — '+(os.unidade||'')+' '+statusBadge+'<br>'+
+              '👷 '+(os.equipe||'—')+'<br>'+
+              '📆 '+(os.dia_semana||'')+(os.data?' — '+os.data:'')+'<br>'+
+              '🚔 '+(os.veiculo||'—')+'<br>'+
+              '📝 '+planejado+'<br>'+
+              '<button class="btn-load" onclick="carregarOS()" style="margin-top:8px">✅ Carregar esta atividade</button>';
+          }
         } else {
           inp.className='lookup-input err';
           res.className='lookup-result err';
@@ -327,6 +339,16 @@
   function carregarOS(){
     var os=_osFinaisPendente;
     if(!os) return;
+    // Bloqueia se já está concluída
+    if(os.status==='Concluído'){
+      var res=document.getElementById('lookupResult');
+      res.className='lookup-result err';
+      res.style.display='block';
+      res.innerHTML='⚠️ Esta OS já possui status <strong>Concluído</strong> no sistema.<br>Não é possível fazer um novo registro final.';
+      document.getElementById('lookupInput').className='lookup-input err';
+      _osFinaisPendente=null;
+      return;
+    }
 
     // Preenche campos gerais e trava
     if(os.guarda) document.getElementById('guarda').value=os.guarda;
@@ -604,7 +626,9 @@
     if(tipo==='final' && _membrosFinais.length===0 && !colabs.length){showMsg('Carregue uma OS primeiro.','err');return;}
     if(!osList.length){showMsg(tipo==='final'?'Carregue pelo menos uma OS para finalizar.':'Adicione pelo menos uma atividade.','err');return;}
     if(tipo==='inicial'&&osList.some(function(o){return !o.descricao_inicial;})){showMsg('Preencha "O que vai ser feito".','err');return;}
+    // Status is always Andamento for inicial — no need to validate
     if(tipo==='final'&&osList.some(function(o){return !o.descricao_final;})){showMsg('Preencha "O que foi feito" em todas as atividades.','err');return;}
+    if(tipo==='final'&&osList.some(function(o){return o.status==='Andamento';})){showMsg('⚠️ Atualize o Status em todas as atividades antes de finalizar.','err');return;}
 
     btn.disabled=true; btn.textContent='⏳ Registrando...';
 
@@ -647,6 +671,41 @@
 
     btn.disabled=false;
     btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';
+
+    // Auto-limpa o formulário após sucesso (exceto resultArea)
+    if(result&&result.ok){
+      setTimeout(function(){
+        limparFormulario();
+      }, 4000); // aguarda 4s para o colaborador ver a confirmação
+    }
+  }
+
+  function limparFormulario(){
+    // Reset colaboradores
+    document.getElementById('colabList').innerHTML='';
+    document.getElementById('btnAddColab').style.display='';
+    addColab();
+    // Reset OS
+    document.getElementById('osList').innerHTML='';
+    document.getElementById('osListFinal').innerHTML='';
+    osCount=0; trajetoCount=0;
+    addOS();
+    // Reset trajeto
+    document.getElementById('trajetoList').innerHTML='';
+    var retLabel=document.getElementById('trajetoRetornoLabel');
+    if(retLabel) retLabel.remove();
+    // Reset campos
+    document.getElementById('telefone').value='';
+    document.getElementById('veiculo').value='';
+    // Reset lookup
+    document.getElementById('lookupInput').value='';
+    document.getElementById('lookupInput').className='lookup-input';
+    document.getElementById('lookupResult').style.display='none';
+    document.getElementById('btnAddOsFinal').style.display='none';
+    _osFinaisCarregados={}; _membrosFinais=[];
+    unlockAll();
+    // Mantém resultArea visível mas limpa após mais 10s
+    setTimeout(function(){ document.getElementById('resultArea').innerHTML=''; }, 10000);
   }
 
   function showMsg(msg,type){
