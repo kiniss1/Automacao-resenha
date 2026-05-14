@@ -36,6 +36,8 @@ async function init() {
   const migrations = [
     'ALTER TABLE ordens_servico ADD COLUMN apr_path TEXT',
     'ALTER TABLE ordens_servico ADD COLUMN apr_verso_path TEXT',
+    'ALTER TABLE ordens_servico ADD COLUMN descricao_inicial TEXT',
+    'ALTER TABLE ordens_servico ADD COLUMN descricao_final TEXT',
   ];
   for (const m of migrations) {
     try { db.run(m); } catch(e) { /* coluna já existe */ }
@@ -71,17 +73,21 @@ function all(sql, params = []) {
 function inserirOS(d) {
   run(`
     INSERT INTO ordens_servico
-      (os, unidade, equipe, veiculo, servico, status, data, guarda, horario, dia_semana, telefone, subestacoes, saida_base, chegada_base)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      (os, unidade, equipe, veiculo, servico, status, data, guarda, horario, dia_semana, telefone, subestacoes, saida_base, chegada_base, descricao_inicial, descricao_final)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(os) DO UPDATE SET
       unidade=excluded.unidade, equipe=excluded.equipe, veiculo=excluded.veiculo,
       servico=excluded.servico, status=excluded.status, data=excluded.data,
       guarda=excluded.guarda, horario=excluded.horario, dia_semana=excluded.dia_semana,
       telefone=excluded.telefone, subestacoes=excluded.subestacoes,
       saida_base=excluded.saida_base, chegada_base=excluded.chegada_base,
+      descricao_final=CASE WHEN excluded.descricao_final IS NOT NULL THEN excluded.descricao_final ELSE descricao_final END,
+      descricao_inicial=CASE WHEN descricao_inicial IS NULL THEN excluded.descricao_inicial ELSE descricao_inicial END,
       atualizado_em=datetime('now','localtime')
   `, [d.os, d.unidade, d.equipe, d.veiculo, d.servico, d.status, d.data,
-      d.guarda, d.horario, d.dia_semana, d.telefone, d.subestacoes, d.saida_base, d.chegada_base]);
+      d.guarda, d.horario, d.dia_semana, d.telefone, d.subestacoes,
+      d.saida_base || null, d.chegada_base || null,
+      d.descricao_inicial || null, d.descricao_final || null]);
 }
 
 function listarOS({ status, unidade, search, dataDe, dataAte } = {}) {
@@ -120,9 +126,10 @@ function removerOS(id) {
 
 function estatisticas() {
   return get(`SELECT COUNT(*) AS total,
-    SUM(status='Andamento') AS andamento,
-    SUM(status='Concluído') AS concluido,
-    SUM(status='Cancelado') AS cancelado
+    SUM(status='Andamento')       AS andamento,
+    SUM(status='Concluído')       AS concluido,
+    SUM(status='Etapa Concluída') AS etapa,
+    SUM(status='Cancelado')       AS cancelado
     FROM ordens_servico`);
 }
 
