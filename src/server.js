@@ -201,6 +201,7 @@ function startServer() {
 
       const registradas = [];
 
+      console.log('[ATIVIDADE] Recebido', ordens.length, 'ordens, tipo:', tipo);
       for (const o of ordens) {
         if (!o.servico && !o.descricao_inicial && !o.descricao_final) continue;
 
@@ -235,6 +236,7 @@ function startServer() {
           chegada_base:      null,
           descricao_inicial: descInicial,
           descricao_final:   descFinal,
+          trajeto:           trajeto || null,
         });
 
         registradas.push({ os: osId, unidade: o.unidade, status, servico: servicoFull });
