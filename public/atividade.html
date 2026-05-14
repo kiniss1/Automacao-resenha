@@ -39,9 +39,19 @@
     .field textarea{resize:none;height:68px}
     .field-row{display:flex;gap:10px}
     .field-row .field{flex:1}
+    .field input[readonly],.field textarea[readonly]{opacity:.55;cursor:not-allowed}
+
+    /* Busca de OS no modo Final */
+    .os-lookup-box{background:var(--bg);border:2px solid var(--orange);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+    .os-lookup-box h3{font-size:.85rem;font-weight:700;color:var(--orange)}
+    .os-lookup-input{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px;font-size:1rem;outline:none;width:100%;transition:border-color .15s;font-family:inherit}
+    .os-lookup-input:focus{border-color:var(--primary)}
+    .os-lookup-input.ok{border-color:var(--green)}
+    .os-lookup-input.err{border-color:var(--red)}
+    .os-found-info{background:var(--green-bg);border:1px solid #14532d;border-radius:8px;padding:10px 12px;font-size:.82rem;color:var(--green);line-height:1.6}
 
     /* Colaboradores */
-    .colab-wrap{display:flex;flex-direction:column;gap:2px}
+    .colab-wrap{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
     .colab-row{display:flex;gap:6px;align-items:center}
     .colab-mat{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;transition:border-color .15s}
     .colab-mat:focus{border-color:var(--primary)}
@@ -56,12 +66,12 @@
     .btn-add:hover{border-color:var(--primary);color:var(--primary)}
 
     /* OS items */
-    .os-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+    .os-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
     .os-item-header{display:flex;justify-content:space-between;align-items:center}
     .os-item-num{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase}
 
     /* Trajeto */
-    .trajeto-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .trajeto-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
     .trajeto-item select,.trajeto-item input{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.85rem;outline:none}
     .trajeto-item select{flex:1;min-width:140px}
     .trajeto-item input[type=time]{width:100px}
@@ -85,17 +95,17 @@
     .result-msg.err{background:var(--red-bg);border:1px solid #7f1d1d;color:var(--red)}
 
     /* APR cards */
-    .apr-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+    .apr-card{background:var(--surface);border:1px solid var(--orange);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
     .apr-card.done{border-color:var(--green)}
     .apr-card-title{font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:space-between}
     .apr-status{font-size:.72rem;font-weight:500}
     .apr-status.pendente{color:var(--orange)}
     .apr-status.enviada{color:var(--green)}
     .apr-sides{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .apr-side-title{font-size:.72rem;color:var(--muted);margin-bottom:4px}
+    .apr-side-title{font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:4px}
     .apr-preview{width:100%;border-radius:6px;border:1px solid var(--green);display:none;margin-bottom:6px}
     .apr-upload-row{display:flex;gap:6px}
-    .apr-lbl{flex:1;border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:.72rem;color:var(--muted);transition:border-color .15s}
+    .apr-lbl{flex:1;border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:.72rem;color:var(--muted);transition:border-color .15s;display:block}
     .apr-lbl:hover{border-color:var(--primary);color:var(--primary)}
     .apr-lbl.done{border-color:var(--green);border-style:solid;color:var(--green)}
     .apr-lbl input{display:none}
@@ -104,7 +114,6 @@
     .btn-apr-send:disabled{opacity:.4;cursor:default}
     .apr-done-msg{text-align:center;color:var(--green);font-size:.85rem;padding:8px}
 
-    /* Theme button */
     .btn-tema{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer}
   </style>
 </head>
@@ -131,10 +140,7 @@
       <div class="field">
         <label>⚙️ Guarda</label>
         <select id="guarda" onchange="autoHorario()">
-          <option>Manhã</option>
-          <option>Tarde</option>
-          <option>Noite</option>
-          <option>Técnicos da Guarda</option>
+          <option>Manhã</option><option>Tarde</option><option>Noite</option><option>Técnicos da Guarda</option>
         </select>
       </div>
       <div class="field">
@@ -146,13 +152,8 @@
       <div class="field">
         <label>📆 Dia da semana</label>
         <select id="diaSemana">
-          <option>Segunda-feira</option>
-          <option>Terça-feira</option>
-          <option>Quarta-feira</option>
-          <option>Quinta-feira</option>
-          <option>Sexta-feira</option>
-          <option>Sábado</option>
-          <option>Domingo</option>
+          <option>Segunda-feira</option><option>Terça-feira</option><option>Quarta-feira</option>
+          <option>Quinta-feira</option><option>Sexta-feira</option><option>Sábado</option><option>Domingo</option>
         </select>
       </div>
       <div class="field">
@@ -182,11 +183,25 @@
     </div>
   </div>
 
-  <!-- Atividades -->
-  <div class="card">
+  <!-- Atividades (Início) -->
+  <div class="card" id="cardOsInicial">
     <div class="section-label">🧰 Atividades / Ordens de Serviço</div>
     <div id="osList"></div>
     <button class="btn-add" onclick="addOS()">+ Adicionar atividade</button>
+  </div>
+
+  <!-- Atividades (Final) — busca por OS -->
+  <div class="card" id="cardOsFinal" style="display:none">
+    <div class="section-label">🧰 Finalizar Atividades</div>
+    <div class="os-lookup-box">
+      <h3>🔍 Digite o número da OS para carregar</h3>
+      <input type="text" class="os-lookup-input" id="osLookupInput"
+        inputmode="numeric" placeholder="Ex: 3257260621"
+        oninput="lookupOS(this.value)"/>
+      <div id="osLookupInfo" style="display:none" class="os-found-info"></div>
+    </div>
+    <div id="osListFinal"></div>
+    <button class="btn-add" id="btnAddOsFinal" style="display:none" onclick="addOSFinal()">+ Adicionar outra OS</button>
   </div>
 
   <!-- Trajeto -->
@@ -210,30 +225,29 @@
   var osCount = 0;
   var trajetoCount = 0;
   var TIPOS_TRAJETO = ['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
+  var _osFinais = {}; // osCode -> {id, data} from API
+  var _aprFiles = {};
 
-  // ── Init ──────────────────────────────────────────────────────────────────
+  // ── Tema ──────────────────────────────────────────────────────────────────
   function toggleTema(){
     var isLight = document.body.classList.toggle('light');
     document.getElementById('btnTema').textContent = isLight ? '🌑 Escuro' : '🌙 Escuro';
     localStorage.setItem('tema_atv', isLight ? 'light' : 'dark');
   }
-  if (localStorage.getItem('tema_atv') === 'light') {
-    document.body.classList.add('light');
-  }
+  if (localStorage.getItem('tema_atv') === 'light') document.body.classList.add('light');
 
+  // ── Init ──────────────────────────────────────────────────────────────────
   function autoHorario(){
     var h = {'Manhã':'07h x 16h','Tarde':'14h x 23h','Noite':'23h x 07h','Técnicos da Guarda':''};
     document.getElementById('horario').value = h[document.getElementById('guarda').value] || '';
   }
 
-  // Data e dia automático
   var hoje = new Date();
   document.getElementById('data').value = hoje.toISOString().split('T')[0];
   var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
   document.getElementById('diaSemana').value = dias[hoje.getDay()];
   document.getElementById('horario').value = '07h x 16h';
 
-  // Carrega subestações
   fetch('/api/subestacoes').then(function(r){ return r.json(); }).then(function(res){
     SUBESTACOES = res.data || [];
     addColab();
@@ -247,21 +261,125 @@
     document.getElementById('tabInicial').className = 'type-tab' + (t==='inicial' ? ' active-inicial' : '');
     document.getElementById('tabFinal').className   = 'type-tab' + (t==='final'   ? ' active-final'   : '');
     document.getElementById('btnSubmit').textContent = t==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
-    document.querySelectorAll('.os-status-wrap').forEach(function(el){ el.style.display = t==='final' ? '' : 'none'; });
-    document.querySelectorAll('.os-inicial-field').forEach(function(el){ el.style.display = t==='inicial' ? '' : 'none'; });
-    document.querySelectorAll('.os-final-field').forEach(function(el){ el.style.display = t==='final' ? '' : 'none'; });
-
+    document.getElementById('cardOsInicial').style.display = t==='inicial' ? '' : 'none';
+    document.getElementById('cardOsFinal').style.display   = t==='final'   ? '' : 'none';
+    // Reset final OS list when switching
     if (t === 'final') {
-      document.querySelectorAll('.os-item').forEach(function(item){
-        var osNum = item.querySelector('.os-num-input').value.trim();
-        if (!osNum) return;
-        fetch('/api/os').then(function(r){ return r.json(); }).then(function(res){
-          var os = res.data.find(function(o){ return o.os === osNum; });
-          var planejado = item.querySelector('.os-planejado-input');
-          if (os && planejado) planejado.value = os.descricao_inicial || os.servico || '—';
-        }).catch(function(){});
-      });
+      document.getElementById('osListFinal').innerHTML = '';
+      document.getElementById('osLookupInput').value = '';
+      document.getElementById('osLookupInput').className = 'os-lookup-input';
+      document.getElementById('osLookupInfo').style.display = 'none';
+      _osFinais = {};
     }
+    // Reset result area
+    document.getElementById('resultArea').innerHTML = '';
+  }
+
+  // ── Busca OS pelo número no modo Final ────────────────────────────────────
+  var _lookupTimer = null;
+  function lookupOS(val) {
+    clearTimeout(_lookupTimer);
+    var inp = document.getElementById('osLookupInput');
+    var info = document.getElementById('osLookupInfo');
+    if (!val || val.length < 3) {
+      inp.className = 'os-lookup-input';
+      info.style.display = 'none';
+      return;
+    }
+    _lookupTimer = setTimeout(function(){
+      fetch('/api/os').then(function(r){ return r.json(); }).then(function(res){
+        var os = res.data.find(function(o){ return o.os === val.trim(); });
+        if (os) {
+          inp.className = 'os-lookup-input ok';
+          info.style.display = 'block';
+          info.innerHTML =
+            '<strong>' + os.os + '</strong> — ' + (os.unidade||'') + '<br>' +
+            '👷 ' + (os.equipe||'—') + '<br>' +
+            '📆 ' + (os.data||'—') + '<br>' +
+            '📝 ' + ((os.descricao_inicial||os.servico||'—').split(' | ')[0]) + '<br>' +
+            '<span style="font-size:.72rem;opacity:.8">Clique em "Carregar" para preencher o formulário</span>';
+          // Auto-load button
+          info.innerHTML += '<button onclick="carregarOS()" style="margin-top:8px;background:var(--green);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:.82rem;font-weight:600;cursor:pointer;width:100%">✅ Carregar atividade</button>';
+          _osFinais['_pending'] = os;
+        } else {
+          inp.className = 'os-lookup-input err';
+          info.style.display = 'block';
+          info.innerHTML = '❌ OS não encontrada. Verifique o número.';
+          info.style.background = 'var(--red-bg)';
+          info.style.borderColor = '#7f1d1d';
+          info.style.color = 'var(--red)';
+        }
+      }).catch(function(){});
+    }, 500);
+  }
+
+  function carregarOS() {
+    var os = _osFinais['_pending'];
+    if (!os) return;
+    // Preenche campos gerais da resenha com dados da OS
+    if (os.guarda)     document.getElementById('guarda').value = os.guarda;
+    if (os.horario)    document.getElementById('horario').value = os.horario;
+    if (os.dia_semana) document.getElementById('diaSemana').value = os.dia_semana;
+    if (os.data) {
+      var parts = os.data.split('/');
+      if (parts.length === 3) document.getElementById('data').value = parts[2]+'-'+parts[1]+'-'+parts[0];
+    }
+    if (os.veiculo)   document.getElementById('veiculo').value = os.veiculo;
+    if (os.telefone)  document.getElementById('telefone').value = os.telefone;
+
+    // Adiciona OS na lista final
+    adicionarOSFinalCard(os);
+
+    // Limpa campo de busca para permitir adicionar outra OS
+    document.getElementById('osLookupInput').value = '';
+    document.getElementById('osLookupInput').className = 'os-lookup-input';
+    document.getElementById('osLookupInfo').style.display = 'none';
+    document.getElementById('btnAddOsFinal').style.display = '';
+    _osFinais[os.os] = os;
+    delete _osFinais['_pending'];
+  }
+
+  function adicionarOSFinalCard(os) {
+    var list = document.getElementById('osListFinal');
+    var idx = list.children.length;
+    var card = document.createElement('div');
+    card.className = 'os-item';
+    card.id = 'os-final-' + os.os.replace(/[^a-z0-9]/gi, '_');
+    var planejado = (os.descricao_inicial || os.servico || '').split(' | ')[0];
+    var subOpts = SUBESTACOES.map(function(s){ return '<option value="'+s+'"'+(s===os.unidade?' selected':'')+'>'+s+'</option>'; }).join('');
+    card.innerHTML =
+      '<div class="os-item-header">' +
+        '<span class="os-item-num">🧰 OS ' + os.os + ' — ' + (os.unidade||'') + '</span>' +
+        '<button class="btn-remove" onclick="this.closest(\'.os-item\').remove()">✕</button>' +
+      '</div>' +
+      '<input type="hidden" class="os-code" value="' + os.os + '"/>' +
+      '<input type="hidden" class="os-db-id" value="' + os.id + '"/>' +
+      '<div class="field">' +
+        '<label style="color:var(--muted)">📋 O que foi planejado (somente leitura)</label>' +
+        '<textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none">' + planejado + '</textarea>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label style="color:var(--green)">✅ O que foi feito</label>' +
+        '<textarea class="os-feito-input" placeholder="Descreva o que foi executado..." rows="3"></textarea>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>Status</label>' +
+        '<select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">' +
+          '<option value="Andamento">Andamento</option>' +
+          '<option value="Concluído">Concluído</option>' +
+          '<option value="Etapa Concluída">Etapa Concluída</option>' +
+          '<option value="Cancelado">Cancelado</option>' +
+        '</select>' +
+      '</div>';
+    list.appendChild(card);
+    // Scroll to new card
+    card.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function addOSFinal() {
+    // Shows lookup box again
+    document.getElementById('osLookupInput').focus();
+    document.getElementById('osLookupInput').scrollIntoView({behavior:'smooth'});
   }
 
   // ── Colaboradores ─────────────────────────────────────────────────────────
@@ -271,7 +389,6 @@
     var idx = list.children.length;
     var wrap = document.createElement('div');
     wrap.className = 'colab-wrap';
-    wrap.style.marginBottom = '6px';
     wrap.innerHTML =
       '<div class="colab-row">' +
         '<input type="number" inputmode="numeric" placeholder="' + (idx===0?'Responsável':'Colaborador '+(idx+1)) + '"' +
@@ -283,38 +400,24 @@
     if (list.children.length >= MAX_COLAB) document.getElementById('btnAddColab').style.display = 'none';
   }
 
-  function removeColab(btn) {
-    btn.closest('.colab-wrap').remove();
-    document.getElementById('btnAddColab').style.display = '';
-  }
+  function removeColab(btn) { btn.closest('.colab-wrap').remove(); document.getElementById('btnAddColab').style.display = ''; }
 
   function lookupColab(inp) {
     var mat = inp.value.trim();
     var hint = inp.closest('.colab-wrap').querySelector('.colab-hint');
     if (mat.length >= 4) {
       fetch('/api/colaborador/' + mat).then(function(r){ return r.json(); }).then(function(res){
-        if (res.data) {
-          inp.className = 'colab-mat ok';
-          hint.className = 'colab-hint ok';
-          hint.textContent = '✓ ' + res.data.nome;
-        } else {
-          inp.className = 'colab-mat err';
-          hint.className = 'colab-hint err';
-          hint.textContent = '✗ Matrícula não encontrada';
-        }
+        if (res.data) { inp.className='colab-mat ok'; hint.className='colab-hint ok'; hint.textContent='✓ '+res.data.nome; }
+        else           { inp.className='colab-mat err'; hint.className='colab-hint err'; hint.textContent='✗ Matrícula não encontrada'; }
       }).catch(function(){});
-    } else {
-      inp.className = 'colab-mat';
-      hint.className = 'colab-hint';
-      hint.textContent = '';
-    }
+    } else { inp.className='colab-mat'; hint.className='colab-hint'; hint.textContent=''; }
   }
 
   function getColabs() {
     return Array.from(document.querySelectorAll('.colab-mat')).map(function(i){ return i.value.trim(); }).filter(Boolean);
   }
 
-  // ── OS / Atividades ───────────────────────────────────────────────────────
+  // ── OS Início ─────────────────────────────────────────────────────────────
   function addOS() {
     osCount++;
     var n = osCount;
@@ -323,7 +426,6 @@
     var item = document.createElement('div');
     item.className = 'os-item';
     item.id = 'os-' + n;
-    item.style.marginBottom = '8px';
     item.innerHTML =
       '<div class="os-item-header">' +
         '<span class="os-item-num">🧰 Atividade ' + n + '</span>' +
@@ -333,44 +435,34 @@
         '<input type="text" class="os-num-input" placeholder="Ex: 3257260658" inputmode="numeric"/></div>' +
       '<div class="field"><label>Subestação</label>' +
         '<select class="os-sub-input">' + subOptions + '</select></div>' +
-      '<div class="field os-inicial-field">' +
+      '<div class="field">' +
         '<label>📝 O que vai ser feito</label>' +
-        '<textarea class="os-inicial-input" placeholder="Descreva o que será executado..."></textarea></div>' +
-      '<div class="field os-final-field" style="display:none">' +
-        '<label style="color:var(--muted)">📋 O que foi planejado (somente leitura)</label>' +
-        '<textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none" placeholder="—"></textarea>' +
-        '<label style="color:var(--green);margin-top:4px">✅ O que foi feito</label>' +
-        '<textarea class="os-feito-input" placeholder="Descreva o que foi executado..."></textarea></div>' +
-      '<div class="os-status-wrap field" style="display:none">' +
-        '<label>Status</label>' +
-        '<select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">' +
-          '<option value="Andamento">Andamento</option>' +
-          '<option value="Concluído">Concluído</option>' +
-          '<option value="Etapa Concluída">Etapa Concluída</option>' +
-          '<option value="Cancelado">Cancelado</option>' +
-        '</select></div>';
+        '<textarea class="os-inicial-input" placeholder="Descreva o que será executado..."></textarea></div>';
     list.appendChild(item);
   }
 
   function removeOS(n) { var el = document.getElementById('os-'+n); if(el) el.remove(); }
 
-  function updateStatusStyle(sel) {
-    sel.className = 'os-status-input status-select status-' + sel.value;
-  }
+  function updateStatusStyle(sel) { sel.className = 'os-status-input status-select status-' + sel.value; }
 
-  function getOSList() {
-    return Array.from(document.querySelectorAll('.os-item')).map(function(item){
+  function getOSListInicial() {
+    return Array.from(document.querySelectorAll('#osList .os-item')).map(function(item){
       var os      = item.querySelector('.os-num-input').value.trim();
       var unidade = item.querySelector('.os-sub-input').value;
-      var status  = (item.querySelector('.os-status-input') || {}).value || 'Andamento';
-      if (tipo === 'inicial') {
-        var desc = (item.querySelector('.os-inicial-input') || {}).value || '';
-        return { os:os, unidade:unidade, servico:desc.trim(), descricao_inicial:desc.trim(), status:status };
-      } else {
-        var feito = (item.querySelector('.os-feito-input') || {}).value || '';
-        return { os:os, unidade:unidade, servico:feito.trim(), descricao_final:feito.trim(), status:status };
-      }
+      var desc    = (item.querySelector('.os-inicial-input') || {}).value || '';
+      return { os:os, unidade:unidade, servico:desc.trim(), descricao_inicial:desc.trim(), status:'Andamento' };
     }).filter(function(o){ return o.servico || o.os; });
+  }
+
+  function getOSListFinal() {
+    return Array.from(document.querySelectorAll('#osListFinal .os-item')).map(function(item){
+      var os     = (item.querySelector('.os-code') || {}).value || '';
+      var dbId   = (item.querySelector('.os-db-id') || {}).value || '';
+      var feito  = (item.querySelector('.os-feito-input') || {}).value || '';
+      var status = (item.querySelector('.os-status-input') || {}).value || 'Andamento';
+      var unidade = os && _osFinais[os] ? (_osFinais[os].unidade || '') : '';
+      return { os:os, dbId:dbId, unidade:unidade, servico:feito.trim(), descricao_final:feito.trim(), status:status };
+    }).filter(function(o){ return o.os; });
   }
 
   // ── Trajeto ───────────────────────────────────────────────────────────────
@@ -383,13 +475,13 @@
     var item = document.createElement('div');
     item.className = 'trajeto-item';
     item.id = 'traj-' + n;
-    item.style.marginBottom = '6px';
     item.innerHTML =
       '<select class="traj-tipo" onchange="toggleSeSel(this)">' + tipoOpts + '</select>' +
       '<select class="sub-sel traj-se">' + subOpts + '</select>' +
       '<input type="time" class="traj-hora" value="' + now + '"/>' +
       '<button class="btn-remove" onclick="removeTrajeto('+n+')">✕</button>';
     document.getElementById('trajetoList').appendChild(item);
+    toggleSeSel(item.querySelector('.traj-tipo'));
   }
 
   function toggleSeSel(sel) {
@@ -401,22 +493,22 @@
 
   function getTrajetoStr() {
     return Array.from(document.querySelectorAll('.trajeto-item')).map(function(item){
-      var tipo2 = item.querySelector('.traj-tipo').value;
-      var hora  = item.querySelector('.traj-hora').value;
-      var seEl  = item.querySelector('.traj-se');
-      var se    = (seEl && seEl.style.display !== 'none') ? seEl.value : '';
-      return tipo2 + (se ? ' ' + se : '') + (hora ? ' ' + hora : '');
+      var t2   = item.querySelector('.traj-tipo').value;
+      var hora = item.querySelector('.traj-hora').value;
+      var seEl = item.querySelector('.traj-se');
+      var se   = (seEl && seEl.style.display !== 'none') ? seEl.value : '';
+      return t2 + (se ? ' ' + se : '') + (hora ? ' ' + hora : '');
     }).filter(Boolean).join(' | ');
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
   async function submeter() {
     var btn = document.getElementById('btnSubmit');
-    var osList = getOSList();
     var colabs = getColabs();
+    var osList = tipo === 'inicial' ? getOSListInicial() : getOSListFinal();
 
     if (!colabs.length) { showMsg('Informe pelo menos um colaborador.', 'err'); return; }
-    if (!osList.length) { showMsg('Adicione pelo menos uma atividade.', 'err'); return; }
+    if (!osList.length) { showMsg(tipo==='final' ? 'Carregue pelo menos uma OS para finalizar.' : 'Adicione pelo menos uma atividade.', 'err'); return; }
     if (tipo === 'inicial' && osList.some(function(o){ return !o.descricao_inicial; })) {
       showMsg('Preencha "O que vai ser feito" em todas as atividades.', 'err'); return;
     }
@@ -424,24 +516,21 @@
       showMsg('Preencha "O que foi feito" em todas as atividades.', 'err'); return;
     }
 
-    btn.disabled = true;
-    btn.textContent = '⏳ Registrando...';
+    btn.disabled = true; btn.textContent = '⏳ Registrando...';
 
-    // Busca nomes dos colaboradores
+    // Resolve nomes
     var membros = [];
     for (var i = 0; i < colabs.length; i++) {
-      var mat = colabs[i];
       try {
-        var res = await fetch('/api/colaborador/' + mat).then(function(r){ return r.json(); });
-        if (!res.data) { showMsg('Matrícula ' + mat + ' não encontrada.', 'err'); btn.disabled=false; btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão'; return; }
-        membros.push(res.data.nome);
+        var r1 = await fetch('/api/colaborador/' + colabs[i]).then(function(r){ return r.json(); });
+        if (!r1.data) { showMsg('Matrícula ' + colabs[i] + ' não encontrada.', 'err'); btn.disabled=false; btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão'; return; }
+        membros.push(r1.data.nome);
       } catch(e) { showMsg('Erro ao validar matrícula.', 'err'); btn.disabled=false; return; }
     }
 
     var dataVal = document.getElementById('data').value;
-    var parts = dataVal.split('-');
-    var dataFmt = parts[2]+'/'+parts[1]+'/'+parts[0];
-    var trajeto = getTrajetoStr();
+    var dp = dataVal.split('-');
+    var dataFmt = dp[2]+'/'+dp[1]+'/'+dp[0];
 
     var payload = {
       tipo:       tipo,
@@ -452,14 +541,13 @@
       equipe:     membros.join(', '),
       telefone:   document.getElementById('telefone').value.trim(),
       veiculo:    document.getElementById('veiculo').value.trim(),
-      trajeto:    trajeto,
+      trajeto:    getTrajetoStr(),
       ordens:     osList,
     };
 
     try {
       var result = await fetch('/api/atividade', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify(payload)
       }).then(function(r){ return r.json(); });
 
@@ -467,11 +555,9 @@
 
       showMsg('✅ ' + (tipo==='inicial'?'Início':'Conclusão') + ' registrado!\nEquipe: ' + membros.join(', '), 'ok');
       mostrarCardsAPR(result.registradas || []);
-
     } catch(e) {
       showMsg('❌ Erro: ' + e.message, 'err');
     }
-
     btn.disabled = false;
     btn.textContent = tipo==='inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
   }
@@ -482,11 +568,10 @@
     div.className = 'result-msg ' + type;
     div.textContent = msg;
     area.insertBefore(div, area.firstChild);
+    div.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
 
   // ── APR por OS ────────────────────────────────────────────────────────────
-  var _aprFiles = {}; // { 'idx_frente': File, 'idx_verso': File }
-
   function mostrarCardsAPR(registradas) {
     var area = document.getElementById('resultArea');
     registradas.forEach(function(r, i) {
@@ -496,30 +581,24 @@
       card.className = 'apr-card';
       card.id = 'aprCard_' + i;
       card.innerHTML =
-        '<div class="apr-card-title">' +
-          '📎 APR — ' + label +
-          '<span class="apr-status pendente" id="aprStatus_'+i+'">pendente</span>' +
-        '</div>' +
+        '<div class="apr-card-title">📎 APR — ' + label +
+          '<span class="apr-status pendente" id="aprStatus_'+i+'">pendente</span></div>' +
         '<p style="font-size:.75rem;color:var(--muted)">' + (r.unidade||'') + ' — ' + (r.servico||'').substring(0,60) + '</p>' +
         '<div class="apr-sides">' +
-          '<div>' +
-            '<div class="apr-side-title">Frente</div>' +
-            '<img class="apr-preview" id="aprPrevF_'+i+'" src=""/>' +
+          '<div><div class="apr-side-title">Frente <span style="color:var(--red)">*</span></div>' +
+            '<img class="apr-preview" id="aprPrevF_'+i+'"/>' +
             '<div class="apr-upload-row">' +
-              '<label class="apr-lbl" id="aprLFC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'frente\',this)"/>📸</label>' +
-              '<label class="apr-lbl" id="aprLFG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'frente\',this)"/>🖼️</label>' +
-            '</div>' +
-          '</div>' +
-          '<div>' +
-            '<div class="apr-side-title">Verso <span style="font-size:.65rem;opacity:.6">(opcional)</span></div>' +
-            '<img class="apr-preview" id="aprPrevV_'+i+'" src=""/>' +
+              '<label class="apr-lbl" id="aprLFC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'frente\',this)"/>📸 Câmera</label>' +
+              '<label class="apr-lbl" id="aprLFG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'frente\',this)"/>🖼️ Galeria</label>' +
+            '</div></div>' +
+          '<div><div class="apr-side-title">Verso <span style="color:var(--red)">*</span></div>' +
+            '<img class="apr-preview" id="aprPrevV_'+i+'"/>' +
             '<div class="apr-upload-row">' +
-              '<label class="apr-lbl" id="aprLVC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'verso\',this)"/>📸</label>' +
-              '<label class="apr-lbl" id="aprLVG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'verso\',this)"/>🖼️</label>' +
-            '</div>' +
-          '</div>' +
+              '<label class="apr-lbl" id="aprLVC_'+i+'"><input type="file" accept="image/*" capture="environment" onchange="previewAprCard('+i+',\'verso\',this)"/>📸 Câmera</label>' +
+              '<label class="apr-lbl" id="aprLVG_'+i+'"><input type="file" accept="image/*" onchange="previewAprCard('+i+',\'verso\',this)"/>🖼️ Galeria</label>' +
+            '</div></div>' +
         '</div>' +
-        '<button class="btn-apr-send" id="btnApr_'+i+'" disabled onclick="enviarAprCard('+i+',\''+osCode.replace(/'/g,"\\'")+'\')" style="display:none">📤 Enviar APR</button>';
+        '<button class="btn-apr-send" id="btnApr_'+i+'" disabled style="display:none" onclick="enviarAprCard('+i+',\''+osCode.replace(/'/g,"\\'")+'\')" >📤 Enviar APR</button>';
       area.appendChild(card);
     });
   }
@@ -528,17 +607,13 @@
     var file = input.files[0];
     if (!file) return;
     _aprFiles[idx + '_' + side] = file;
-    var imgId = side === 'frente' ? 'aprPrevF_'+idx : 'aprPrevV_'+idx;
-    var img = document.getElementById(imgId);
+    var img = document.getElementById(side==='frente' ? 'aprPrevF_'+idx : 'aprPrevV_'+idx);
     if (img) { img.src = URL.createObjectURL(file); img.style.display = 'block'; }
-    // Mark label
-    var lblId = input.closest('label').id;
-    if (lblId) document.getElementById(lblId).classList.add('done');
-    // Show send button if frente is selected
-    if (_aprFiles[idx + '_frente']) {
+    input.closest('label').classList.add('done');
+    // Show send button only when BOTH frente AND verso are selected
+    if (_aprFiles[idx+'_frente'] && _aprFiles[idx+'_verso']) {
       var btn = document.getElementById('btnApr_'+idx);
-      btn.style.display = 'block';
-      btn.disabled = false;
+      btn.style.display = 'block'; btn.disabled = false;
     }
   }
 
@@ -550,24 +625,23 @@
       var os = res.data.find(function(o){ return o.os === osCode; });
       if (!os) throw new Error('OS não encontrada: ' + osCode);
 
-      if (_aprFiles[idx + '_frente']) {
-        var fd1 = new FormData(); fd1.append('apr', _aprFiles[idx + '_frente']);
+      if (_aprFiles[idx+'_frente']) {
+        var fd1 = new FormData(); fd1.append('apr', _aprFiles[idx+'_frente']);
         await fetch('/api/os/'+os.id+'/apr', {method:'POST', body:fd1});
       }
-      if (_aprFiles[idx + '_verso']) {
-        var fd2 = new FormData(); fd2.append('apr', _aprFiles[idx + '_verso']);
+      if (_aprFiles[idx+'_verso']) {
+        var fd2 = new FormData(); fd2.append('apr', _aprFiles[idx+'_verso']);
         await fetch('/api/os/'+os.id+'/apr-verso', {method:'POST', body:fd2});
       }
 
-      var card = document.getElementById('aprCard_'+idx);
-      if (card) card.classList.add('done');
-      var status = document.getElementById('aprStatus_'+idx);
-      if (status) { status.textContent = '✓ enviada'; status.className = 'apr-status enviada'; }
+      document.getElementById('aprCard_'+idx).classList.add('done');
+      var st = document.getElementById('aprStatus_'+idx);
+      if (st) { st.textContent = '✓ enviada'; st.className = 'apr-status enviada'; }
       btn.style.display = 'none';
-      var doneMsg = document.createElement('p');
-      doneMsg.className = 'apr-done-msg';
-      doneMsg.textContent = '✅ APR enviada com sucesso';
-      document.getElementById('aprCard_'+idx).appendChild(doneMsg);
+      var done = document.createElement('p');
+      done.className = 'apr-done-msg';
+      done.textContent = '✅ APR enviada com sucesso';
+      document.getElementById('aprCard_'+idx).appendChild(done);
     } catch(e) {
       alert('Erro ao enviar APR: ' + e.message);
       btn.disabled = false; btn.textContent = '📤 Enviar APR';
