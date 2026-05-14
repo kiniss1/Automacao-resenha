@@ -32,6 +32,12 @@ async function init() {
     )
   `);
 
+  // Migração: adiciona apr_path se não existir (bancos antigos)
+  try {
+    db.run('ALTER TABLE ordens_servico ADD COLUMN apr_path TEXT');
+    console.log('[DB] Migração: coluna apr_path adicionada.');
+  } catch(e) { /* já existe */ }
+
   // Inicializa tabela de checkins
   const checkin = require('./checkin');
   checkin.setDb(db);
@@ -117,9 +123,13 @@ function estatisticas() {
     FROM ordens_servico`);
 }
 
+function buscarPorId(id) {
+  return get('SELECT * FROM ordens_servico WHERE id=?', [id]);
+}
+
 function updateAprPath(id, aprPath) {
   run(`UPDATE ordens_servico SET apr_path=? WHERE id=?`, [aprPath, id]);
   return get('SELECT * FROM ordens_servico WHERE id=?', [id]);
 }
 
-module.exports = { init, inserirOS, listarOS, atualizarStatus, removerOS, estatisticas, updateAprPath };
+module.exports = { init, inserirOS, listarOS, atualizarStatus, removerOS, estatisticas, updateAprPath, buscarPorId };
