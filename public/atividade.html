@@ -79,6 +79,7 @@
     .status-Andamento{border-color:var(--orange)!important;color:var(--orange)!important;background:var(--orange-bg)!important}
     .status-Concluído{border-color:var(--green)!important; color:var(--green)!important; background:var(--green-bg)!important}
     .status-Cancelado{border-color:var(--gray)!important;  color:var(--gray)!important;  background:var(--gray-bg)!important}
+    .status-Etapa\ Concluída{border-color:#a5b4fc!important;color:#a5b4fc!important;background:#1e1b4b!important}
 
     /* Submit */
     #aprLabel:hover{border-color:var(--primary)}
@@ -283,12 +284,26 @@
     tipo = t;
     document.getElementById('tabInicial').className = 'type-tab' + (t==='inicial'?' active-inicial':'');
     document.getElementById('tabFinal').className   = 'type-tab' + (t==='final'  ?' active-final':'');
-    // Ajusta label do botão
     document.getElementById('btnSubmit').textContent = t === 'inicial' ? '▶ Registrar Início' : '◀ Registrar Conclusão';
-    // Mostra/oculta status por OS
-    document.querySelectorAll('.os-status-wrap').forEach(el => {
-      el.style.display = t === 'final' ? '' : 'none';
-    });
+
+    document.querySelectorAll('.os-status-wrap').forEach(el => { el.style.display = t==='final' ? '' : 'none'; });
+    document.querySelectorAll('.os-inicial-field').forEach(el => { el.style.display = t==='inicial' ? '' : 'none'; });
+    document.querySelectorAll('.os-final-field').forEach(el => { el.style.display = t==='final' ? '' : 'none'; });
+
+    // No final, carrega o que foi planejado para cada OS
+    if (t === 'final') {
+      document.querySelectorAll('.os-item').forEach(item => {
+        const osNum = item.querySelector('.os-num-input').value.trim();
+        if (!osNum) return;
+        fetch('/api/os').then(r=>r.json()).then(({data}) => {
+          const os = data.find(o => o.os === osNum);
+          const planejado = item.querySelector('.os-planejado-input');
+          if (os && planejado) {
+            planejado.value = os.descricao_inicial || os.servico || '—';
+          }
+        }).catch(()=>{});
+      });
+    }
   }
 
   // ── Colaboradores ─────────────────────────────────────────────────────────
@@ -352,15 +367,22 @@
         <label>Subestação</label>
         <select class="os-sub-input">${subOptions}</select>
       </div>
-      <div class="field">
-        <label>Descrição da atividade</label>
-        <textarea class="os-desc-input" placeholder="Descreva o que será/foi feito..."></textarea>
+      <div class="field os-inicial-field">
+        <label>📝 O que vai ser feito</label>
+        <textarea class="os-inicial-input" placeholder="Descreva o que será executado..."></textarea>
+      </div>
+      <div class="field os-final-field" style="display:none">
+        <label style="color:var(--muted)">📋 O que foi planejado <span style="font-size:.7rem">(somente leitura)</span></label>
+        <textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none" placeholder="—"></textarea>
+        <label style="color:var(--green);margin-top:4px">✅ O que foi feito</label>
+        <textarea class="os-feito-input" placeholder="Descreva o que foi executado..."></textarea>
       </div>
       <div class="os-status-wrap field" style="display:${tipo==='final'?'':'none'}">
         <label>Status</label>
         <select class="os-status-input status-select status-Andamento" onchange="updateStatusStyle(this)">
           <option value="Andamento">Andamento</option>
           <option value="Concluído">Concluído</option>
+          <option value="Etapa Concluída">Etapa Concluída</option>
           <option value="Cancelado">Cancelado</option>
         </select>
       </div>
@@ -375,12 +397,19 @@
   }
 
   function getOSList() {
-    return [...document.querySelectorAll('.os-item')].map(item => ({
-      os:      item.querySelector('.os-num-input').value.trim(),
-      unidade: item.querySelector('.os-sub-input').value,
-      servico: item.querySelector('.os-desc-input').value.trim(),
-      status:  item.querySelector('.os-status-input')?.value || (tipo==='inicial'?'Andamento':'Andamento'),
-    })).filter(o => o.servico || o.os);
+    return [...document.querySelectorAll('.os-item')].map(item => {
+      const os      = item.querySelector('.os-num-input').value.trim();
+      const unidade = item.querySelector('.os-sub-input').value;
+      const status  = item.querySelector('.os-status-input')?.value || 'Andamento';
+
+      if (tipo === 'inicial') {
+        const desc = item.querySelector('.os-inicial-input')?.value.trim() || '';
+        return { os, unidade, servico: desc, descricao_inicial: desc, status };
+      } else {
+        const feito = item.querySelector('.os-feito-input')?.value.trim() || '';
+        return { os, unidade, servico: feito, descricao_final: feito, status };
+      }
+    }).filter(o => o.servico || o.os);
   }
 
   // ── Trajeto ───────────────────────────────────────────────────────────────
@@ -442,8 +471,13 @@
     if (!colabs.length)  { showResult('Informe pelo menos um colaborador.', 'err'); return; }
     if (!getAprFile('frente')) { showResult('📎 APR obrigatória — anexe a foto da FRENTE.', 'err'); return; }
     if (!getAprFile('verso'))  { showResult('📎 APR obrigatória — anexe a foto do VERSO.', 'err'); return; }
-    if (!osList.length)  { showResult('Adicione pelo menos uma atividade.', 'err'); return; }
-    if (osList.some(o=>!o.servico)) { showResult('Preencha a descrição de todas as atividades.', 'err'); return; }
+    if (!osList.length) { showResult('Adicione pelo menos uma atividade.', 'err'); return; }
+    if (tipo === 'inicial' && osList.some(o=>!o.descricao_inicial)) {
+      showResult('Preencha "O que vai ser feito" em todas as atividades.', 'err'); return;
+    }
+    if (tipo === 'final' && osList.some(o=>!o.descricao_final)) {
+      showResult('Preencha "O que foi feito" em todas as atividades.', 'err'); return;
+    }
 
     btn.disabled = true; btn.textContent = '⏳ Registrando...';
 
