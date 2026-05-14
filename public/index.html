@@ -108,10 +108,10 @@
 
     /* Card accent bar — colored by status */
     .card-accent{height:3px;flex-shrink:0}
-    .card-accent.Andamento{background:var(--orange)}
-    .card-accent.Concluído{background:var(--green)}
-    .card-accent.Etapa\ Concluída{background:var(--violet)}
-    .card-accent.Cancelado{background:var(--red)}
+    .card-accent[data-s="Andamento"]{background:var(--orange)}
+    .card-accent[data-s="Concluído"]{background:var(--green)}
+    .card-accent[data-s="Etapa Concluída"]{background:var(--violet)}
+    .card-accent[data-s="Cancelado"]{background:var(--red)}
 
     .card-inner{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 
@@ -156,10 +156,10 @@
       display:inline-flex;align-items:center;padding:3px 8px;
       border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.02em;
     }
-    .badge.Andamento{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border)}
-    .badge.Concluído{background:var(--green-bg); color:var(--green); border:1px solid var(--green-border)}
-    .badge.Cancelado{background:var(--red-bg);   color:var(--red);   border:1px solid var(--red-border)}
-    .badge.Etapa\ Concluída{background:var(--violet-bg);color:var(--violet);border:1px solid var(--violet-border)}
+    .badge[data-s="Andamento"]{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border)}
+    .badge[data-s="Concluído"]{background:var(--green-bg); color:var(--green); border:1px solid var(--green-border)}
+    .badge[data-s="Cancelado"]{background:var(--red-bg);   color:var(--red);   border:1px solid var(--red-border)}
+    .badge[data-s="Etapa Concluída"]{background:var(--violet-bg);color:var(--violet);border:1px solid var(--violet-border)}
 
     /* Card footer */
     .card-footer{
@@ -174,10 +174,10 @@
     }
     .btn-status:hover{background:var(--surface2);color:var(--text);border-color:var(--muted2)}
     .btn-status:disabled{opacity:.3;cursor:default}
-    .btn-status.active-Andamento{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange)}
-    .btn-status.active-Concluído{background:var(--green-bg); border-color:var(--green-border); color:var(--green)}
-    .btn-status.active-Cancelado{background:var(--red-bg);   border-color:var(--red-border);   color:var(--red)}
-    .btn-status.active-Etapa\ Concluída{background:var(--violet-bg);border-color:var(--violet-border);color:var(--violet)}
+    .btn-status[data-active="Andamento"]{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange)}
+    .btn-status[data-active="Concluído"]{background:var(--green-bg); border-color:var(--green-border); color:var(--green)}
+    .btn-status[data-active="Cancelado"]{background:var(--red-bg);   border-color:var(--red-border);   color:var(--red)}
+    .btn-status[data-active="Etapa Concluída"]{background:var(--violet-bg);border-color:var(--violet-border);color:var(--violet)}
 
     /* APR badge */
     .apr-badge{
@@ -196,10 +196,10 @@
       display:flex;flex-direction:column;
     }
     .modal-top-bar{height:4px;border-radius:12px 12px 0 0;flex-shrink:0}
-    .modal-top-bar.Andamento{background:var(--orange)}
-    .modal-top-bar.Concluído{background:var(--green)}
-    .modal-top-bar.Cancelado{background:var(--gray)}
-    .modal-top-bar.Etapa\ Concluída{background:var(--violet)}
+    .modal-top-bar[data-s="Andamento"]{background:var(--orange)}
+    .modal-top-bar[data-s="Concluído"]{background:var(--green)}
+    .modal-top-bar[data-s="Cancelado"]{background:var(--red)}
+    .modal-top-bar[data-s="Etapa Concluída"]{background:var(--violet)}
     .modal-body{padding:20px;display:flex;flex-direction:column;gap:16px}
     .modal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
     .modal-title-wrap{display:flex;flex-direction:column;gap:4px}
@@ -233,10 +233,10 @@
     }
     .modal-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--muted2)}
     .modal-btn:disabled{opacity:.3;cursor:default}
-    .modal-btn.active-Andamento{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange)}
-    .modal-btn.active-Concluído{background:var(--green-bg); border-color:var(--green-border); color:var(--green)}
-    .modal-btn.active-Cancelado{background:var(--red-bg);   border-color:var(--red-border);   color:var(--red)}
-    .modal-btn.active-Etapa\ Concluída{background:var(--violet-bg);border-color:var(--violet-border);color:var(--violet)}
+    .modal-btn[data-active="Andamento"]{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange)}
+    .modal-btn[data-active="Concluído"]{background:var(--green-bg); border-color:var(--green-border); color:var(--green)}
+    .modal-btn[data-active="Cancelado"]{background:var(--red-bg);   border-color:var(--red-border);   color:var(--red)}
+    .modal-btn[data-active="Etapa Concluída"]{background:var(--violet-bg);border-color:var(--violet-border);color:var(--violet)}
     .modal-btn.btn-delete{border-color:var(--red-border);color:var(--red);flex:0 0 100%}
     .modal-btn.btn-delete:hover{background:var(--red-bg)}
 
@@ -353,8 +353,7 @@
         <div class="modal-field"><span class="icon">⏰</span><div class="content"><div class="lbl">Horário</div><div class="val" id="mHorario">—</div></div></div>
         <div class="modal-field"><span class="icon">📆</span><div class="content"><div class="lbl">Dia / Data</div><div class="val" id="mData">—</div></div></div>
         <div class="modal-field"><span class="icon">🏛️</span><div class="content"><div class="lbl">Subestações</div><div class="val" id="mSub">—</div></div></div>
-        <div class="modal-field"><span class="icon">⏰</span><div class="content"><div class="lbl">Saída da base</div><div class="val" id="mSaida">—</div></div></div>
-        <div class="modal-field"><span class="icon">⏰</span><div class="content"><div class="lbl">Chegada na base</div><div class="val" id="mChegada">—</div></div></div>
+        <div class="modal-field" id="mTrajetoField" style="display:none"><span class="icon">🗺️</span><div class="content"><div class="lbl">Trajeto</div><div class="val" id="mTrajeto" style="white-space:pre-line">—</div></div></div>
       </div>
 
       <div class="modal-section">
@@ -516,7 +515,7 @@
     }).join('');
 
     return '<div class="os-card" id="card-'+os.id+'">'+
-      '<div class="card-accent '+e(st)+'"></div>'+
+      '<div class="card-accent" data-s="'+e(st)+'"></div>'+
       '<div class="card-inner">'+
         '<div class="card-top">'+
           '<div class="card-meta-left" onclick="openModal('+os.id+')">'+
@@ -531,7 +530,7 @@
           (os.veiculo?'<div class="card-row">🚔 <span>'+e(os.veiculo)+'</span></div>':'')+
           (os.data?'<div class="card-row">📅 <span>'+(os.dia_semana?e(os.dia_semana)+', ':'')+e(os.data)+'</span></div>':'')+
           '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
-            '<span class="badge '+e(st)+'">'+e(st)+'</span>'+
+            '<span class="badge" data-s="'+e(st)+'">'+e(st)+'</span>'+
             (hasApr?'<button class="apr-badge" onclick="event.stopPropagation();verApr('+os.id+')">📎 APR</button>':'')+
           '</div>'+
           '<div class="card-footer">'+btns+'</div>'+
@@ -559,15 +558,22 @@
     const st=os.status||'Andamento';
     document.getElementById('modalTitle').textContent=partes[0]||'—';
     document.getElementById('modalSubtitle').textContent='OS '+os.os;
-    document.getElementById('modalTopBar').className='modal-top-bar '+st;
+    document.getElementById('modalTopBar').className='modal-top-bar'; document.getElementById('modalTopBar').setAttribute('data-s',st);
     const badge=document.getElementById('modalBadge');
-    badge.textContent=st; badge.className='badge '+st;
+    badge.textContent=st; badge.className='badge'; badge.setAttribute('data-s',st);
     document.getElementById('mGuarda').textContent  =os.guarda    ||'—';
     document.getElementById('mHorario').textContent =os.horario   ||'—';
     document.getElementById('mData').textContent    =[os.dia_semana,os.data].filter(Boolean).join(', ')||'—';
     document.getElementById('mSub').textContent     =os.subestacoes||'—';
-    document.getElementById('mSaida').textContent   =os.saida_base   ||'—';
-    document.getElementById('mChegada').textContent =os.chegada_base ||'—';
+    const trajetoField=document.getElementById('mTrajetoField');
+    const trajetoEl=document.getElementById('mTrajeto');
+    const trajetoVal=os.trajeto||(os.servico&&os.servico.includes('Trajeto:')?os.servico.split('Trajeto:')[1].trim():'');
+    if(trajetoVal){
+      trajetoField.style.display='';
+      trajetoEl.textContent=trajetoVal.split(' | ').join('\n');
+    } else {
+      trajetoField.style.display='none';
+    }
     document.getElementById('mEquipe').textContent  =os.equipe    ||'—';
     document.getElementById('mTel').textContent     =os.telefone  ||'—';
     document.getElementById('mVeiculo').textContent =os.veiculo   ||'—';
@@ -579,9 +585,9 @@
     document.getElementById('modalFooter').innerHTML=
       STATUS.map(s=>{
         const active=st===s;
-        const safeS=s.replace(/'/g,"\\'");
-        return '<button class="modal-btn'+(active?' active-'+s.replace(/ /g,'\\ '):'')+
-          '" onclick="updateStatus('+os.id+',\''+safeS+'\')" '+(active?'disabled':'')+'>'+s+'</button>';
+        const safeS=s.replace(/'/g,"\'");
+        return '<button class="modal-btn" data-active="'+(active?s:'')+
+          '" onclick="updateStatus('+os.id+',''+safeS+'')" '+(active?'disabled':'')+'>'+s+'</button>';
       }).join('')+
       '<button class="modal-btn btn-delete" onclick="showConfirm()">🗑️ Excluir</button>';
   }
