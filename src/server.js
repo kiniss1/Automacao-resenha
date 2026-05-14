@@ -221,10 +221,15 @@ function startServer() {
         }
 
         const status = tipo === 'final' ? (o.status || 'Concluído') : 'Andamento';
+        // descricao_inicial → título do card (imutável após criação)
+        // descricao_final   → o que foi feito (só no final)
         const descInicial = tipo === 'inicial' ? (o.servico || o.descricao_inicial || null) : null;
         const descFinal   = tipo === 'final'   ? (o.servico || o.descricao_final   || null) : null;
-        const servicoExib = descFinal || descInicial || o.servico || '';
-        const servicoFull = trajeto ? servicoExib + ' | Trajeto: ' + trajeto : servicoExib;
+        // servico = sempre o planejado (descricao_inicial); no final não sobrescreve
+        const servicoBase = tipo === 'inicial'
+          ? (descInicial || '')
+          : (o.descricao_inicial || o.servico || ''); // preserva o que já estava
+        const servicoFull = trajeto ? servicoBase + ' | Trajeto: ' + trajeto : servicoBase;
 
         db.inserirOS({
           os:                osId,
