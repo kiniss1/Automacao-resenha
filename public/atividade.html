@@ -205,7 +205,7 @@
   <div class="card" id="cardTrajeto">
     <div class="section-label">
       🗺️ Trajeto
-      <span class="locked-badge" id="trajetoLockBadge" style="display:none">🔒 + adicione retorno</span>
+      <span class="locked-badge" id="trajetoLockBadge" style="display:none">📋 Ida registrada acima — adicione o retorno</span>
     </div>
     <div id="trajetoList"></div>
     <button class="btn-add" id="btnAddTrajeto" onclick="addTrajeto()">+ Adicionar ponto</button>
@@ -278,11 +278,7 @@
     document.getElementById('resenhaLockBadge').style.display='';
     document.getElementById('equipeLockBadge').style.display='';
     document.getElementById('trajetoLockBadge').style.display='';
-    // Lock existing trajeto items
-    document.querySelectorAll('.trajeto-item').forEach(function(el){
-      el.querySelectorAll('select,input').forEach(function(f){ f.disabled=true; });
-      el.querySelector('.btn-remove').style.display='none';
-    });
+    // Trajeto NÃO é travado — colaborador pode adicionar pontos de retorno
     _finalLocked=true;
   }
   function unlockAll(){
@@ -510,11 +506,7 @@
       '<button class="btn-remove" onclick="removeTrajeto('+n+')">✕</button>';
     document.getElementById('trajetoList').appendChild(item);
     toggleSeSel(item.querySelector('.traj-tipo'));
-    // If in final mode and locked, lock this new item too
-    if(_finalLocked){
-      item.querySelectorAll('select,input').forEach(function(f){f.disabled=true;});
-      item.querySelector('.btn-remove').style.display='none';
-    }
+    // Trajeto sempre editável
   }
   function toggleSeSel(sel){
     var seEl=sel.closest('.trajeto-item').querySelector('.traj-se');
