@@ -244,7 +244,9 @@ function startServer() {
       try {
         const botState = require('./state');
         if (botState.isReady() && global._waClient) {
-          const msgWA = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: registradas });
+          const baseUrl = process.env.PUBLIC_URL || ('https://' + req.headers.host);
+          const ordensComLink = registradas.map(r => ({ ...r, aprLink: baseUrl + '/apr.html?os=' + encodeURIComponent(r.os) }));
+          const msgWA = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: ordensComLink });
 
           if (global._grupoId) {
             // Envio direto pelo ID salvo — mais rápido e confiável
@@ -271,7 +273,12 @@ function startServer() {
         console.error('[ATIVIDADE] Erro WhatsApp:', wErr.message);
       }
 
-      res.json({ ok: true, registradas });
+      const baseUrl = process.env.PUBLIC_URL || ('https://' + req.headers.host);
+      const registradasComLink = registradas.map(r => ({
+        ...r,
+        aprLink: baseUrl + '/apr.html?os=' + encodeURIComponent(r.os),
+      }));
+      res.json({ ok: true, registradas: registradasComLink });
     } catch (err) {
       console.error('[API] POST /api/atividade:', err.message);
       res.status(500).json({ ok: false, error: err.message });
@@ -292,6 +299,7 @@ function startServer() {
       linhas.push('🧰 ' + o.os + (o.unidade && o.unidade !== '—' ? ' — ' + o.unidade : ''));
       if (o.servico) linhas.push(o.servico.split(' | ')[0]);
       linhas.push('📌 Status: ' + o.status);
+      if (o.aprLink) linhas.push('📎 APR: ' + o.aprLink);
       linhas.push('');
     }
     return linhas.join('\n').trim();
