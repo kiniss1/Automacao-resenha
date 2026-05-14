@@ -239,7 +239,16 @@
     <!-- APR — somente visualização no painel -->
     <div class="modal-section" id="aprModalSection" style="display:none">
       <div class="modal-section-title">📎 APR — Análise Preliminar de Risco</div>
-      <div class="apr-section" id="aprSection"></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div id="aprFrenteSection">
+          <p style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:6px">FRENTE</p>
+          <div id="aprFrenteImg"></div>
+        </div>
+        <div id="aprVersoSection" style="display:none">
+          <p style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:6px">VERSO</p>
+          <div id="aprVersoImg"></div>
+        </div>
+      </div>
     </div>
 
     <div class="modal-footer" id="modalFooter"></div>
