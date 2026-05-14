@@ -7,7 +7,7 @@ const db      = require('./db');
 const state   = require('./state');
 
 const PORT = process.env.PORT || 3000;
-const STATUS_VALIDOS = ['Andamento', 'Concluído', 'Cancelado'];
+const STATUS_VALIDOS = ['Andamento', 'Concluído', 'Etapa Concluída', 'Cancelado'];
 
 function startServer() {
   const app = express();
@@ -193,7 +193,7 @@ function startServer() {
   });
 
   // ── Registro de atividade via formulário web ──────────────────────────────
-  app.post('/api/atividade', (req, res) => {
+  app.post('/api/atividade', async (req, res) => {
     try {
       const { tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, trajeto, ordens } = req.body;
 
@@ -202,39 +202,56 @@ function startServer() {
       const registradas = [];
 
       for (const o of ordens) {
-        if (!o.servico) continue;
+        if (!o.servico && !o.descricao_inicial && !o.descricao_final) continue;
 
-        // Gera ID estável (número da OS ou hash do texto)
         let osId = o.os && o.os.trim() ? o.os.trim() : null;
         if (!osId) {
-          const norm = (o.servico || '').toLowerCase().replace(/[^a-z0-9\s]/g,'').trim().replace(/\s+/g,' ');
+          const norm = (o.servico || o.descricao_inicial || '').toLowerCase().replace(/[^a-z0-9\s]/g,'').trim().replace(/\s+/g,' ');
           const prefixo = norm.split(' ').slice(0,3).join('-').toUpperCase().substring(0,20);
           const h = norm.split('').reduce((h,c) => (((h<<5)+h)+c.charCodeAt(0))|0, 5381);
           osId = prefixo + '-' + Math.abs(h).toString(36).toUpperCase();
         }
 
-        // Monta serviço com trajeto se houver
-        const servicoFinal = trajeto ? o.servico + ' | Trajeto: ' + trajeto : o.servico;
         const status = tipo === 'final' ? (o.status || 'Concluído') : 'Andamento';
+        const descInicial = tipo === 'inicial' ? (o.servico || o.descricao_inicial || null) : null;
+        const descFinal   = tipo === 'final'   ? (o.servico || o.descricao_final   || null) : null;
+        const servicoExib = descFinal || descInicial || o.servico || '';
+        const servicoFull = trajeto ? servicoExib + ' | Trajeto: ' + trajeto : servicoExib;
 
         db.inserirOS({
-          os:          osId,
-          unidade:     o.unidade || '—',
+          os:                osId,
+          unidade:           o.unidade || '—',
           equipe,
-          veiculo:     veiculo || null,
-          servico:     servicoFinal,
+          veiculo:           veiculo || null,
+          servico:           servicoFull,
           status,
-          data:        data || null,
-          guarda:      guarda || null,
-          horario:     horario || null,
-          dia_semana:  dia_semana || null,
-          telefone:    telefone || null,
-          subestacoes: o.unidade || null,
-          saida_base:  null,
-          chegada_base: null,
+          data:              data || null,
+          guarda:            guarda || null,
+          horario:           horario || null,
+          dia_semana:        dia_semana || null,
+          telefone:          telefone || null,
+          subestacoes:       o.unidade || null,
+          saida_base:        null,
+          chegada_base:      null,
+          descricao_inicial: descInicial,
+          descricao_final:   descFinal,
         });
 
-        registradas.push({ os: osId, unidade: o.unidade, status });
+        registradas.push({ os: osId, unidade: o.unidade, status, servico: servicoFull });
+      }
+
+      // Envia mensagem de confirmação no WhatsApp
+      try {
+        const botState = require('./state');
+        if (botState.isReady() && global._waClient) {
+          const msg = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: registradas });
+          const grupoNome = process.env.GRUPO_NOME || 'Resenha';
+          const chats = await global._waClient.getChats();
+          const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+          if (grupo) await grupo.sendMessage(msg);
+        }
+      } catch(wErr) {
+        console.warn('[ATIVIDADE] Aviso WhatsApp:', wErr.message);
       }
 
       res.json({ ok: true, registradas });
@@ -243,6 +260,25 @@ function startServer() {
       res.status(500).json({ ok: false, error: err.message });
     }
   });
+
+  function formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens }) {
+    const titulo = tipo === 'inicial' ? '*📋 Resenha Inicial — Registro de Atividade*' : '*📋 Resenha Final — Registro de Atividade*';
+    const linhas = [titulo, ''];
+    if (guarda)    linhas.push('⚙️ Guarda: ' + guarda);
+    if (horario)   linhas.push('⏰ Horário: ' + horario);
+    if (dia_semana || data) linhas.push('📆 ' + [dia_semana, data].filter(Boolean).join(', '));
+    if (equipe)    linhas.push('👷 Equipe: ' + equipe);
+    if (telefone)  linhas.push('📱 ' + telefone);
+    if (veiculo)   linhas.push('🚔 ' + veiculo);
+    linhas.push('');
+    for (const o of ordens) {
+      linhas.push('🧰 ' + o.os + (o.unidade && o.unidade !== '—' ? ' — ' + o.unidade : ''));
+      if (o.servico) linhas.push(o.servico.split(' | ')[0]);
+      linhas.push('📌 Status: ' + o.status);
+      linhas.push('');
+    }
+    return linhas.join('\n').trim();
+  }
 
   // ── APR upload/serve ──────────────────────────────────────────────────────
   const multer = require('multer');
