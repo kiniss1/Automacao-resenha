@@ -7,172 +7,293 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --bg:#0f1117;--surface:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892a4;
-      --primary:#4f6ef7;--green:#22c55e;--orange:#f97316;--gray:#94a3b8;--red:#ef4444;
-      --green-bg:#052e16;--orange-bg:#431407;--gray-bg:#1e293b;--red-bg:#450a0a;
+      --bg:#0d1117;--surface:#161b22;--surface2:#1c2230;--border:#21262d;--border2:#30363d;
+      --text:#e6edf3;--muted:#7d8590;--muted2:#484f58;
+      --primary:#58a6ff;--primary-bg:#0d2040;
+      --green:#3fb950;--green-bg:#0d2c1a;--green-border:#196c2e;
+      --orange:#d29922;--orange-bg:#2d1f00;--orange-border:#6e4800;
+      --gray:#8b949e;--gray-bg:#21262d;--gray-border:#30363d;
+      --red:#f85149;--red-bg:#2d1117;--red-border:#6e1b1b;
+      --violet:#a5b4fc;--violet-bg:#1e1b4b;--violet-border:#4338ca;
     }
     body.light{
-      --bg:#f1f5f9;--surface:#ffffff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;
-      --green-bg:#dcfce7;--orange-bg:#ffedd5;--gray-bg:#f1f5f9;--red-bg:#fee2e2;
+      --bg:#f6f8fa;--surface:#ffffff;--surface2:#f6f8fa;--border:#d0d7de;--border2:#d0d7de;
+      --text:#1f2328;--muted:#656d76;--muted2:#afb8c1;
+      --primary:#0969da;--primary-bg:#ddf4ff;
+      --green:#1a7f37;--green-bg:#dafbe1;--green-border:#74c47a;
+      --orange:#9a6700;--orange-bg:#fff8c5;--orange-border:#d4a72c;
+      --gray:#57606a;--gray-bg:#f6f8fa;--gray-border:#d0d7de;
+      --red:#cf222e;--red-bg:#ffebe9;--red-border:#ff8182;
+      --violet:#5b21b6;--violet-bg:#ede9fe;--violet-border:#8b5cf6;
     }
-    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:14px}
 
-    /* Header */
-    header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-    .header-left h1{font-size:1.1rem;font-weight:700}
-    .header-left span{font-size:.75rem;color:var(--muted)}
-    .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .hbtn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:.78rem;cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center}
-    .hbtn:hover{background:var(--border);color:var(--text)}
-    .hbtn.green{background:var(--green);color:#fff;border-color:var(--green);font-weight:600}
-    .hbtn.green:hover{opacity:.88}
-    .bot-badge{display:flex;align-items:center;gap:6px;font-size:.78rem;padding:5px 10px;border-radius:999px;border:1px solid var(--border)}
-    .dot{width:7px;height:7px;border-radius:50%;background:var(--red)}
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    header{
+      background:var(--surface);border-bottom:1px solid var(--border);
+      padding:12px 20px;display:flex;align-items:center;
+      justify-content:space-between;flex-wrap:wrap;gap:10px;
+      position:sticky;top:0;z-index:100;
+    }
+    .header-left{display:flex;align-items:center;gap:10px}
+    .header-logo{width:28px;height:28px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .header-left h1{font-size:15px;font-weight:600;letter-spacing:-.01em}
+    .header-left span{font-size:11px;color:var(--muted);display:none}
+    @media(min-width:600px){.header-left span{display:block}}
+    .header-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .hbtn{background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;text-decoration:none;transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;font-weight:500}
+    .hbtn:hover{background:var(--surface2);color:var(--text);border-color:var(--muted2)}
+    .hbtn.primary{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600}
+    .hbtn.primary:hover{opacity:.88}
+    .bot-badge{display:flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border2);color:var(--muted)}
+    .dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
     .dot.online{background:var(--green);animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-    /* Stats */
-    .stats-bar{display:flex;gap:12px;padding:14px 24px;flex-wrap:wrap}
-    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 18px;min-width:90px;text-align:center}
-    .stat-card .num{font-size:1.5rem;font-weight:700;line-height:1}
-    .stat-card .lbl{font-size:.7rem;color:var(--muted);margin-top:3px}
-    .stat-card.orange .num{color:var(--orange)}
-    .stat-card.green  .num{color:var(--green)}
-    .stat-card.gray   .num{color:var(--gray)}
+    /* ── Stats ──────────────────────────────────────────────────────────── */
+    .stats-bar{display:flex;gap:1px;padding:16px 20px;flex-wrap:wrap;gap:10px}
+    .stat-card{
+      background:var(--surface);border:1px solid var(--border);border-radius:8px;
+      padding:10px 16px;min-width:80px;text-align:center;
+      transition:border-color .12s;cursor:default;
+    }
+    .stat-card:hover{border-color:var(--border2)}
+    .stat-card .num{font-size:22px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+    .stat-card .lbl{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap}
+    .stat-card.s-orange .num{color:var(--orange)}
+    .stat-card.s-green  .num{color:var(--green)}
+    .stat-card.s-gray   .num{color:var(--gray)}
+    .stat-card.s-violet .num{color:var(--violet)}
 
-    /* Filters */
-    .filters{display:flex;gap:8px;padding:0 24px 14px;flex-wrap:wrap;align-items:center}
-    .filters input,.filters select{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 11px;font-size:.85rem;outline:none}
+    /* ── Filters ────────────────────────────────────────────────────────── */
+    .filters{
+      display:flex;gap:6px;padding:0 20px 14px;flex-wrap:wrap;align-items:center;
+    }
+    .filters input,.filters select{
+      background:var(--surface);border:1px solid var(--border2);color:var(--text);
+      border-radius:6px;padding:6px 10px;font-size:13px;outline:none;
+      transition:border-color .12s;
+    }
     .filters input:focus,.filters select:focus{border-color:var(--primary)}
-    .filters input[type=text]{min-width:200px}
-    .btn-refresh{margin-left:auto;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:.85rem;cursor:pointer;transition:opacity .15s}
+    .filters input[type=text]{min-width:180px;flex:1}
+    .btn-refresh{
+      background:var(--primary);color:#fff;border:none;border-radius:6px;
+      padding:6px 12px;font-size:12px;cursor:pointer;transition:opacity .12s;
+      font-weight:600;margin-left:auto;
+    }
     .btn-refresh:hover{opacity:.85}
     .btn-refresh:disabled{opacity:.5;cursor:default}
-    .btn-limpar{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 11px;font-size:.85rem;cursor:pointer}
-    .btn-limpar:hover{background:var(--border);color:var(--text)}
+    .btn-limpar{
+      background:transparent;border:1px solid var(--border2);color:var(--muted);
+      border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;
+    }
+    .btn-limpar:hover{background:var(--surface2);color:var(--text)}
 
-    /* Grid */
-    .grid{display:flex;flex-wrap:wrap;gap:14px;padding:0 24px 32px}
-    .os-card{width:275px;flex:1 1 275px;min-width:240px;max-width:100%}
-    .os-card.collapsed{flex:0 0 auto;width:auto;min-width:180px;max-width:340px}
+    /* ── Grid ───────────────────────────────────────────────────────────── */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      gap:12px;padding:0 20px 32px;
+      align-items:start;
+    }
 
-    /* OS Card */
-    .os-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s}
-    .os-card:hover{border-color:var(--primary)}
+    /* ── OS Card ────────────────────────────────────────────────────────── */
+    .os-card{
+      background:var(--surface);border:1px solid var(--border);border-radius:10px;
+      display:flex;flex-direction:column;overflow:hidden;
+      transition:border-color .12s, box-shadow .12s;
+    }
+    .os-card:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,.15)}
 
-    /* Card top row: header + collapse button */
-    .card-top{display:flex;align-items:flex-start;gap:6px}
-    .card-header{flex:1;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:6px;min-width:0}
-    .unidade{font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-    .os-num{font-size:.72rem;color:var(--muted);white-space:nowrap}
-    .btn-collapse{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:2px 8px;font-size:.85rem;cursor:pointer;line-height:1.4;flex-shrink:0;transition:background .15s}
-    .btn-collapse:hover{background:var(--border);color:var(--text)}
+    /* Card accent bar — colored by status */
+    .card-accent{height:3px;flex-shrink:0}
+    .card-accent.Andamento{background:var(--orange)}
+    .card-accent.Concluído{background:var(--green)}
+    .card-accent.Etapa\ Concluída{background:var(--violet)}
+    .card-accent.Cancelado{background:var(--gray)}
 
-    /* Collapsed state — hide body and shrink card */
+    .card-inner{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+
+    /* Card top: unidade + OS num + collapse */
+    .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .card-meta-left{display:flex;align-items:center;gap:6px;min-width:0;flex:1;cursor:pointer}
+    .unidade{
+      font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;
+      text-transform:uppercase;white-space:nowrap;
+    }
+    .os-num{
+      font-size:11px;color:var(--muted2);white-space:nowrap;
+      border:1px solid var(--border2);border-radius:4px;padding:1px 6px;
+      font-family:monospace;
+    }
+    .btn-collapse{
+      background:transparent;border:none;color:var(--muted2);
+      font-size:16px;cursor:pointer;line-height:1;padding:0 2px;
+      flex-shrink:0;transition:color .12s;
+    }
+    .btn-collapse:hover{color:var(--text)}
+
+    /* Collapsed */
     .os-card.collapsed .card-body{display:none}
-    .os-card.collapsed{padding:8px 12px;gap:0}
+    .os-card.collapsed .card-inner{padding:8px 14px}
+    .os-card.collapsed{box-shadow:none}
 
     .card-body{display:flex;flex-direction:column;gap:8px}
-    .card-servico{font-size:.88rem;font-weight:600;line-height:1.4;cursor:pointer}
-    .card-row{font-size:.76rem;color:var(--muted);display:flex;align-items:center;gap:5px}
 
-    /* Badges */
-    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:.73rem;font-weight:600}
-    .badge.Andamento{background:var(--orange-bg);color:var(--orange);border:1px solid #7c2d12}
-    .badge.Concluído{background:var(--green-bg); color:var(--green); border:1px solid #14532d}
-    .badge.Cancelado{background:var(--gray-bg);  color:var(--gray);  border:1px solid #334155}
-    .badge.Etapa\ Concluída{background:#1e1b4b;color:#a5b4fc;border:1px solid #4338ca}
+    /* Service title */
+    .card-servico{
+      font-size:13px;font-weight:600;line-height:1.45;cursor:pointer;
+      display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+    }
+    .card-servico:hover{color:var(--primary)}
 
-    /* Status buttons */
-    .card-footer{display:flex;gap:5px}
-    .btn-status{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 3px;font-size:.7rem;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
-    .btn-status:hover{background:var(--border);color:var(--text)}
-    .btn-status:disabled{opacity:.35;cursor:default}
-    .btn-status.active-Andamento{border-color:var(--orange);color:var(--orange)}
-    .btn-status.active-Concluído{border-color:var(--green); color:var(--green)}
-    .btn-status.active-Cancelado{border-color:var(--gray);  color:var(--gray)}
-    .btn-status.active-Etapa\ Concluída{border-color:#a5b4fc;color:#a5b4fc}
+    /* Meta row */
+    .card-row{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
 
-    /* APR badge on card */
-    .apr-badge{font-size:.7rem;color:var(--primary);border:1px solid var(--primary);border-radius:6px;padding:2px 8px;cursor:pointer;background:transparent;transition:background .15s}
+    /* Badge */
+    .badge{
+      display:inline-flex;align-items:center;padding:3px 8px;
+      border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.02em;
+    }
+    .badge.Andamento{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border)}
+    .badge.Concluído{background:var(--green-bg); color:var(--green); border:1px solid var(--green-border)}
+    .badge.Cancelado{background:var(--gray-bg);  color:var(--gray);  border:1px solid var(--gray-border)}
+    .badge.Etapa\ Concluída{background:var(--violet-bg);color:var(--violet);border:1px solid var(--violet-border)}
+
+    /* Card footer */
+    .card-footer{
+      display:flex;gap:4px;padding-top:4px;border-top:1px solid var(--border);
+      flex-wrap:wrap;
+    }
+    .btn-status{
+      flex:1;min-width:60px;background:transparent;border:1px solid var(--border2);color:var(--muted);
+      border-radius:5px;padding:4px 2px;font-size:11px;cursor:pointer;white-space:nowrap;
+      transition:all .12s;font-weight:500;
+    }
+    .btn-status:hover{background:var(--surface2);color:var(--text);border-color:var(--muted2)}
+    .btn-status:disabled{opacity:.3;cursor:default}
+    .btn-status.active-Andamento{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange)}
+    .btn-status.active-Concluído{background:var(--green-bg); border-color:var(--green-border); color:var(--green)}
+    .btn-status.active-Cancelado{background:var(--gray-bg);  border-color:var(--gray-border);  color:var(--gray)}
+    .btn-status.active-Etapa\ Concluída{background:var(--violet-bg);border-color:var(--violet-border);color:var(--violet)}
+
+    /* APR badge */
+    .apr-badge{
+      font-size:11px;color:var(--primary);border:1px solid var(--primary);
+      border-radius:4px;padding:2px 7px;cursor:pointer;background:var(--primary-bg);
+      transition:all .12s;font-weight:500;
+    }
     .apr-badge:hover{background:var(--primary);color:#fff}
 
-    /* Modal */
-    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+    /* ── Modal ──────────────────────────────────────────────────────────── */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
     .modal-bg.hidden{display:none}
-    .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:14px}
+    .modal{
+      background:var(--surface);border:1px solid var(--border2);border-radius:12px;
+      width:100%;max-width:540px;max-height:92vh;overflow-y:auto;
+      display:flex;flex-direction:column;
+    }
+    .modal-top-bar{height:4px;border-radius:12px 12px 0 0;flex-shrink:0}
+    .modal-top-bar.Andamento{background:var(--orange)}
+    .modal-top-bar.Concluído{background:var(--green)}
+    .modal-top-bar.Cancelado{background:var(--gray)}
+    .modal-top-bar.Etapa\ Concluída{background:var(--violet)}
+    .modal-body{padding:20px;display:flex;flex-direction:column;gap:16px}
     .modal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-    .modal-title{font-size:1rem;font-weight:700;line-height:1.4}
-    .modal-close{background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;padding:0 4px}
+    .modal-title-wrap{display:flex;flex-direction:column;gap:4px}
+    .modal-title{font-size:15px;font-weight:700;line-height:1.4}
+    .modal-subtitle{font-size:11px;color:var(--muted);font-family:monospace}
+    .modal-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;flex-shrink:0}
     .modal-close:hover{color:var(--text)}
-    .modal-section{display:flex;flex-direction:column;gap:0}
-    .modal-section-title{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px}
-    .modal-field{display:flex;align-items:flex-start;gap:9px;font-size:.83rem;padding:7px 0;border-bottom:1px solid var(--border)}
+
+    .modal-section{display:flex;flex-direction:column;gap:1px}
+    .modal-section-title{
+      font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.1em;padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:2px;
+    }
+    .modal-field{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
     .modal-field:last-child{border-bottom:none}
-    .modal-field .icon{font-size:.95rem;min-width:20px;text-align:center;margin-top:1px}
-    .modal-field .val{color:var(--text);line-height:1.5}
-    .modal-field .lbl{color:var(--muted);font-size:.7rem;margin-bottom:2px}
-    .modal-desc{background:var(--bg);border-radius:8px;padding:9px 12px;font-size:.8rem;color:var(--muted);line-height:1.7;border-left:3px solid var(--border);white-space:pre-wrap}
-    .modal-footer{display:flex;gap:7px;flex-wrap:wrap}
-    .modal-btn{flex:1;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:8px;padding:8px;font-size:.78rem;cursor:pointer;transition:background .15s,color .15s;min-width:75px}
-    .modal-btn:hover{background:var(--border);color:var(--text)}
-    .modal-btn:disabled{opacity:.35;cursor:default}
-    .modal-btn.active-Andamento{border-color:var(--orange);color:var(--orange)}
-    .modal-btn.active-Concluído{border-color:var(--green); color:var(--green)}
-    .modal-btn.active-Cancelado{border-color:var(--gray);  color:var(--gray)}
-    .modal-btn.active-Etapa\ Concluída{border-color:#a5b4fc;color:#a5b4fc}
-    .modal-btn.btn-delete{border-color:var(--red);color:var(--red);flex:0 0 100%}
+    .modal-field .icon{font-size:13px;min-width:18px;text-align:center;margin-top:1px;flex-shrink:0}
+    .modal-field .content{display:flex;flex-direction:column;gap:1px;min-width:0}
+    .modal-field .lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+    .modal-field .val{font-size:13px;color:var(--text);line-height:1.5;word-break:break-word}
+    .modal-desc{
+      background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+      padding:10px 12px;font-size:13px;color:var(--text);line-height:1.7;
+      white-space:pre-wrap;word-break:break-word;border-left:3px solid var(--primary);
+    }
+
+    .modal-footer{display:flex;gap:6px;flex-wrap:wrap;padding-top:4px}
+    .modal-btn{
+      flex:1;min-width:80px;border:1px solid var(--border2);background:transparent;
+      color:var(--muted);border-radius:6px;padding:8px;font-size:12px;cursor:pointer;
+      transition:all .12s;font-weight:500;
+    }
+    .modal-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--muted2)}
+    .modal-btn:disabled{opacity:.3;cursor:default}
+    .modal-btn.active-Andamento{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange)}
+    .modal-btn.active-Concluído{background:var(--green-bg); border-color:var(--green-border); color:var(--green)}
+    .modal-btn.active-Cancelado{background:var(--gray-bg);  border-color:var(--gray-border);  color:var(--gray)}
+    .modal-btn.active-Etapa\ Concluída{background:var(--violet-bg);border-color:var(--violet-border);color:var(--violet)}
+    .modal-btn.btn-delete{border-color:var(--red-border);color:var(--red);flex:0 0 100%}
     .modal-btn.btn-delete:hover{background:var(--red-bg)}
 
-    /* APR section in modal */
-    .apr-section{display:flex;flex-direction:column;gap:10px}
-    .apr-img-wrap{position:relative;cursor:pointer}
-    .apr-img-wrap img{width:100%;border-radius:8px;border:1px solid var(--border);display:block}
-    .apr-img-wrap .apr-expand{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:.72rem;cursor:pointer}
-    .apr-upload-zone{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s;position:relative}
-    .apr-upload-zone:hover{border-color:var(--primary)}
-    .apr-upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-    .apr-upload-zone p{font-size:.82rem;color:var(--muted)}
-    .apr-upload-zone .icon-up{font-size:1.5rem;margin-bottom:6px}
-    .btn-apr-upload{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.82rem;cursor:pointer;font-weight:600;width:100%;transition:opacity .15s}
-    .btn-apr-upload:hover{opacity:.88}
-    .btn-apr-upload:disabled{opacity:.4;cursor:default}
-
-    /* APR lightbox */
-    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:400;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
-    .lightbox.hidden{display:none}
-    .lightbox img{max-width:95vw;max-height:95vh;border-radius:8px;object-fit:contain}
+    /* APR in modal */
+    .apr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .apr-side-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+    .apr-img-wrap{position:relative;cursor:zoom-in;border-radius:6px;overflow:hidden;border:1px solid var(--border2)}
+    .apr-img-wrap img{width:100%;display:block;aspect-ratio:3/4;object-fit:cover}
+    .apr-img-wrap .expand-btn{
+      position:absolute;bottom:6px;right:6px;
+      background:rgba(0,0,0,.65);color:#fff;border:none;
+      border-radius:4px;padding:3px 7px;font-size:10px;cursor:pointer;
+    }
+    .apr-placeholder{
+      background:var(--surface2);border:1px dashed var(--border2);border-radius:6px;
+      display:flex;align-items:center;justify-content:center;
+      aspect-ratio:3/4;color:var(--muted);font-size:11px;
+    }
 
     /* Confirm */
-    .confirm-box{background:var(--red-bg);border:1px solid var(--red);border-radius:10px;padding:13px 15px;display:flex;flex-direction:column;gap:9px}
+    .confirm-box{background:var(--red-bg);border:1px solid var(--red-border);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
     .confirm-box.hidden{display:none}
-    .confirm-box p{font-size:.83rem;color:var(--text);line-height:1.5}
+    .confirm-box p{font-size:13px;color:var(--text);line-height:1.5}
     .confirm-box strong{color:var(--red)}
-    .confirm-actions{display:flex;gap:8px}
-    .btn-confirm-yes{flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:8px;font-size:.8rem;cursor:pointer;font-weight:600}
-    .btn-confirm-no{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px;font-size:.8rem;cursor:pointer}
+    .confirm-actions{display:flex;gap:6px}
+    .btn-confirm-yes{flex:1;background:var(--red);color:#fff;border:none;border-radius:6px;padding:7px;font-size:12px;cursor:pointer;font-weight:600}
+    .btn-confirm-no{flex:1;background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:6px;padding:7px;font-size:12px;cursor:pointer}
 
+    /* Empty/spinner */
     .empty{grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)}
-    .spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:10px}
+    .spinner{display:inline-block;width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:10px}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    #toast{position:fixed;bottom:22px;right:22px;background:#1e293b;border:1px solid var(--border);border-radius:10px;padding:11px 18px;font-size:.85rem;transform:translateY(80px);opacity:0;transition:all .25s;z-index:300;max-width:300px}
+    /* Lightbox */
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:400;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+    .lightbox.hidden{display:none}
+    .lightbox img{max-width:95vw;max-height:95vh;border-radius:6px;object-fit:contain}
+
+    /* Toast */
+    #toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:13px;transform:translateY(80px);opacity:0;transition:all .2s;z-index:300;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
     #toast.show{transform:translateY(0);opacity:1}
-    #toast.ok {border-color:var(--green);color:var(--green)}
-    #toast.err{border-color:var(--red);  color:var(--red)}
+    #toast.ok {border-color:var(--green-border);color:var(--green)}
+    #toast.err{border-color:var(--red-border);  color:var(--red)}
   </style>
 </head>
 <body>
 
 <header>
   <div class="header-left">
-    <h1>⚡ Painel de Ordens de Serviço</h1>
-    <span>OOMC — MANUTENÇÃO ALTA TENSÃO</span>
+    <div class="header-logo">⚡</div>
+    <div>
+      <h1>Painel de Ordens de Serviço</h1>
+      <span>OOMC — Manutenção Alta Tensão</span>
+    </div>
   </div>
   <div class="header-right">
-    <a href="/atividade.html" class="hbtn green">+ Nova Atividade</a>
+    <a href="/atividade.html" class="hbtn primary">+ Nova Atividade</a>
     <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
-    <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Escuro</button>
+    <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙</button>
     <div class="bot-badge">
       <div class="dot" id="botDot"></div>
       <span id="botLabel">Verificando...</span>
@@ -181,11 +302,11 @@
 </header>
 
 <div class="stats-bar">
-  <div class="stat-card">        <div class="num" id="sTotal">–</div>    <div class="lbl">Total</div></div>
-  <div class="stat-card orange"> <div class="num" id="sAndamento">–</div> <div class="lbl">Andamento</div></div>
-  <div class="stat-card green">  <div class="num" id="sConcluido">–</div> <div class="lbl">Concluído</div></div>
-  <div class="stat-card" style="--num-color:#a5b4fc">  <div class="num" id="sEtapa" style="color:#a5b4fc">–</div>    <div class="lbl">Etapa Concluída</div></div>
-  <div class="stat-card gray">   <div class="num" id="sCancelado">–</div> <div class="lbl">Cancelado</div></div>
+  <div class="stat-card">          <div class="num" id="sTotal">–</div>     <div class="lbl">Total</div></div>
+  <div class="stat-card s-orange"> <div class="num" id="sAndamento">–</div>  <div class="lbl">Andamento</div></div>
+  <div class="stat-card s-violet"> <div class="num" id="sEtapa">–</div>      <div class="lbl">Etapa Concluída</div></div>
+  <div class="stat-card s-green">  <div class="num" id="sConcluido">–</div>  <div class="lbl">Concluído</div></div>
+  <div class="stat-card s-gray">   <div class="num" id="sCancelado">–</div>  <div class="lbl">Cancelado</div></div>
 </div>
 
 <div class="filters">
@@ -193,8 +314,8 @@
   <select id="filterStatus" onchange="load()">
     <option value="">Todos os status</option>
     <option value="Andamento">Andamento</option>
-    <option value="Concluído">Concluído</option>
     <option value="Etapa Concluída">Etapa Concluída</option>
+    <option value="Concluído">Concluído</option>
     <option value="Cancelado">Cancelado</option>
   </select>
   <select id="filterUnidade" onchange="load()">
@@ -202,7 +323,7 @@
   </select>
   <input type="date" id="filterDataDe"  onchange="load()" title="Data início"/>
   <input type="date" id="filterDataAte" onchange="load()" title="Data fim"/>
-  <button class="btn-limpar" onclick="limparFiltros()">✕ Limpar</button>
+  <button class="btn-limpar" onclick="limparFiltros()">✕</button>
   <button class="btn-refresh" id="btnRefresh" onclick="load()">↻ Atualizar</button>
 </div>
 
@@ -210,75 +331,80 @@
   <div class="empty"><div class="spinner"></div><br>Carregando...</div>
 </div>
 
-<!-- Modal detalhes -->
+<!-- Modal -->
 <div class="modal-bg hidden" id="modalBg" onclick="closeModal(event)">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle">—</div>
-      <button class="modal-close" onclick="closeModalDirect()">✕</button>
-    </div>
-    <span class="badge" id="modalBadge">—</span>
-
-    <div class="modal-section">
-      <div class="modal-section-title">Resenha</div>
-      <div class="modal-field"><span class="icon">⚙️</span><div><div class="lbl">Guarda</div><div class="val" id="mGuarda">—</div></div></div>
-      <div class="modal-field"><span class="icon">⏰</span><div><div class="lbl">Horário</div><div class="val" id="mHorario">—</div></div></div>
-      <div class="modal-field"><span class="icon">📆</span><div><div class="lbl">Dia / Data</div><div class="val" id="mData">—</div></div></div>
-      <div class="modal-field"><span class="icon">🏛️</span><div><div class="lbl">Subestações</div><div class="val" id="mSub">—</div></div></div>
-      <div class="modal-field"><span class="icon">⏰</span><div><div class="lbl">Saída da base</div><div class="val" id="mSaida">—</div></div></div>
-      <div class="modal-field"><span class="icon">⏰</span><div><div class="lbl">Chegada na base</div><div class="val" id="mChegada">—</div></div></div>
-    </div>
-
-    <div class="modal-section">
-      <div class="modal-section-title">Equipe</div>
-      <div class="modal-field"><span class="icon">👷</span><div><div class="lbl">Colaboradores</div><div class="val" id="mEquipe">—</div></div></div>
-      <div class="modal-field"><span class="icon">📱</span><div><div class="lbl">Telefone</div><div class="val" id="mTel">—</div></div></div>
-      <div class="modal-field"><span class="icon">🚔</span><div><div class="lbl">Veículo</div><div class="val" id="mVeiculo">—</div></div></div>
-    </div>
-
-    <div class="modal-section">
-      <div class="modal-section-title">Atividade</div>
-      <div class="modal-desc" id="mServico">—</div>
-    </div>
-
-    <!-- APR — somente visualização no painel -->
-    <div class="modal-section" id="aprModalSection" style="display:none">
-      <div class="modal-section-title">📎 APR — Análise Preliminar de Risco</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div id="aprFrenteSection">
-          <p style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:6px">FRENTE</p>
-          <div id="aprFrenteImg"></div>
+    <div class="modal-top-bar" id="modalTopBar"></div>
+    <div class="modal-body">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-title" id="modalTitle">—</div>
+          <div class="modal-subtitle" id="modalSubtitle">—</div>
         </div>
-        <div id="aprVersoSection" style="display:none">
-          <p style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:6px">VERSO</p>
-          <div id="aprVersoImg"></div>
+        <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      </div>
+      <span class="badge" id="modalBadge">—</span>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Resenha</div>
+        <div class="modal-field"><span class="icon">⚙️</span><div class="content"><div class="lbl">Guarda</div><div class="val" id="mGuarda">—</div></div></div>
+        <div class="modal-field"><span class="icon">⏰</span><div class="content"><div class="lbl">Horário</div><div class="val" id="mHorario">—</div></div></div>
+        <div class="modal-field"><span class="icon">📆</span><div class="content"><div class="lbl">Dia / Data</div><div class="val" id="mData">—</div></div></div>
+        <div class="modal-field"><span class="icon">🏛️</span><div class="content"><div class="lbl">Subestações</div><div class="val" id="mSub">—</div></div></div>
+        <div class="modal-field"><span class="icon">⏰</span><div class="content"><div class="lbl">Saída da base</div><div class="val" id="mSaida">—</div></div></div>
+        <div class="modal-field"><span class="icon">⏰</span><div class="content"><div class="lbl">Chegada na base</div><div class="val" id="mChegada">—</div></div></div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Equipe</div>
+        <div class="modal-field"><span class="icon">👷</span><div class="content"><div class="lbl">Colaboradores</div><div class="val" id="mEquipe">—</div></div></div>
+        <div class="modal-field"><span class="icon">📱</span><div class="content"><div class="lbl">Telefone</div><div class="val" id="mTel">—</div></div></div>
+        <div class="modal-field"><span class="icon">🚔</span><div class="content"><div class="lbl">Veículo</div><div class="val" id="mVeiculo">—</div></div></div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Atividade</div>
+        <div class="modal-desc" id="mServico">—</div>
+      </div>
+
+      <!-- APR frente e verso -->
+      <div class="modal-section" id="aprModalSection" style="display:none">
+        <div class="modal-section-title">📎 APR — Análise Preliminar de Risco</div>
+        <div class="apr-grid">
+          <div>
+            <div class="apr-side-label">Frente</div>
+            <div id="aprFrenteWrap" class="apr-placeholder">Sem imagem</div>
+          </div>
+          <div>
+            <div class="apr-side-label">Verso</div>
+            <div id="aprVersoWrap" class="apr-placeholder">Sem imagem</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="modal-footer" id="modalFooter"></div>
+      <div class="modal-footer" id="modalFooter"></div>
 
-    <div class="confirm-box hidden" id="confirmBox">
-      <p>Excluir a OS <strong id="confirmOs">—</strong>?<br>Esta ação não pode ser desfeita.</p>
-      <div class="confirm-actions">
-        <button class="btn-confirm-no" onclick="hideConfirm()">Cancelar</button>
-        <button class="btn-confirm-yes" onclick="confirmarExclusao()">Excluir</button>
+      <div class="confirm-box hidden" id="confirmBox">
+        <p>Excluir a OS <strong id="confirmOs">—</strong>?<br>Esta ação não pode ser desfeita.</p>
+        <div class="confirm-actions">
+          <button class="btn-confirm-no" onclick="hideConfirm()">Cancelar</button>
+          <button class="btn-confirm-yes" onclick="confirmarExclusao()">Excluir</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Lightbox APR -->
-<div class="lightbox hidden" id="lightbox" onclick="document.getElementById('lightbox').classList.add('hidden')">
+<!-- Lightbox -->
+<div class="lightbox hidden" id="lightbox" onclick="this.classList.add('hidden')">
   <img id="lightboxImg" src="" alt="APR"/>
 </div>
 
 <div id="toast"></div>
 
 <script>
-  const STATUS = ['Andamento', 'Concluído', 'Etapa Concluída', 'Cancelado'];
+  const STATUS = ['Andamento', 'Etapa Concluída', 'Concluído', 'Cancelado'];
   let _debounce, _unidades = new Set(), _currentId = null, _currentOs = null;
-  let _aprPreviewFile = null;
 
   function displayOs(os) {
     if (!os) return '';
@@ -298,23 +424,21 @@
 
   function debounceLoad(){ clearTimeout(_debounce); _debounce=setTimeout(load,400); }
 
-  // ── Collapse ──────────────────────────────────────────────────────────────
   function toggleCollapse(id, btn) {
     const card = document.getElementById('card-'+id);
     if (!card) return;
     const collapsed = card.classList.toggle('collapsed');
-    btn.textContent = collapsed ? '+' : '−';
+    btn.textContent = collapsed ? '▸' : '▾';
     btn.title = collapsed ? 'Expandir' : 'Minimizar';
   }
 
-  // ── Bot status ─────────────────────────────────────────────────────────────
   async function checkBot(){
     try{
       const r=await fetch('/api/bot-status').then(r=>r.json());
       const dot=document.getElementById('botDot'),lbl=document.getElementById('botLabel');
       if(r.ready){dot.className='dot online';lbl.textContent='Bot online';}
-      else if(r.hasQR){dot.className='dot';dot.style.background='#f59e0b';lbl.innerHTML='Aguardando QR &nbsp;<a href="/qr" target="_blank" style="color:#4f6ef7">Escanear</a>';}
-      else{dot.className='dot';lbl.textContent='Bot iniciando...';}
+      else if(r.hasQR){dot.className='dot';dot.style.background='#d29922';lbl.innerHTML='Aguardando QR <a href="/qr" target="_blank" style="color:var(--primary)">Escanear</a>';}
+      else{dot.className='dot';lbl.textContent='Iniciando...';}
     }catch{}
   }
 
@@ -323,16 +447,15 @@
       const {data}=await fetch('/api/stats').then(r=>r.json());
       document.getElementById('sTotal').textContent    =data.total    ||0;
       document.getElementById('sAndamento').textContent=data.andamento||0;
+      document.getElementById('sEtapa').textContent    =data.etapa    ||0;
       document.getElementById('sConcluido').textContent=data.concluido||0;
       document.getElementById('sCancelado').textContent=data.cancelado||0;
-      document.getElementById('sEtapa').textContent=data.etapa||0;
     }catch{}
   }
 
-  // ── Load ──────────────────────────────────────────────────────────────────
   async function load(){
     const btn=document.getElementById('btnRefresh');
-    btn.disabled=true; btn.textContent='↻ Carregando...';
+    btn.disabled=true; btn.textContent='↻';
     const p=new URLSearchParams();
     const search =document.getElementById('search').value.trim();
     const status =document.getElementById('filterStatus').value;
@@ -365,7 +488,6 @@
       [..._unidades].sort().map(u=>'<option value="'+u+'"'+(u===cur?' selected':'')+'>'+u+'</option>').join('');
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   function renderGrid(lista){
     const grid=document.getElementById('grid');
     if(!lista.length){grid.innerHTML='<div class="empty">📭 Nenhuma OS encontrada.</div>';return;}
@@ -376,43 +498,45 @@
     const partes=(os.servico||'—').split(' | ');
     const principal=e(partes[0]);
     const osDisplay=displayOs(os.os);
+    const st = os.status || 'Andamento';
+    const hasApr = !!os.apr_path;
+
     const btns=STATUS.map(s=>{
-      const active=os.status===s;
-      return '<button class="btn-status'+(active?' active-'+s:'')+
-        '" onclick="event.stopPropagation();updateStatus('+os.id+',\''+s+'\')" '+
+      const active=st===s;
+      const safeS=s.replace(/'/g,"\\'");
+      return '<button class="btn-status'+(active?' active-'+s.replace(/ /g,'\\ '):'')+
+        '" onclick="event.stopPropagation();updateStatus('+os.id+',\''+safeS+'\')" '+
         (active?'disabled':'')+'>'+s+'</button>';
     }).join('');
-    const hasApr = os.apr_path ? true : false;
 
     return '<div class="os-card" id="card-'+os.id+'">'+
-      // Top row: header + collapse
-      '<div class="card-top">'+
-        '<div class="card-header" onclick="openModal('+os.id+')">'+
-          '<div class="unidade">'+e(os.unidade)+'</div>'+
-          (osDisplay?'<div class="os-num">'+e(osDisplay)+'</div>':'')+
+      '<div class="card-accent '+e(st)+'"></div>'+
+      '<div class="card-inner">'+
+        '<div class="card-top">'+
+          '<div class="card-meta-left" onclick="openModal('+os.id+')">'+
+            '<span class="unidade">'+e(os.unidade)+'</span>'+
+            (osDisplay?'<span class="os-num">'+e(osDisplay)+'</span>':'')+
+          '</div>'+
+          '<button class="btn-collapse" onclick="toggleCollapse('+os.id+',this)" title="Minimizar">▾</button>'+
         '</div>'+
-        '<button class="btn-collapse" onclick="toggleCollapse('+os.id+',this)" title="Minimizar">−</button>'+
-      '</div>'+
-      // Body (collapsible)
-      '<div class="card-body">'+
-        '<div class="card-servico" onclick="openModal('+os.id+')">'+principal+'</div>'+
-        (os.equipe  ?'<div class="card-row">👷 '+e(os.equipe)+'</div>':'')+
-        (os.veiculo ?'<div class="card-row">🚔 '+e(os.veiculo)+'</div>':'')+
-        (os.data    ?'<div class="card-row">📅 '+(os.dia_semana?e(os.dia_semana)+', ':'')+e(os.data)+'</div>':'')+
-        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
-          '<span class="badge '+e(os.status)+'">'+e(os.status)+'</span>'+
-          (hasApr?'<button class="apr-badge" onclick="event.stopPropagation();verApr('+os.id+')">📎 Ver APR</button>':'')+
+        '<div class="card-body">'+
+          '<div class="card-servico" onclick="openModal('+os.id+')">'+principal+'</div>'+
+          (os.equipe?'<div class="card-row">👷 <span>'+e(os.equipe)+'</span></div>':'')+
+          (os.veiculo?'<div class="card-row">🚔 <span>'+e(os.veiculo)+'</span></div>':'')+
+          (os.data?'<div class="card-row">📅 <span>'+(os.dia_semana?e(os.dia_semana)+', ':'')+e(os.data)+'</span></div>':'')+
+          '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
+            '<span class="badge '+e(st)+'">'+e(st)+'</span>'+
+            (hasApr?'<button class="apr-badge" onclick="event.stopPropagation();verApr('+os.id+')">📎 APR</button>':'')+
+          '</div>'+
+          '<div class="card-footer">'+btns+'</div>'+
         '</div>'+
-        '<div class="card-footer">'+btns+'</div>'+
       '</div>'+
     '</div>';
   }
 
-  // ── Modal ──────────────────────────────────────────────────────────────────
+  // ── Modal ──────────────────────────────────────────────────────────────
   async function openModal(id){
-    _currentId=id; _aprPreviewFile=null;
-    hideConfirm();
-    resetAprUpload();
+    _currentId=id; hideConfirm();
     try{
       const {data}=await fetch('/api/os').then(r=>r.json());
       const os=data.find(o=>o.id===id);
@@ -420,16 +544,18 @@
       _currentOs=os.os;
       fillModal(os);
       document.getElementById('modalBg').classList.remove('hidden');
-      // Carrega APR se existir
       loadAprInModal(id);
     }catch(err){toast('Erro ao abrir detalhes','err');}
   }
 
   function fillModal(os){
     const partes=(os.servico||'').split(' | ');
+    const st=os.status||'Andamento';
     document.getElementById('modalTitle').textContent=partes[0]||'—';
+    document.getElementById('modalSubtitle').textContent='OS '+os.os;
+    document.getElementById('modalTopBar').className='modal-top-bar '+st;
     const badge=document.getElementById('modalBadge');
-    badge.textContent=os.status; badge.className='badge '+os.status;
+    badge.textContent=st; badge.className='badge '+st;
     document.getElementById('mGuarda').textContent  =os.guarda    ||'—';
     document.getElementById('mHorario').textContent =os.horario   ||'—';
     document.getElementById('mData').textContent    =[os.dia_semana,os.data].filter(Boolean).join(', ')||'—';
@@ -443,82 +569,49 @@
 
     document.getElementById('modalFooter').innerHTML=
       STATUS.map(s=>{
-        const active=os.status===s;
-        return '<button class="modal-btn'+(active?' active-'+s:'')+
-          '" onclick="updateStatus('+os.id+',\''+s+'\')" '+(active?'disabled':'')+'>'+s+'</button>';
+        const active=st===s;
+        const safeS=s.replace(/'/g,"\\'");
+        return '<button class="modal-btn'+(active?' active-'+s.replace(/ /g,'\\ '):'')+
+          '" onclick="updateStatus('+os.id+',\''+safeS+'\')" '+(active?'disabled':'')+'>'+s+'</button>';
       }).join('')+
-      '<button class="modal-btn btn-delete" onclick="showConfirm()">🗑️ Excluir esta OS</button>';
+      '<button class="modal-btn btn-delete" onclick="showConfirm()">🗑️ Excluir</button>';
   }
 
-  // ── APR ───────────────────────────────────────────────────────────────────
+  // ── APR frente e verso ─────────────────────────────────────────────────
   async function loadAprInModal(id){
-    const section=document.getElementById('aprSection');
-    try{
-      const res=await fetch('/api/os/'+id+'/apr').catch(()=>null);
-      if(res && res.ok){
+    const section=document.getElementById('aprModalSection');
+    const fWrap=document.getElementById('aprFrenteWrap');
+    const vWrap=document.getElementById('aprVersoWrap');
+    let hasAny=false;
+
+    async function loadSide(url, wrap) {
+      try {
+        const res=await fetch(url);
+        if(!res.ok) return false;
         const blob=await res.blob();
-        const url=URL.createObjectURL(blob);
-        section.innerHTML=
-          '<div class="apr-img-wrap" onclick="openLightbox(\''+url+'\')" title="Clique para ampliar">'+
-            '<img src="'+url+'" alt="APR"/>'+
-            '<button class="apr-expand">⛶ Ampliar</button>'+
-          '</div>'+
-          '<button class="btn-apr-upload" style="background:transparent;border:1px solid var(--border);color:var(--muted)" onclick="resetAprUpload();loadAprUploadUI()">🔄 Substituir APR</button>';
-      } else {
-        loadAprUploadUI();
-      }
-    }catch{ loadAprUploadUI(); }
-  }
-
-  function loadAprUploadUI(){
-    const section=document.getElementById('aprSection');
-    section.innerHTML=
-      '<div class="apr-upload-zone" id="aprUploadZone">'+
-        '<input type="file" id="aprFileInput" accept="image/*" onchange="previewApr(this)"/>'+
-        '<div class="icon-up">📷</div>'+
-        '<p>Toque para anexar foto da APR</p>'+
-      '</div>'+
-      '<button class="btn-apr-upload" id="btnAprUpload" style="display:none" onclick="uploadApr()">📤 Enviar APR</button>';
-  }
-
-  function previewApr(input){
-    const file=input.files[0];
-    if(!file) return;
-    _aprPreviewFile=file;
-    const url=URL.createObjectURL(file);
-    const zone=document.getElementById('aprUploadZone');
-    zone.innerHTML='<img src="'+url+'" style="width:100%;border-radius:6px;display:block"/>'+
-      '<p style="margin-top:6px;font-size:.75rem;color:var(--muted)">'+file.name+'</p>'+
-      '<input type="file" id="aprFileInput" accept="image/*" onchange="previewApr(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer"/>';
-    document.getElementById('btnAprUpload').style.display='block';
-  }
-
-  async function uploadApr(){
-    if(!_aprPreviewFile||!_currentId) return;
-    const btn=document.getElementById('btnAprUpload');
-    btn.disabled=true; btn.textContent='⏳ Enviando...';
-    const fd=new FormData();
-    fd.append('apr',_aprPreviewFile);
-    try{
-      const res=await fetch('/api/os/'+_currentId+'/apr',{method:'POST',body:fd}).then(r=>r.json());
-      if(!res.ok) throw new Error(res.error);
-      toast('📎 APR salva com sucesso','ok');
-      loadAprInModal(_currentId);
-      // Recarrega o card para mostrar badge APR
-      const {data}=await fetch('/api/os').then(r=>r.json());
-      const os=data.find(o=>o.id===_currentId);
-      if(os){const card=document.getElementById('card-'+_currentId);if(card)card.outerHTML=renderCard(os);}
-    }catch(err){
-      toast('❌ Erro ao enviar APR: '+err.message,'err');
-      btn.disabled=false; btn.textContent='📤 Enviar APR';
+        const src=URL.createObjectURL(blob);
+        wrap.className='apr-img-wrap';
+        wrap.innerHTML=
+          '<img src="'+src+'" alt="APR"/>'+
+          '<button class="expand-btn" onclick="event.stopPropagation();openLightbox(\''+src+'\')">⛶</button>';
+        wrap.onclick=()=>openLightbox(src);
+        return true;
+      } catch(e){ return false; }
     }
+
+    const [f,v]=await Promise.all([
+      loadSide('/api/os/'+id+'/apr', fWrap),
+      loadSide('/api/os/'+id+'/apr-verso', vWrap),
+    ]);
+
+    if(!f){ fWrap.className='apr-placeholder'; fWrap.textContent='Sem imagem'; fWrap.onclick=null; }
+    if(!v){ vWrap.className='apr-placeholder'; vWrap.textContent='Sem imagem'; vWrap.onclick=null; }
+
+    section.style.display=(f||v)?'':'none';
   }
 
   function verApr(id){
-    // Abre direto a imagem no lightbox
-    fetch('/api/os/'+id+'/apr').then(r=>r.blob()).then(blob=>{
-      openLightbox(URL.createObjectURL(blob));
-    }).catch(()=>toast('APR não encontrada','err'));
+    openModal(id);
   }
 
   function openLightbox(url){
@@ -526,11 +619,8 @@
     document.getElementById('lightbox').classList.remove('hidden');
   }
 
-  function resetAprUpload(){ _aprPreviewFile=null; }
-
   function closeModal(e){if(e.target===document.getElementById('modalBg'))closeModalDirect();}
   function closeModalDirect(){document.getElementById('modalBg').classList.add('hidden');_currentId=null;hideConfirm();}
-
   function showConfirm(){document.getElementById('confirmOs').textContent=_currentOs||'—';document.getElementById('confirmBox').classList.remove('hidden');}
   function hideConfirm(){document.getElementById('confirmBox').classList.add('hidden');}
 
@@ -547,7 +637,6 @@
     }catch(err){toast('❌ '+err.message,'err');}
   }
 
-  // ── Update status ──────────────────────────────────────────────────────────
   async function updateStatus(id,status){
     const card=document.getElementById('card-'+id);
     if(card) card.querySelectorAll('.btn-status').forEach(b=>b.disabled=true);
@@ -560,7 +649,7 @@
       if(!res.ok) throw new Error(res.error);
       if(card) card.outerHTML=renderCard(res.data);
       if(_currentId===id) fillModal(res.data);
-      toast('✅ Status: '+status);
+      toast('✅ '+status);
       loadStats();
     }catch(err){
       toast('❌ '+err.message,'err');
@@ -569,22 +658,20 @@
     }
   }
 
-  // ── Tema ──────────────────────────────────────────────────────────────────
+  // ── Tema ──────────────────────────────────────────────────────────────
   function toggleTema(){
     const isLight=document.body.classList.toggle('light');
-    const btn=document.getElementById('btnTema');
-    btn.textContent=isLight?'🌑 Escuro':'🌙 Escuro';
+    document.getElementById('btnTema').textContent=isLight?'🌑':'🌙';
     localStorage.setItem('tema',isLight?'light':'dark');
   }
   if(localStorage.getItem('tema')==='light'){
     document.body.classList.add('light');
     document.addEventListener('DOMContentLoaded',()=>{
-      const b=document.getElementById('btnTema');if(b)b.textContent='🌑 Escuro';
+      const b=document.getElementById('btnTema');if(b)b.textContent='🌑';
     });
   }
 
-  load();
-  checkBot();
+  load(); checkBot();
   setInterval(checkBot,15_000);
   setInterval(load,60_000);
 </script>
