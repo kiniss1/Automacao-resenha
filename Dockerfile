@@ -1,6 +1,5 @@
 FROM node:20-slim
 
-# Instala Chromium e dependências necessárias
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-freefont-ttf \
@@ -16,18 +15,16 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Evita download do Chromium pelo Puppeteer (usamos o do sistema)
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --only=production
 
 COPY . .
 
-# Diretório persistente (volume Railway)
 RUN mkdir -p /data
 
 EXPOSE 3000
