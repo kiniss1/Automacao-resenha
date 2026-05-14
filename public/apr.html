@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Enviar APR</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0f1117;--surface:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892a4;
+      --primary:#4f6ef7;--green:#22c55e;--red:#ef4444;--orange:#f97316;
+      --green-bg:#052e16;--border-green:#14532d;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:420px;padding:24px;display:flex;flex-direction:column;gap:18px}
+    .card-header{text-align:center}
+    .card-header h1{font-size:1.1rem;font-weight:700;margin-bottom:4px}
+    .card-header p{font-size:.8rem;color:var(--muted)}
+    .os-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+    .os-box .label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+    .os-box .value{font-size:.95rem;font-weight:600}
+    .side-title{font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:6px}
+    .preview-img{width:100%;border-radius:8px;border:1px solid var(--green);display:none;margin-bottom:8px}
+    .upload-btns{display:flex;gap:8px}
+    .upload-label{flex:1;border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s;display:block}
+    .upload-label:hover{border-color:var(--primary)}
+    .upload-label input{display:none}
+    .upload-label .icon{font-size:1.2rem;margin-bottom:3px}
+    .upload-label p{font-size:.75rem;color:var(--muted);font-weight:600}
+    .upload-label.done{border-color:var(--green);border-style:solid}
+    .btn-send{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:.95rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s}
+    .btn-send:hover{opacity:.88}
+    .btn-send:disabled{opacity:.4;cursor:default}
+    .result{border-radius:10px;padding:14px;font-size:.88rem;line-height:1.6;text-align:center}
+    .result.ok {background:var(--green-bg);border:1px solid var(--border-green);color:var(--green)}
+    .result.err{background:#450a0a;border:1px solid #7f1d1d;color:var(--red)}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="card-header">
+    <h1>📎 Enviar APR</h1>
+    <p>OOMC — Manutenção Alta Tensão</p>
+  </div>
+
+  <div class="os-box" id="osBox">
+    <div class="label">Ordem de Serviço</div>
+    <div class="value" id="osLabel">Carregando...</div>
+  </div>
+
+  <!-- Frente -->
+  <div>
+    <p class="side-title">Frente</p>
+    <img id="prevF" class="preview-img"/>
+    <div class="upload-btns">
+      <label class="upload-label" id="lblFC">
+        <input type="file" accept="image/*" capture="environment" onchange="preview('F',this)"/>
+        <div class="icon">📸</div><p>Câmera</p>
+      </label>
+      <label class="upload-label" id="lblFG">
+        <input type="file" accept="image/*" onchange="preview('F',this)"/>
+        <div class="icon">🖼️</div><p>Galeria</p>
+      </label>
+    </div>
+  </div>
+
+  <!-- Verso -->
+  <div>
+    <p class="side-title">Verso <span style="font-size:.7rem;color:var(--muted)">(opcional)</span></p>
+    <img id="prevV" class="preview-img"/>
+    <div class="upload-btns">
+      <label class="upload-label" id="lblVC">
+        <input type="file" accept="image/*" capture="environment" onchange="preview('V',this)"/>
+        <div class="icon">📸</div><p>Câmera</p>
+      </label>
+      <label class="upload-label" id="lblVG">
+        <input type="file" accept="image/*" onchange="preview('V',this)"/>
+        <div class="icon">🖼️</div><p>Galeria</p>
+      </label>
+    </div>
+  </div>
+
+  <button class="btn-send" id="btnSend" onclick="enviar()" disabled>📤 Enviar APR</button>
+  <div class="result" id="result" style="display:none"></div>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const osCode = params.get('os') || '';
+  let osId = null;
+  const files = { F: null, V: null };
+
+  // Busca a OS pelo código
+  async function init() {
+    if (!osCode) {
+      document.getElementById('osLabel').textContent = 'OS não informada na URL';
+      return;
+    }
+    try {
+      const {data} = await fetch('/api/os').then(r=>r.json());
+      const os = data.find(o => o.os === osCode);
+      if (!os) {
+        document.getElementById('osLabel').textContent = 'OS "' + osCode + '" não encontrada';
+        return;
+      }
+      osId = os.id;
+      document.getElementById('osLabel').textContent = os.os + (os.unidade && os.unidade !== '—' ? ' — ' + os.unidade : '') + '\n' + (os.servico || '').split(' | ')[0];
+    } catch(e) {
+      document.getElementById('osLabel').textContent = 'Erro ao carregar OS';
+    }
+  }
+
+  function preview(side, input) {
+    const file = input.files[0];
+    if (!file) return;
+    files[side] = file;
+    const img = document.getElementById('prev'+side);
+    img.src = URL.createObjectURL(file);
+    img.style.display = 'block';
+    ['lblFC','lblFG','lblVC','lblVG'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('done');
+    });
+    const activeLabel = input.closest('label');
+    if (activeLabel) activeLabel.classList.add('done');
+    if (files.F) document.getElementById('btnSend').disabled = false;
+  }
+
+  async function enviar() {
+    if (!osId) { showResult('OS não encontrada.', 'err'); return; }
+    if (!files.F) { showResult('Selecione a foto da frente.', 'err'); return; }
+
+    const btn = document.getElementById('btnSend');
+    btn.disabled = true; btn.textContent = '⏳ Enviando...';
+
+    try {
+      if (files.F) {
+        const fd = new FormData(); fd.append('apr', files.F);
+        const r = await fetch('/api/os/'+osId+'/apr', {method:'POST',body:fd}).then(r=>r.json());
+        if (!r.ok) throw new Error(r.error);
+      }
+      if (files.V) {
+        const fd = new FormData(); fd.append('apr', files.V);
+        await fetch('/api/os/'+osId+'/apr-verso', {method:'POST',body:fd});
+      }
+      showResult('✅ APR enviada com sucesso!\nPode fechar esta página.', 'ok');
+      btn.textContent = '✅ Enviado';
+    } catch(e) {
+      showResult('❌ Erro: ' + e.message, 'err');
+      btn.disabled = false; btn.textContent = '📤 Enviar APR';
+    }
+  }
+
+  function showResult(msg, type) {
+    const el = document.getElementById('result');
+    el.textContent = msg; el.className = 'result ' + type; el.style.display = 'block';
+  }
+
+  init();
+</script>
+</body>
+</html>
