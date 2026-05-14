@@ -150,22 +150,42 @@ function startBot() {
     console.log(`[BOT] Carregando... ${percent}% — ${message}`);
     if (percent >= 99 && !state.isReady()) {
       clearTimeout(readyTimer);
-      readyTimer = setTimeout(() => {
+      readyTimer = setTimeout(async () => {
         if (!state.isReady()) {
           state.setReady(true);
           state.clearQR();
           global._waClient = client;
+          try {
+            const chats = await client.getChats();
+            const grupo = chats.find(c => c.isGroup && c.name === GRUPO_NOME);
+            if (grupo) { global._grupoId = grupo.id._serialized; console.log(`[BOT] Grupo ID salvo: ${global._grupoId}`); }
+          } catch(e) {}
           console.log(`[BOT] Pronto! (via 99%) Monitorando grupo "${GRUPO_NOME}".`);
         }
       }, 5000);
     }
   });
 
-  client.on('ready', () => {
+  client.on('ready', async () => {
     clearTimeout(readyTimer);
     state.setReady(true);
     state.clearQR();
-    global._waClient = client; // expõe para o servidor enviar mensagens
+    global._waClient = client;
+
+    // Salva o chat ID do grupo para envio direto
+    try {
+      const chats = await client.getChats();
+      const grupo = chats.find(c => c.isGroup && c.name === GRUPO_NOME);
+      if (grupo) {
+        global._grupoId = grupo.id._serialized;
+        console.log(`[BOT] Grupo "${GRUPO_NOME}" encontrado. ID: ${global._grupoId}`);
+      } else {
+        console.warn(`[BOT] ⚠️ Grupo "${GRUPO_NOME}" não encontrado nos chats.`);
+      }
+    } catch(e) {
+      console.error('[BOT] Erro ao buscar grupo:', e.message);
+    }
+
     console.log(`[BOT] Pronto! Monitorando grupo "${GRUPO_NOME}".`);
   });
 
