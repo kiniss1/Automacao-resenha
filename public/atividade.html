@@ -359,9 +359,9 @@
     }
 
     // Preenche trajeto da ida e trava
-    var trajetoStr='';
-    if(os.servico && os.servico.includes('Trajeto:')){
-      // Tudo após "Trajeto:" são os pontos separados por " | "
+    // trajeto agora é campo separado; fallback para extração do servico (registros antigos)
+    var trajetoStr = os.trajeto || '';
+    if(!trajetoStr && os.servico && os.servico.includes('Trajeto:')){
       trajetoStr = os.servico.split('Trajeto:')[1].trim();
     }
     // Sempre mostra o bloco do trajeto inicial (mesmo sem dados)
@@ -375,7 +375,12 @@
       '</div>'+
       (trajetoStr
         ? trajetoStr.split(' | ').filter(Boolean).map(function(t,i){
-            return '<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:8px">'+
+            // Detecta o tipo do ponto para sequência
+            var tipoDetectado='';
+            ['Saída da base','Chegada na SE','Saída da SE','Chegada na base'].forEach(function(tp){
+              if(t.trim().startsWith(tp)) tipoDetectado=tp;
+            });
+            return '<div data-tipo="'+tipoDetectado+'" style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:8px">'+
               '<span style="color:var(--orange);font-size:.72rem;font-weight:700;min-width:16px">'+(i+1)+'.</span>'+
               '<span>'+t.trim()+'</span>'+
             '</div>';
@@ -518,65 +523,61 @@
   }
 
   // ── Trajeto ───────────────────────────────────────────────────────────────
-  var SEQUENCIA_VALIDA = {
+  var PROXIMOS_VALIDOS = {
     'Saída da base':   ['Chegada na SE'],
     'Chegada na SE':   ['Saída da SE'],
-    'Saída da SE':     ['Chegada na SE', 'Chegada na base'],
+    'Saída da SE':     ['Chegada na SE','Chegada na base'],
     'Chegada na base': ['Saída da base'],
   };
 
   function getUltimoTipoTrajeto(){
-    var items = Array.from(document.querySelectorAll('.trajeto-item'));
-    if(!items.length) return null;
-    var last = items[items.length-1];
-    return last.querySelector('.traj-tipo').value;
+    // Verifica pontos editáveis (não o bloco inicial bloqueado)
+    var items=Array.from(document.querySelectorAll('.trajeto-item'));
+    if(items.length) return items[items.length-1].querySelector('.traj-tipo').value;
+    // Verifica último ponto do trajeto inicial (modo final)
+    var blocoInicial=document.getElementById('trajetoInicial');
+    if(blocoInicial){
+      var pontos=Array.from(blocoInicial.querySelectorAll('[data-tipo]'));
+      if(pontos.length) return pontos[pontos.length-1].getAttribute('data-tipo');
+    }
+    return null;
   }
 
   function addTrajeto(){
+    var ultimo=getUltimoTipoTrajeto();
+    // Primeiro ponto: sempre Saída da base
+    var proximos = ultimo ? (PROXIMOS_VALIDOS[ultimo]||TIPOS_TRAJETO) : ['Saída da base'];
+
     trajetoCount++;
     var n=trajetoCount;
     var subOpts=SUBESTACOES.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
-    var tipoOpts=TIPOS_TRAJETO.map(function(t){return '<option>'+t+'</option>';}).join('');
+    // Só mostra opções válidas
+    var tipoOpts=proximos.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
     var now=new Date().toTimeString().slice(0,5);
     var item=document.createElement('div'); item.className='trajeto-item'; item.id='traj-'+n;
     item.innerHTML=
-      '<select class="traj-tipo" onchange="toggleSeSel(this)">'+tipoOpts+'</select>'+
+      '<select class="traj-tipo" onchange="onTipoChange(this)">'+tipoOpts+'</select>'+
       '<select class="sub-sel traj-se">'+subOpts+'</select>'+
       '<input type="time" class="traj-hora" value="'+now+'"/>'+
       '<button class="btn-remove" onclick="removeTrajeto('+n+')">✕</button>';
     document.getElementById('trajetoList').appendChild(item);
-    var tipoSel = item.querySelector('.traj-tipo');
+    toggleSeSel(item.querySelector('.traj-tipo'));
+    item.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
 
-    // Filtra opções com base no último ponto
-    var ultimo = getUltimoTipoTrajeto();
-    // O item recém adicionado ainda é o último — pega o penúltimo
-    var todosItems = Array.from(document.querySelectorAll('.trajeto-item'));
-    if(todosItems.length > 1){
-      ultimo = todosItems[todosItems.length-2].querySelector('.traj-tipo').value;
-    } else {
-      // Verifica se tem trajeto inicial bloqueado
-      var trajetoInicialEl = document.getElementById('trajetoInicial');
-      if(trajetoInicialEl){
-        var pontos = trajetoInicialEl.querySelectorAll('div[style*="border-bottom"]');
-        if(pontos.length){
-          var lastPonto = pontos[pontos.length-1].textContent.trim();
-          for(var k=0;k<TIPOS_TRAJETO.length;k++){
-            if(lastPonto.startsWith(TIPOS_TRAJETO[k])){ ultimo=TIPOS_TRAJETO[k]; break; }
-          }
-        }
-      }
+  function onTipoChange(sel){
+    toggleSeSel(sel);
+    // Atualiza o próximo item se existir
+    var items=Array.from(document.querySelectorAll('.trajeto-item'));
+    var idx=items.indexOf(sel.closest('.trajeto-item'));
+    if(idx>=0 && idx<items.length-1){
+      var next=items[idx+1];
+      var proximos=PROXIMOS_VALIDOS[sel.value]||TIPOS_TRAJETO;
+      var nextSel=next.querySelector('.traj-tipo');
+      nextSel.innerHTML=proximos.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
+      nextSel.value=proximos[0];
+      toggleSeSel(nextSel);
     }
-
-    if(ultimo && SEQUENCIA_VALIDA[ultimo]){
-      var proximos = SEQUENCIA_VALIDA[ultimo];
-      Array.from(tipoSel.options).forEach(function(opt){
-        opt.disabled = proximos.indexOf(opt.value) === -1;
-        if(!opt.disabled && tipoSel.value !== proximos[0]) tipoSel.value = proximos[0];
-      });
-    }
-
-    toggleSeSel(tipoSel);
-    // Trajeto sempre editável
   }
   function toggleSeSel(sel){
     var seEl=sel.closest('.trajeto-item').querySelector('.traj-se');
