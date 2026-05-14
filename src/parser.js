@@ -17,8 +17,8 @@ function levenshtein(a, b) {
 }
 
 // ── Status fuzzy ───────────────────────────────────────────────────────────────
-const STATUS_TARGETS = ['andamento', 'concluido', 'cancelado'];
-const STATUS_DISPLAY = { 'andamento': 'Andamento', 'concluido': 'Concluído', 'cancelado': 'Cancelado' };
+const STATUS_TARGETS = ['andamento', 'concluido', 'cancelado', 'etapaconcluida'];
+const STATUS_DISPLAY = { 'andamento': 'Andamento', 'concluido': 'Concluído', 'cancelado': 'Cancelado', 'etapa': 'Etapa Concluída', 'etapaconcluida': 'Etapa Concluída' };
 
 function normalizarTexto(s) {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -27,24 +27,23 @@ function normalizarTexto(s) {
 function matchStatusFuzzy(raw) {
   if (!raw) return null;
   const input = normalizarTexto(raw)
-    .replace(/^em\s+/, '') // remove "em " do início
+    .replace(/^em\s+/, '')
     .replace(/[^a-z]/g, '');
 
-  // Match exato primeiro
+  // Match exato
   for (const t of STATUS_TARGETS) {
-    const clean = t.replace(/[^a-z]/g, '');
-    if (input === clean) return STATUS_DISPLAY[t];
+    if (input === t) return STATUS_DISPLAY[t];
   }
+  // Variações diretas
+  if (input === 'etapa' || input.startsWith('etapa')) return 'Etapa Concluída';
 
-  // Fuzzy com distância <= 2
+  // Fuzzy distância <= 2
   let best = null, bestDist = Infinity;
   for (const t of STATUS_TARGETS) {
-    const clean = t.replace(/[^a-z]/g, '');
-    const dist = levenshtein(input, clean);
+    const dist = levenshtein(input, t);
     if (dist < bestDist) { bestDist = dist; best = t; }
   }
-
-  return bestDist <= 2 ? STATUS_DISPLAY[best] : null;
+  return bestDist <= 3 ? STATUS_DISPLAY[best] : null;
 }
 
 // ── Strip emojis ───────────────────────────────────────────────────────────────
@@ -225,7 +224,7 @@ function parseOS(texto) {
       if (statusMatch) {
         atual.status = statusMatch;
       } else {
-        avisos.push(`❓ Status não reconhecido: "${mStatus[1]}" — use Andamento, Concluído ou Cancelado`);
+        avisos.push(`❓ Status não reconhecido: "${mStatus[1]}" — use: Andamento, Concluído, Etapa Concluída ou Cancelado`);
       }
       continue;
     }
