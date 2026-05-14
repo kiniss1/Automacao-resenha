@@ -117,4 +117,9 @@ function estatisticas() {
     FROM ordens_servico`);
 }
 
-module.exports = { init, inserirOS, listarOS, atualizarStatus, removerOS, estatisticas };
+function updateAprPath(id, aprPath) {
+  run(`UPDATE ordens_servico SET apr_path=? WHERE id=?`, [aprPath, id]);
+  return get('SELECT * FROM ordens_servico WHERE id=?', [id]);
+}
+
+module.exports = { init, inserirOS, listarOS, atualizarStatus, removerOS, estatisticas, updateAprPath };
