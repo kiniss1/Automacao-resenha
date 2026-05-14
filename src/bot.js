@@ -154,6 +154,7 @@ function startBot() {
         if (!state.isReady()) {
           state.setReady(true);
           state.clearQR();
+          global._waClient = client;
           console.log(`[BOT] Pronto! (via 99%) Monitorando grupo "${GRUPO_NOME}".`);
         }
       }, 5000);
@@ -164,6 +165,7 @@ function startBot() {
     clearTimeout(readyTimer);
     state.setReady(true);
     state.clearQR();
+    global._waClient = client; // expõe para o servidor enviar mensagens
     console.log(`[BOT] Pronto! Monitorando grupo "${GRUPO_NOME}".`);
   });
 
