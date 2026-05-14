@@ -244,14 +244,31 @@ function startServer() {
       try {
         const botState = require('./state');
         if (botState.isReady() && global._waClient) {
-          const msg = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: registradas });
-          const grupoNome = process.env.GRUPO_NOME || 'Resenha';
-          const chats = await global._waClient.getChats();
-          const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
-          if (grupo) await grupo.sendMessage(msg);
+          const msgWA = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: registradas });
+
+          if (global._grupoId) {
+            // Envio direto pelo ID salvo — mais rápido e confiável
+            const chat = await global._waClient.getChatById(global._grupoId);
+            await chat.sendMessage(msgWA);
+            console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo.');
+          } else {
+            // Fallback: busca pelos chats
+            const grupoNome = process.env.GRUPO_NOME || 'Resenha';
+            const chats = await global._waClient.getChats();
+            const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+            if (grupo) {
+              global._grupoId = grupo.id._serialized; // salva para próxima vez
+              await grupo.sendMessage(msgWA);
+              console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo (fallback).');
+            } else {
+              console.warn('[ATIVIDADE] ⚠️ Grupo não encontrado. GRUPO_NOME =', grupoNome);
+            }
+          }
+        } else {
+          console.warn('[ATIVIDADE] Bot não está pronto para enviar mensagem.');
         }
       } catch(wErr) {
-        console.warn('[ATIVIDADE] Aviso WhatsApp:', wErr.message);
+        console.error('[ATIVIDADE] Erro WhatsApp:', wErr.message);
       }
 
       res.json({ ok: true, registradas });
