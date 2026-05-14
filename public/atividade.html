@@ -625,9 +625,12 @@
 
   // ── Submit ────────────────────────────────────────────────────────────────
   var _submitting=false;
+  var _lastSubmitTime=0;
   async function submeter(){
-    if(_submitting) return;
+    var now=Date.now();
+    if(_submitting || now-_lastSubmitTime < 3000) return; // bloqueia por 3s entre envios
     _submitting=true;
+    _lastSubmitTime=now;
     var btn=document.getElementById('btnSubmit');
     var colabs=getColabs();
     var osList=tipo==='inicial'?getOSListInicial():getOSListFinal();
@@ -641,7 +644,10 @@
     if(tipo==='final'&&osList.some(function(o){return o.status==='Andamento';})){showMsg('⚠️ Atualize o Status em todas as atividades antes de finalizar.','err');return;}
 
     btn.disabled=true; btn.textContent='⏳ Registrando...';
-    console.log('[SUBMIT] tipo:', tipo, 'ordens:', JSON.stringify(osList.map(function(o){return o.os;})));
+    console.log('[SUBMIT] tipo:', tipo, 'ordens:', osList.length, JSON.stringify(osList.map(function(o){return o.os;})));
+    // Dedup client-side
+    var seenOs={}; osList=osList.filter(function(o){ var k=o.os||o.servico; if(seenOs[k]) return false; seenOs[k]=true; return true; });
+    console.log('[SUBMIT] após dedup:', osList.length, 'ordens');
 
     var membros=[];
     // No modo Final com OS carregada, usa os nomes já resolvidos
