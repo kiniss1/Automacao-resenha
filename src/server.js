@@ -263,10 +263,31 @@ function startServer() {
 
   app.post('/api/os/:id/apr', upload.single('apr'), (req, res) => {
     try {
+      const id   = parseInt(req.params.id, 10);
+      const fs   = require('fs');
+      const path = require('path');
+      if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado.' });
+      // Renomeia para frente explícito
+      const newPath = path.join(APR_DIR, 'apr_' + id + '_frente.jpg');
+      fs.renameSync(req.file.path, newPath);
+      db.updateAprPath(id, newPath);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // Upload verso
+  app.post('/api/os/:id/apr-verso', upload.single('apr'), (req, res) => {
+    try {
       const id = parseInt(req.params.id, 10);
       if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado.' });
-      const aprPath = req.file.path;
-      db.updateAprPath(id, aprPath);
+      // Renomeia para verso
+      const fs   = require('fs');
+      const path = require('path');
+      const newPath = path.join(APR_DIR, 'apr_' + id + '_verso.jpg');
+      fs.renameSync(req.file.path, newPath);
+      db.updateAprVersoPath(id, newPath);
       res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
@@ -299,6 +320,25 @@ function startServer() {
       }
 
       res.status(404).json({ ok: false, error: 'APR não encontrada.' });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  app.get('/api/os/:id/apr-verso', (req, res) => {
+    try {
+      const id   = parseInt(req.params.id, 10);
+      const fs   = require('fs');
+      const path = require('path');
+      const os   = db.buscarPorId(id);
+      const APR_DIR = process.env.APR_DIR || '/data/apr';
+      const filePath = (os && os.apr_verso_path && fs.existsSync(os.apr_verso_path))
+        ? os.apr_verso_path
+        : path.join(APR_DIR, 'apr_' + id + '_verso.jpg');
+      if (!fs.existsSync(filePath)) return res.status(404).json({ ok: false, error: 'Verso não encontrado.' });
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      fs.createReadStream(filePath).pipe(res);
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
