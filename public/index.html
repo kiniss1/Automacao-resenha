@@ -52,7 +52,9 @@
     .btn-limpar:hover{background:var(--border);color:var(--text)}
 
     /* Grid */
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:14px;padding:0 24px 32px}
+    .grid{display:flex;flex-wrap:wrap;gap:14px;padding:0 24px 32px}
+    .os-card{width:275px;flex:1 1 275px;min-width:240px;max-width:100%}
+    .os-card.collapsed{flex:0 0 auto;width:auto;min-width:180px;max-width:340px}
 
     /* OS Card */
     .os-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s}
@@ -66,8 +68,9 @@
     .btn-collapse{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:2px 8px;font-size:.85rem;cursor:pointer;line-height:1.4;flex-shrink:0;transition:background .15s}
     .btn-collapse:hover{background:var(--border);color:var(--text)}
 
-    /* Collapsed state — hide everything except card-top */
+    /* Collapsed state — hide body and shrink card */
     .os-card.collapsed .card-body{display:none}
+    .os-card.collapsed{padding:8px 12px;gap:0}
 
     .card-body{display:flex;flex-direction:column;gap:8px}
     .card-servico{font-size:.88rem;font-weight:600;line-height:1.4;cursor:pointer}
@@ -233,17 +236,10 @@
       <div class="modal-desc" id="mServico">—</div>
     </div>
 
-    <!-- APR -->
-    <div class="modal-section">
+    <!-- APR — somente visualização no painel -->
+    <div class="modal-section" id="aprModalSection" style="display:none">
       <div class="modal-section-title">📎 APR — Análise Preliminar de Risco</div>
-      <div class="apr-section" id="aprSection">
-        <div class="apr-upload-zone" id="aprUploadZone">
-          <input type="file" id="aprFileInput" accept="image/*" onchange="previewApr(this)"/>
-          <div class="icon-up">📷</div>
-          <p>Toque para anexar foto da APR</p>
-        </div>
-        <button class="btn-apr-upload hidden" id="btnAprUpload" onclick="uploadApr()">📤 Enviar APR</button>
-      </div>
+      <div class="apr-section" id="aprSection"></div>
     </div>
 
     <div class="modal-footer" id="modalFooter"></div>
