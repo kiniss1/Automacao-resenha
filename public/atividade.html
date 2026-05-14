@@ -527,12 +527,19 @@
   function updateStatusStyle(sel){sel.className='os-status-input status-select status-'+sel.value;}
 
   function getOSListInicial(){
+    var seen={};
     return Array.from(document.querySelectorAll('#osList .os-item')).map(function(item){
       var os=(item.querySelector('.os-num-input')||{}).value||'';
       var unidade=(item.querySelector('.os-sub-input')||{}).value||'';
       var desc=((item.querySelector('.os-inicial-input')||{}).value||'').trim();
       return {os:os,unidade:unidade,servico:desc,descricao_inicial:desc,status:'Andamento'};
-    }).filter(function(o){return o.servico||o.os;});
+    }).filter(function(o){
+      if(!o.servico&&!o.os) return false;
+      var key=o.os||o.servico;
+      if(seen[key]) return false;
+      seen[key]=true;
+      return true;
+    });
   }
   function getOSListFinal(){
     return Array.from(document.querySelectorAll('#osListFinal .os-item')).map(function(item){
@@ -617,7 +624,10 @@
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
+  var _submitting=false;
   async function submeter(){
+    if(_submitting) return;
+    _submitting=true;
     var btn=document.getElementById('btnSubmit');
     var colabs=getColabs();
     var osList=tipo==='inicial'?getOSListInicial():getOSListFinal();
@@ -631,6 +641,7 @@
     if(tipo==='final'&&osList.some(function(o){return o.status==='Andamento';})){showMsg('⚠️ Atualize o Status em todas as atividades antes de finalizar.','err');return;}
 
     btn.disabled=true; btn.textContent='⏳ Registrando...';
+    console.log('[SUBMIT] tipo:', tipo, 'ordens:', JSON.stringify(osList.map(function(o){return o.os;})));
 
     var membros=[];
     // No modo Final com OS carregada, usa os nomes já resolvidos
@@ -672,40 +683,6 @@
     btn.disabled=false;
     btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';
 
-    // Auto-limpa o formulário após sucesso (exceto resultArea)
-    if(result&&result.ok){
-      setTimeout(function(){
-        limparFormulario();
-      }, 4000); // aguarda 4s para o colaborador ver a confirmação
-    }
-  }
-
-  function limparFormulario(){
-    // Reset colaboradores
-    document.getElementById('colabList').innerHTML='';
-    document.getElementById('btnAddColab').style.display='';
-    addColab();
-    // Reset OS
-    document.getElementById('osList').innerHTML='';
-    document.getElementById('osListFinal').innerHTML='';
-    osCount=0; trajetoCount=0;
-    addOS();
-    // Reset trajeto
-    document.getElementById('trajetoList').innerHTML='';
-    var retLabel=document.getElementById('trajetoRetornoLabel');
-    if(retLabel) retLabel.remove();
-    // Reset campos
-    document.getElementById('telefone').value='';
-    document.getElementById('veiculo').value='';
-    // Reset lookup
-    document.getElementById('lookupInput').value='';
-    document.getElementById('lookupInput').className='lookup-input';
-    document.getElementById('lookupResult').style.display='none';
-    document.getElementById('btnAddOsFinal').style.display='none';
-    _osFinaisCarregados={}; _membrosFinais=[];
-    unlockAll();
-    // Mantém resultArea visível mas limpa após mais 10s
-    setTimeout(function(){ document.getElementById('resultArea').innerHTML=''; }, 10000);
   }
 
   function showMsg(msg,type){
