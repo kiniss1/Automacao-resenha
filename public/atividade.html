@@ -360,8 +360,9 @@
 
     // Preenche trajeto da ida e trava
     var trajetoStr='';
-    if(os.servico&&os.servico.includes('Trajeto:')){
-      trajetoStr=os.servico.split('Trajeto:')[1].trim().split(' | ')[0];
+    if(os.servico && os.servico.includes('Trajeto:')){
+      // Tudo após "Trajeto:" são os pontos separados por " | "
+      trajetoStr = os.servico.split('Trajeto:')[1].trim();
     }
     // Sempre mostra o bloco do trajeto inicial (mesmo sem dados)
     var tList=document.getElementById('trajetoList');
@@ -373,12 +374,13 @@
         '📍 Trajeto da Ida (registrado no início)'+
       '</div>'+
       (trajetoStr
-        ? trajetoStr.split(' | ').map(function(t,i){
-            return '<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text)">'+
-              '<span style="color:var(--muted);font-size:.7rem;margin-right:6px">'+(i+1)+'.</span>'+t+
+        ? trajetoStr.split(' | ').filter(Boolean).map(function(t,i){
+            return '<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:8px">'+
+              '<span style="color:var(--orange);font-size:.72rem;font-weight:700;min-width:16px">'+(i+1)+'.</span>'+
+              '<span>'+t.trim()+'</span>'+
             '</div>';
           }).join('')
-        : '<span style="color:var(--muted);font-size:.82rem">Nenhum trajeto registrado no início</span>'
+        : '<div style="padding:8px 0;color:var(--muted);font-size:.82rem;font-style:italic">Nenhum trajeto registrado no início</div>'
       );
     tList.insertBefore(div,tList.firstChild);
     // Add visual separator before new points
@@ -516,6 +518,20 @@
   }
 
   // ── Trajeto ───────────────────────────────────────────────────────────────
+  var SEQUENCIA_VALIDA = {
+    'Saída da base':   ['Chegada na SE'],
+    'Chegada na SE':   ['Saída da SE'],
+    'Saída da SE':     ['Chegada na SE', 'Chegada na base'],
+    'Chegada na base': ['Saída da base'],
+  };
+
+  function getUltimoTipoTrajeto(){
+    var items = Array.from(document.querySelectorAll('.trajeto-item'));
+    if(!items.length) return null;
+    var last = items[items.length-1];
+    return last.querySelector('.traj-tipo').value;
+  }
+
   function addTrajeto(){
     trajetoCount++;
     var n=trajetoCount;
@@ -529,7 +545,37 @@
       '<input type="time" class="traj-hora" value="'+now+'"/>'+
       '<button class="btn-remove" onclick="removeTrajeto('+n+')">✕</button>';
     document.getElementById('trajetoList').appendChild(item);
-    toggleSeSel(item.querySelector('.traj-tipo'));
+    var tipoSel = item.querySelector('.traj-tipo');
+
+    // Filtra opções com base no último ponto
+    var ultimo = getUltimoTipoTrajeto();
+    // O item recém adicionado ainda é o último — pega o penúltimo
+    var todosItems = Array.from(document.querySelectorAll('.trajeto-item'));
+    if(todosItems.length > 1){
+      ultimo = todosItems[todosItems.length-2].querySelector('.traj-tipo').value;
+    } else {
+      // Verifica se tem trajeto inicial bloqueado
+      var trajetoInicialEl = document.getElementById('trajetoInicial');
+      if(trajetoInicialEl){
+        var pontos = trajetoInicialEl.querySelectorAll('div[style*="border-bottom"]');
+        if(pontos.length){
+          var lastPonto = pontos[pontos.length-1].textContent.trim();
+          for(var k=0;k<TIPOS_TRAJETO.length;k++){
+            if(lastPonto.startsWith(TIPOS_TRAJETO[k])){ ultimo=TIPOS_TRAJETO[k]; break; }
+          }
+        }
+      }
+    }
+
+    if(ultimo && SEQUENCIA_VALIDA[ultimo]){
+      var proximos = SEQUENCIA_VALIDA[ultimo];
+      Array.from(tipoSel.options).forEach(function(opt){
+        opt.disabled = proximos.indexOf(opt.value) === -1;
+        if(!opt.disabled && tipoSel.value !== proximos[0]) tipoSel.value = proximos[0];
+      });
+    }
+
+    toggleSeSel(tipoSel);
     // Trajeto sempre editável
   }
   function toggleSeSel(sel){
