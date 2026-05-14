@@ -94,7 +94,7 @@
     .status-Andamento{border-color:var(--orange)!important;color:var(--orange)!important;background:var(--orange-bg)!important}
     .status-Concluído{border-color:var(--green)!important;color:var(--green)!important;background:var(--green-bg)!important}
     .status-Etapa\ Concluída{border-color:var(--violet)!important;color:var(--violet)!important;background:var(--violet-bg)!important}
-    .status-Cancelado{border-color:var(--gray)!important;color:var(--gray)!important;background:var(--gray-bg)!important}
+    .status-Cancelado{border-color:var(--red)!important;  color:var(--red)!important;  background:var(--red-bg)!important}
 
     .btn-submit{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s;margin-top:4px}
     .btn-submit:hover{opacity:.88}
@@ -205,8 +205,9 @@
   <div class="card" id="cardTrajeto">
     <div class="section-label">
       🗺️ Trajeto
-      <span class="locked-badge" id="trajetoLockBadge" style="display:none">📋 Ida registrada acima — adicione o retorno</span>
+      <span class="locked-badge" id="trajetoLockBadge" style="display:none">📋 Ida registrada</span>
     </div>
+    <div id="trajetoInicalRef" style="display:none"></div>
     <div id="trajetoList"></div>
     <button class="btn-add" id="btnAddTrajeto" onclick="addTrajeto()">+ Adicionar Trajeto</button>
   </div>
@@ -222,6 +223,7 @@
   var SUBESTACOES=[], tipo='inicial', MAX_COLAB=6, osCount=0, trajetoCount=0;
   var _membrosFinais=[]; // nomes já resolvidos no modo final
   var TIPOS_TRAJETO=['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
+  var TIPOS_DISPLAY={'Saída da base':'🏠 Saída da base','Chegada na SE':'📍 Chegada na SE','Saída da SE':'📍 Saída da SE','Chegada na base':'🏠 Chegada na base'};
   var _osFinaisPendente=null, _osFinaisCarregados={}, _aprFiles={};
   var _lookupTimer=null, _finalLocked=false;
 
@@ -386,9 +388,12 @@
     if(!trajetoStr && os.servico && os.servico.includes('Trajeto:')){
       trajetoStr = os.servico.split('Trajeto:')[1].trim();
     }
-    // Adiciona bloco do trajeto inicial só uma vez
+    // Mostra trajeto inicial como referência (só uma vez)
+    var refDiv=document.getElementById('trajetoInicalRef');
     var tList=document.getElementById('trajetoList');
-    if(!document.getElementById('trajetoInicial')){
+    if(refDiv && !refDiv.dataset.filled){
+    refDiv.dataset.filled='1';
+    refDiv.style.display='block';
     var div=document.createElement('div');
     div.className='trajeto-locked';
     div.id='trajetoInicial';
@@ -410,15 +415,12 @@
           }).join('')
         : '<div style="padding:8px 0;color:var(--muted);font-size:.82rem;font-style:italic">Nenhum trajeto registrado no início</div>'
       );
-    tList.insertBefore(div,tList.firstChild);
-    if(!document.getElementById('trajetoRetornoLabel')){
-      var sep=document.createElement('div');
-      sep.style.cssText='font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px';
-      sep.textContent='↩ Trajeto de Retorno — adicione abaixo';
-      sep.id='trajetoRetornoLabel';
-      tList.appendChild(sep);
-    }
-    } // end if !trajetoInicial
+    refDiv.appendChild(div);
+    var sep=document.createElement('div');
+    sep.style.cssText='font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px';
+    sep.textContent='↩ Trajeto de Retorno — adicione abaixo';
+    refDiv.appendChild(sep);
+    } // end if !filled
 
     // Trava todos os campos preenchidos
     lockAll();
@@ -557,61 +559,21 @@
   }
 
   // ── Trajeto ───────────────────────────────────────────────────────────────
-  var PROXIMOS_VALIDOS = {
-    'Saída da base':   ['Chegada na SE'],
-    'Chegada na SE':   ['Saída da SE'],
-    'Saída da SE':     ['Chegada na SE','Chegada na base'],
-    'Chegada na base': ['Saída da base'],
-  };
-
-  function getUltimoTipoTrajeto(){
-    // Verifica pontos editáveis (não o bloco inicial bloqueado)
-    var items=Array.from(document.querySelectorAll('.trajeto-item'));
-    if(items.length) return items[items.length-1].querySelector('.traj-tipo').value;
-    // Verifica último ponto do trajeto inicial (modo final)
-    var blocoInicial=document.getElementById('trajetoInicial');
-    if(blocoInicial){
-      var pontos=Array.from(blocoInicial.querySelectorAll('[data-tipo]'));
-      if(pontos.length) return pontos[pontos.length-1].getAttribute('data-tipo');
-    }
-    return null;
-  }
-
   function addTrajeto(){
-    var ultimo=getUltimoTipoTrajeto();
-    // Primeiro ponto: sempre Saída da base
-    var proximos = ultimo ? (PROXIMOS_VALIDOS[ultimo]||TIPOS_TRAJETO) : ['Saída da base'];
-
     trajetoCount++;
     var n=trajetoCount;
     var subOpts=SUBESTACOES.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
-    // Só mostra opções válidas
-    var tipoOpts=proximos.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
+    var tipoOpts=TIPOS_TRAJETO.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
     var now=new Date().toTimeString().slice(0,5);
     var item=document.createElement('div'); item.className='trajeto-item'; item.id='traj-'+n;
     item.innerHTML=
-      '<select class="traj-tipo" onchange="onTipoChange(this)">'+tipoOpts+'</select>'+
+      '<select class="traj-tipo" onchange="toggleSeSel(this)">'+tipoOpts+'</select>'+
       '<select class="sub-sel traj-se">'+subOpts+'</select>'+
       '<input type="time" class="traj-hora" value="'+now+'"/>'+
       '<button class="btn-remove" onclick="removeTrajeto('+n+')">✕</button>';
     document.getElementById('trajetoList').appendChild(item);
     toggleSeSel(item.querySelector('.traj-tipo'));
     item.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
-
-  function onTipoChange(sel){
-    toggleSeSel(sel);
-    // Atualiza o próximo item se existir
-    var items=Array.from(document.querySelectorAll('.trajeto-item'));
-    var idx=items.indexOf(sel.closest('.trajeto-item'));
-    if(idx>=0 && idx<items.length-1){
-      var next=items[idx+1];
-      var proximos=PROXIMOS_VALIDOS[sel.value]||TIPOS_TRAJETO;
-      var nextSel=next.querySelector('.traj-tipo');
-      nextSel.innerHTML=proximos.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
-      nextSel.value=proximos[0];
-      toggleSeSel(nextSel);
-    }
   }
   function toggleSeSel(sel){
     var seEl=sel.closest('.trajeto-item').querySelector('.traj-se');
@@ -640,13 +602,26 @@
     var colabs=getColabs();
     var osList=tipo==='inicial'?getOSListInicial():getOSListFinal();
 
-    if(tipo==='inicial' && !colabs.length){showMsg('Informe pelo menos um colaborador.','err');return;}
+    if(tipo==='inicial' && !colabs.length){showMsg('⚠️ Equipe: informe pelo menos uma matrícula.','err');return;}
     if(tipo==='final' && _membrosFinais.length===0 && !colabs.length){showMsg('Carregue uma OS primeiro.','err');return;}
-    if(!osList.length){showMsg(tipo==='final'?'Carregue pelo menos uma OS para finalizar.':'Adicione pelo menos uma atividade.','err');return;}
-    if(tipo==='inicial'&&osList.some(function(o){return !o.descricao_inicial;})){showMsg('Preencha "O que vai ser feito".','err');return;}
+    if(!osList.length){showMsg(tipo==='final'?'⚠️ Carregue pelo menos uma OS para finalizar.':'⚠️ Atividades: adicione pelo menos uma atividade.','err');return;}
+    if(tipo==='inicial'&&osList.some(function(o){return !o.descricao_inicial;})){
+      showMsg('⚠️ Atividades: preencha "O que vai ser feito" em todas as atividades.','err');return;
+    }
     // Status is always Andamento for inicial — no need to validate
-    if(tipo==='final'&&osList.some(function(o){return !o.descricao_final;})){showMsg('Preencha "O que foi feito" em todas as atividades.','err');return;}
+    if(tipo==='final'&&osList.some(function(o){return !o.descricao_final;})){
+      showMsg('⚠️ Atividades: preencha "O que foi feito" em todas as atividades.','err');return;
+    }
     if(tipo==='final'&&osList.some(function(o){return !o.status||o.status==='Andamento'||o.status==='';})){showMsg('⚠️ Selecione o Status de todas as atividades antes de finalizar.','err');return;}
+
+    // Validate trajeto has at least one point if button was clicked
+    var trajetoItems=document.querySelectorAll('.trajeto-item');
+    var trajetoErros=[];
+    Array.from(trajetoItems).forEach(function(item,i){
+      var hora=item.querySelector('.traj-hora').value;
+      if(!hora) trajetoErros.push('Ponto '+(i+1)+': horário obrigatório');
+    });
+    if(trajetoErros.length){showMsg('⚠️ Trajeto incompleto:\n'+trajetoErros.join('\n'),'err');return;}
 
     btn.disabled=true; btn.textContent='⏳ Registrando...';
     console.log('[SUBMIT] tipo:', tipo, 'ordens:', osList.length, JSON.stringify(osList.map(function(o){return o.os;})));
