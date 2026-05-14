@@ -81,6 +81,7 @@
     .badge.Andamento{background:var(--orange-bg);color:var(--orange);border:1px solid #7c2d12}
     .badge.Concluído{background:var(--green-bg); color:var(--green); border:1px solid #14532d}
     .badge.Cancelado{background:var(--gray-bg);  color:var(--gray);  border:1px solid #334155}
+    .badge.Etapa\ Concluída{background:#1e1b4b;color:#a5b4fc;border:1px solid #4338ca}
 
     /* Status buttons */
     .card-footer{display:flex;gap:5px}
@@ -90,6 +91,7 @@
     .btn-status.active-Andamento{border-color:var(--orange);color:var(--orange)}
     .btn-status.active-Concluído{border-color:var(--green); color:var(--green)}
     .btn-status.active-Cancelado{border-color:var(--gray);  color:var(--gray)}
+    .btn-status.active-Etapa\ Concluída{border-color:#a5b4fc;color:#a5b4fc}
 
     /* APR badge on card */
     .apr-badge{font-size:.7rem;color:var(--primary);border:1px solid var(--primary);border-radius:6px;padding:2px 8px;cursor:pointer;background:transparent;transition:background .15s}
@@ -118,6 +120,7 @@
     .modal-btn.active-Andamento{border-color:var(--orange);color:var(--orange)}
     .modal-btn.active-Concluído{border-color:var(--green); color:var(--green)}
     .modal-btn.active-Cancelado{border-color:var(--gray);  color:var(--gray)}
+    .modal-btn.active-Etapa\ Concluída{border-color:#a5b4fc;color:#a5b4fc}
     .modal-btn.btn-delete{border-color:var(--red);color:var(--red);flex:0 0 100%}
     .modal-btn.btn-delete:hover{background:var(--red-bg)}
 
@@ -181,6 +184,7 @@
   <div class="stat-card">        <div class="num" id="sTotal">–</div>    <div class="lbl">Total</div></div>
   <div class="stat-card orange"> <div class="num" id="sAndamento">–</div> <div class="lbl">Andamento</div></div>
   <div class="stat-card green">  <div class="num" id="sConcluido">–</div> <div class="lbl">Concluído</div></div>
+  <div class="stat-card" style="--num-color:#a5b4fc">  <div class="num" id="sEtapa" style="color:#a5b4fc">–</div>    <div class="lbl">Etapa Concluída</div></div>
   <div class="stat-card gray">   <div class="num" id="sCancelado">–</div> <div class="lbl">Cancelado</div></div>
 </div>
 
@@ -190,6 +194,7 @@
     <option value="">Todos os status</option>
     <option value="Andamento">Andamento</option>
     <option value="Concluído">Concluído</option>
+    <option value="Etapa Concluída">Etapa Concluída</option>
     <option value="Cancelado">Cancelado</option>
   </select>
   <select id="filterUnidade" onchange="load()">
@@ -271,7 +276,7 @@
 <div id="toast"></div>
 
 <script>
-  const STATUS = ['Andamento', 'Concluído', 'Cancelado'];
+  const STATUS = ['Andamento', 'Concluído', 'Etapa Concluída', 'Cancelado'];
   let _debounce, _unidades = new Set(), _currentId = null, _currentOs = null;
   let _aprPreviewFile = null;
 
@@ -320,6 +325,7 @@
       document.getElementById('sAndamento').textContent=data.andamento||0;
       document.getElementById('sConcluido').textContent=data.concluido||0;
       document.getElementById('sCancelado').textContent=data.cancelado||0;
+      document.getElementById('sEtapa').textContent=data.etapa||0;
     }catch{}
   }
 
