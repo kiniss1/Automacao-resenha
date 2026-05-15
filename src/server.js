@@ -305,7 +305,11 @@ function startServer() {
     if (guarda)    linhas.push('⚙️ Guarda: ' + guarda);
     if (horario)   linhas.push('⏰ Horário: ' + horario);
     if (dia_semana || data) linhas.push('📆 ' + [dia_semana, data].filter(Boolean).join(', '));
-    if (equipe)    linhas.push('👷 Equipe: ' + equipe);
+    if (equipe) {
+      equipe.split(',').map(n => n.trim()).filter(Boolean).forEach(nome => {
+        linhas.push('👷🏼‍♂️ ' + nome);
+      });
+    }
     if (telefone)  linhas.push('📱 ' + telefone);
     if (veiculo)   linhas.push('🚔 ' + veiculo);
     linhas.push('');
