@@ -7,12 +7,27 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --bg:#0f1117;--surface:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892a4;
-      --primary:#4f6ef7;--green:#22c55e;--red:#ef4444;--orange:#f97316;--gray:#94a3b8;
-      --green-bg:#052e16;--orange-bg:#431407;--gray-bg:#1e293b;--red-bg:#450a0a;
-      --violet:#a5b4fc;--violet-bg:#1e1b4b;
+      --bg:#0d1a19;--surface:#112220;--surface2:#163330;--border:#1e3836;--border2:#2a4f4c;
+      --text:#e8f4f3;--muted:#7aaba7;--muted2:#4a7572;
+      --primary:#009B91;--primary-bg:#0d2e2c;--primary-dark:#005852;
+      --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
+      --orange:#F5AA41;--orange-bg:#2d1f00;--orange-border:#EB8C0A;
+      --gray:#7F7F7F;--gray-bg:#1e1e1e;--gray-border:#414141;
+      --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+      --violet:#50EBE1;--violet-bg:#0d2e2c;--violet-border:#009B91;
+      --cyan:#50EBE1;--beige:#FACD91;
     }
-    body.light{--bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--green-bg:#dcfce7;--orange-bg:#ffedd5;--gray-bg:#f1f5f9;--red-bg:#fee2e2}
+    body.light{
+      --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
+      --text:#414141;--muted:#7F7F7F;--muted2:#CDCDCD;
+      --primary:#009B91;--primary-bg:#e0f5f4;--primary-dark:#005852;
+      --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
+      --orange:#F5AA41;--orange-bg:#fff4e0;--orange-border:#EB8C0A;
+      --gray:#7F7F7F;--gray-bg:#f0f0f0;--gray-border:#CDCDCD;
+      --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
+      --violet:#009B91;--violet-bg:#e0f5f4;--violet-border:#005852;
+      --cyan:#50EBE1;--beige:#FACD91;
+    }
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px;display:flex;justify-content:center}
     .page{width:100%;max-width:520px;display:flex;flex-direction:column;gap:0}
 
@@ -35,9 +50,7 @@
 
     .field{display:flex;flex-direction:column;gap:5px}
     .field label{font-size:.78rem;font-weight:600;color:var(--muted)}
-    .field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;width:100%;transition:border-color .15s;font-family:inherit}
-    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
-    .field textarea{resize:none;height:68px}
+    .field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;width:100%;transition:border-color .15s;font-family:Arial,sans-serif;height:68px}
     .field-row{display:flex;gap:10px}
     .field-row .field{flex:1}
 
@@ -51,7 +64,7 @@
     /* OS Lookup */
     .lookup-card{background:var(--surface);border:2px solid var(--orange);border-left:4px solid var(--orange);padding:18px 24px;display:flex;flex-direction:column;gap:12px;border-top:none}
     .lookup-title{font-size:.85rem;font-weight:700;color:var(--orange);display:flex;align-items:center;gap:6px}
-    .lookup-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px;font-size:1.1rem;outline:none;width:100%;transition:border-color .15s;font-family:monospace;font-weight:600;letter-spacing:.05em}
+    .lookup-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px;font-size:1.1rem;outline:none;width:100%;transition:border-color .15s;font-family:Arial,sans-serif;font-weight:600;letter-spacing:.05em}
     .lookup-input:focus{border-color:var(--orange)}
     .lookup-input.ok{border-color:var(--green);color:var(--green)}
     .lookup-input.err{border-color:var(--red)}
