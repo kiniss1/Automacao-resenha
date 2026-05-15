@@ -7,26 +7,28 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --bg:#0d1117;--surface:#161b22;--surface2:#1c2230;--border:#21262d;--border2:#30363d;
-      --text:#e6edf3;--muted:#7d8590;--muted2:#484f58;
-      --primary:#58a6ff;--primary-bg:#0d2040;
-      --green:#3fb950;--green-bg:#0d2c1a;--green-border:#196c2e;
-      --orange:#d29922;--orange-bg:#2d1f00;--orange-border:#6e4800;
-      --gray:#8b949e;--gray-bg:#21262d;--gray-border:#30363d;
-      --red:#f85149;--red-bg:#2d1117;--red-border:#6e1b1b;
-      --violet:#a5b4fc;--violet-bg:#1e1b4b;--violet-border:#4338ca;
+      --bg:#0d1a19;--surface:#112220;--surface2:#163330;--border:#1e3836;--border2:#2a4f4c;
+      --text:#e8f4f3;--muted:#7aaba7;--muted2:#4a7572;
+      --primary:#009B91;--primary-bg:#0d2e2c;--primary-dark:#005852;
+      --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
+      --orange:#F5AA41;--orange-bg:#2d1f00;--orange-border:#EB8C0A;
+      --gray:#7F7F7F;--gray-bg:#1e1e1e;--gray-border:#414141;
+      --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+      --violet:#50EBE1;--violet-bg:#0d2e2c;--violet-border:#009B91;
+      --cyan:#50EBE1;--beige:#FACD91;
     }
     body.light{
-      --bg:#f6f8fa;--surface:#ffffff;--surface2:#f6f8fa;--border:#d0d7de;--border2:#d0d7de;
-      --text:#1f2328;--muted:#656d76;--muted2:#afb8c1;
-      --primary:#0969da;--primary-bg:#ddf4ff;
-      --green:#1a7f37;--green-bg:#dafbe1;--green-border:#74c47a;
-      --orange:#9a6700;--orange-bg:#fff8c5;--orange-border:#d4a72c;
-      --gray:#57606a;--gray-bg:#f6f8fa;--gray-border:#d0d7de;
-      --red:#cf222e;--red-bg:#ffebe9;--red-border:#ff8182;
-      --violet:#5b21b6;--violet-bg:#ede9fe;--violet-border:#8b5cf6;
+      --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
+      --text:#414141;--muted:#7F7F7F;--muted2:#CDCDCD;
+      --primary:#009B91;--primary-bg:#e0f5f4;--primary-dark:#005852;
+      --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
+      --orange:#F5AA41;--orange-bg:#fff4e0;--orange-border:#EB8C0A;
+      --gray:#7F7F7F;--gray-bg:#f0f0f0;--gray-border:#CDCDCD;
+      --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
+      --violet:#009B91;--violet-bg:#e0f5f4;--violet-border:#005852;
+      --cyan:#50EBE1;--beige:#FACD91;
     }
-    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:14px}
+    body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif'Segoe UI',sans-serif;min-height:100vh;font-size:14px}
 
     /* ── Header ─────────────────────────────────────────────────────────── */
     header{
@@ -47,7 +49,7 @@
     .hbtn.primary:hover{opacity:.88}
     .bot-badge{display:flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border2);color:var(--muted)}
     .dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
-    .dot.online{background:var(--green);animation:pulse 2s infinite}
+    .dot.online{background:var(--primary);animation:pulse 2s infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
     /* ── Stats ──────────────────────────────────────────────────────────── */
@@ -125,7 +127,7 @@
     .os-num{
       font-size:11px;color:var(--muted2);white-space:nowrap;
       border:1px solid var(--border2);border-radius:4px;padding:1px 6px;
-      font-family:monospace;
+      font-family:Arial,sans-serif;
     }
     .btn-collapse{
       background:transparent;border:none;color:var(--muted2);
@@ -204,8 +206,7 @@
     .modal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
     .modal-title-wrap{display:flex;flex-direction:column;gap:4px}
     .modal-title{font-size:15px;font-weight:700;line-height:1.4}
-    .modal-subtitle{font-size:11px;color:var(--muted);font-family:monospace}
-    .modal-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;flex-shrink:0}
+    .modal-subtitle{font-size:11px;color:var(--muted);font-family:Arial,sans-serif;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;flex-shrink:0}
     .modal-close:hover{color:var(--text)}
 
     .modal-section{display:flex;flex-direction:column;gap:1px}
