@@ -41,6 +41,7 @@ async function init() {
     'ALTER TABLE ordens_servico ADD COLUMN trajeto TEXT',
     'ALTER TABLE ordens_servico ADD COLUMN sp_enviado INTEGER DEFAULT 0',
     'ALTER TABLE ordens_servico ADD COLUMN sp_enviado_em TEXT',
+    'ALTER TABLE ordens_servico ADD COLUMN sp_peso REAL',
   ];
   for (const m of migrations) {
     try { db.run(m); } catch(e) { /* coluna já existe */ }
