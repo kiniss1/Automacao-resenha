@@ -402,12 +402,23 @@
 
       <!-- SharePoint -->
     <div id="spSection" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border)">
-        <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="border-top:1px solid var(--border);padding:12px 0 0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span style="font-size:.78rem;font-weight:600">SharePoint — Programação Diária</span>
           <span id="spBadgeModal" class="sp-badge nao" style="width:fit-content">📤 Não enviado</span>
         </div>
-        <button class="btn-sp" id="btnSpModal" onclick="enviarSP()">📤 Enviar ao SharePoint</button>
+        <!-- Peso prompt (aparece antes de enviar) -->
+        <div id="spPesoWrap" style="display:flex;flex-direction:column;gap:8px">
+          <label style="font-size:.78rem;color:var(--muted);font-weight:600">⚖️ Peso da Atividade</label>
+          <div style="display:flex;gap:8px">
+            <input type="number" id="spPesoInput" min="1" max="100" placeholder="Ex: 4"
+              style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.95rem;outline:none;flex:1"
+              onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+              onkeydown="if(event.key==='Enter')enviarSP()"/>
+            <button class="btn-sp" id="btnSpModal" onclick="enviarSP()">📤 Enviar ao SharePoint</button>
+          </div>
+          <p style="font-size:.72rem;color:var(--muted)">Informe o peso antes de enviar. Este valor será gravado no SharePoint.</p>
+        </div>
       </div>
     </div>
 
@@ -616,15 +627,21 @@
     const spBadgeM  = document.getElementById('spBadgeModal');
     const btnSpM    = document.getElementById('btnSpModal');
     const spVal = os.sp_enviado;
+    const pesoWrap = document.getElementById('spPesoWrap');
+    const pesoInput = document.getElementById('spPesoInput');
     if(spVal===1){
       spBadgeM.className='sp-badge ok'; spBadgeM.textContent='✅ Enviado em '+(os.sp_enviado_em||'');
       btnSpM.disabled=true; btnSpM.textContent='✅ Enviado';
+      if(pesoWrap) pesoWrap.style.display='none';
     } else if(spVal===2){
       spBadgeM.className='sp-badge fila'; spBadgeM.textContent='⏳ Aguardando PC local...';
       btnSpM.disabled=true; btnSpM.textContent='⏳ Na fila';
+      if(pesoWrap) pesoWrap.style.display='none';
     } else {
       spBadgeM.className='sp-badge nao'; spBadgeM.textContent='📤 Não enviado';
       btnSpM.disabled=false; btnSpM.textContent='📤 Enviar ao SharePoint';
+      if(pesoWrap) pesoWrap.style.display='';
+      if(pesoInput) pesoInput.value='';
     }
     spSection.style.display = '';
 
@@ -722,22 +739,36 @@
   // ── SharePoint ────────────────────────────────────────────────────────────
   async function enviarSP(){
     if(!_currentId) return;
+    const pesoInput = document.getElementById('spPesoInput');
+    const peso = pesoInput ? pesoInput.value.trim() : '';
+    if(!peso || isNaN(peso) || Number(peso) <= 0){
+      pesoInput.style.borderColor='var(--red)';
+      pesoInput.focus();
+      toast('⚠️ Informe o Peso da Atividade antes de enviar','err');
+      return;
+    }
     const btn = document.getElementById('btnSpModal');
     const badge = document.getElementById('spBadgeModal');
     btn.disabled=true; btn.textContent='⏳ Enviando...';
     try{
-      const res = await fetch('/api/sp-enviar/'+_currentId, {method:'POST'}).then(r=>r.json());
+      const res = await fetch('/api/sp-enviar/'+_currentId, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ peso: Number(peso) })
+      }).then(r=>r.json());
       if(!res.ok) throw new Error(res.error);
       if(res.ja_enviado){
         badge.className='sp-badge ok'; badge.textContent='✅ Já enviado ao SharePoint';
+        document.getElementById('spPesoWrap').style.display='none';
       } else {
         badge.className='sp-badge fila'; badge.textContent='⏳ Na fila — aguardando PC local';
         btn.textContent='⏳ Na fila';
+        btn.disabled=true;
+        document.getElementById('spPesoWrap').style.display='none';
         toast('📤 OS adicionada à fila do SharePoint');
-        // Atualiza card
         const {data}=await fetch('/api/os').then(r=>r.json());
-        const os=data.find(o=>o.id===_currentId);
-        if(os){const card=document.getElementById('card-'+_currentId);if(card)card.outerHTML=renderCard(os);}
+        const osItem=data.find(o=>o.id===_currentId);
+        if(osItem){const card=document.getElementById('card-'+_currentId);if(card)card.outerHTML=renderCard(osItem);}
       }
     }catch(e){
       toast('❌ Erro: '+e.message,'err');
