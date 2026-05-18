@@ -631,8 +631,8 @@
     const pesoInput = document.getElementById('spPesoInput');
     if(spVal===1){
       spBadgeM.className='sp-badge ok'; spBadgeM.textContent='✅ Enviado em '+(os.sp_enviado_em||'');
-      btnSpM.disabled=true; btnSpM.textContent='✅ Enviado';
-      if(pesoWrap) pesoWrap.style.display='none';
+      btnSpM.disabled=false; btnSpM.textContent='🔄 Reenviar ao SharePoint';
+      if(pesoWrap) pesoWrap.style.display='';
     } else if(spVal===2){
       spBadgeM.className='sp-badge fila'; spBadgeM.textContent='⏳ Aguardando PC local...';
       btnSpM.disabled=true; btnSpM.textContent='⏳ Na fila';
@@ -757,14 +757,10 @@
         body: JSON.stringify({ peso: Number(peso) })
       }).then(r=>r.json());
       if(!res.ok) throw new Error(res.error);
-      if(res.ja_enviado){
-        badge.className='sp-badge ok'; badge.textContent='✅ Já enviado ao SharePoint';
-        document.getElementById('spPesoWrap').style.display='none';
-      } else {
+      {
         badge.className='sp-badge fila'; badge.textContent='⏳ Na fila — aguardando PC local';
         btn.textContent='⏳ Na fila';
         btn.disabled=true;
-        document.getElementById('spPesoWrap').style.display='none';
         toast('📤 OS adicionada à fila do SharePoint');
         const {data}=await fetch('/api/os').then(r=>r.json());
         const osItem=data.find(o=>o.id===_currentId);
