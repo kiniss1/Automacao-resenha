@@ -425,14 +425,15 @@ function startServer() {
 
   // ── SharePoint Queue ─────────────────────────────────────────────────────
   // Gestor clica "Enviar ao SharePoint" → adiciona à fila
-  app.post('/api/sp-enviar/:id', (req, res) => {
+  app.post('/api/sp-enviar/:id', express.json(), (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      const os = db.buscarPorId(id);
+      const id   = parseInt(req.params.id, 10);
+      const peso = req.body?.peso || null;
+      const os   = db.buscarPorId(id);
       if (!os) return res.status(404).json({ ok: false, error: 'OS não encontrada' });
-      if (os.sp_enviado) return res.json({ ok: true, msg: 'Já enviado ao SharePoint', ja_enviado: true });
-      // Marca como "na fila" (sp_enviado = 2 = pendente)
-      db.run('UPDATE ordens_servico SET sp_enviado=2 WHERE id=?', [id]);
+      if (os.sp_enviado === 1) return res.json({ ok: true, msg: 'Já enviado ao SharePoint', ja_enviado: true });
+      // Armazena o peso junto (reutiliza campo trajeto não — usa campo auxiliar)
+      db.run('UPDATE ordens_servico SET sp_enviado=2, sp_peso=? WHERE id=?', [peso, id]);
       res.json({ ok: true, msg: 'OS adicionada à fila do SharePoint' });
     } catch(e) {
       res.status(500).json({ ok: false, error: e.message });
@@ -443,7 +444,7 @@ function startServer() {
   app.get('/api/sp-queue', (req, res) => {
     try {
       const pending = db.all(
-        `SELECT * FROM ordens_servico WHERE sp_enviado=2 ORDER BY atualizado_em DESC LIMIT 20`
+        'SELECT * FROM ordens_servico WHERE sp_enviado=2 ORDER BY atualizado_em DESC LIMIT 20'
       );
       res.json({ ok: true, data: pending });
     } catch(e) {
