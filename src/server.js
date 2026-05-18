@@ -431,7 +431,7 @@ function startServer() {
       const peso = req.body?.peso || null;
       const os   = db.buscarPorId(id);
       if (!os) return res.status(404).json({ ok: false, error: 'OS não encontrada' });
-      if (os.sp_enviado === 1) return res.json({ ok: true, msg: 'Já enviado ao SharePoint', ja_enviado: true });
+      // Permite reenvio — sempre coloca na fila novamente
       // Armazena o peso junto (reutiliza campo trajeto não — usa campo auxiliar)
       db.run('UPDATE ordens_servico SET sp_enviado=2, sp_peso=? WHERE id=?', [peso, id]);
       res.json({ ok: true, msg: 'OS adicionada à fila do SharePoint' });
