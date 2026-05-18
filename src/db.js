@@ -39,6 +39,8 @@ async function init() {
     'ALTER TABLE ordens_servico ADD COLUMN descricao_inicial TEXT',
     'ALTER TABLE ordens_servico ADD COLUMN descricao_final TEXT',
     'ALTER TABLE ordens_servico ADD COLUMN trajeto TEXT',
+    'ALTER TABLE ordens_servico ADD COLUMN sp_enviado INTEGER DEFAULT 0',
+    'ALTER TABLE ordens_servico ADD COLUMN sp_enviado_em TEXT',
   ];
   for (const m of migrations) {
     try { db.run(m); } catch(e) { /* coluna já existe */ }
@@ -151,4 +153,19 @@ function updateAprPath(id, aprPath) {
   return get('SELECT * FROM ordens_servico WHERE id=?', [id]);
 }
 
-module.exports = { init, inserirOS, listarOS, atualizarStatus, removerOS, estatisticas, updateAprPath, updateAprVersoPath, buscarPorId };
+function marcarSpEnviado(id) {
+  run(`UPDATE ordens_servico SET sp_enviado=1, sp_enviado_em=datetime('now','localtime') WHERE id=?`, [id]);
+  return get('SELECT * FROM ordens_servico WHERE id=?', [id]);
+}
+
+function listarSpQueue() {
+  return all(`SELECT * FROM ordens_servico WHERE sp_enviado=0 AND status IN ('Concluído','Cancelado','Etapa Concluída') ORDER BY atualizado_em DESC LIMIT 50`);
+}
+
+module.exports = {
+  init, inserirOS, listarOS, atualizarStatus, removerOS, estatisticas,
+  updateAprPath, updateAprVersoPath, buscarPorId, marcarSpEnviado, listarSpQueue,
+  // acesso direto para server.js
+  run: (sql, params) => run(sql, params),
+  all: (sql, params) => all(sql, params),
+};
