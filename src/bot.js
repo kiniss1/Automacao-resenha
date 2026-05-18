@@ -204,8 +204,8 @@ function startBot() {
     }, 10000);
   });
 
-  // Só escuta mensagens de OUTROS — nunca processa mensagens do próprio bot
-  client.on('message', processarMensagem);
+  // Leitura de mensagens desabilitada — registros feitos exclusivamente pelo formulário web
+  // client.on('message', processarMensagem);
 
   client.initialize();
 }
