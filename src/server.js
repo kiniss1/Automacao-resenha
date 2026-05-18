@@ -423,6 +423,56 @@ function startServer() {
     }
   });
 
+  // ── SharePoint Queue ─────────────────────────────────────────────────────
+  // Gestor clica "Enviar ao SharePoint" → adiciona à fila
+  app.post('/api/sp-enviar/:id', (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const os = db.buscarPorId(id);
+      if (!os) return res.status(404).json({ ok: false, error: 'OS não encontrada' });
+      if (os.sp_enviado) return res.json({ ok: true, msg: 'Já enviado ao SharePoint', ja_enviado: true });
+      // Marca como "na fila" (sp_enviado = 2 = pendente)
+      db.run('UPDATE ordens_servico SET sp_enviado=2 WHERE id=?', [id]);
+      res.json({ ok: true, msg: 'OS adicionada à fila do SharePoint' });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // sync.js no PC consulta esta rota para pegar OS pendentes
+  app.get('/api/sp-queue', (req, res) => {
+    try {
+      const pending = db.all(
+        `SELECT * FROM ordens_servico WHERE sp_enviado=2 ORDER BY atualizado_em DESC LIMIT 20`
+      );
+      res.json({ ok: true, data: pending });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // sync.js chama esta rota após enviar com sucesso ao SP
+  app.post('/api/sp-confirmado/:id', (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      db.marcarSpEnviado(id);
+      res.json({ ok: true });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // sync.js chama se falhar — volta para sp_enviado=0 (não enviado)
+  app.post('/api/sp-falhou/:id', (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      db.run('UPDATE ordens_servico SET sp_enviado=0 WHERE id=?', [id]);
+      res.json({ ok: true });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   app.get('/api/bot-status', (_req, res) => {
     res.json({ ready: state.isReady(), hasQR: !!state.getQR() });
   });
