@@ -88,7 +88,7 @@ function inserirOS(d) {
       saida_base=excluded.saida_base, chegada_base=excluded.chegada_base,
       descricao_final=CASE WHEN excluded.descricao_final IS NOT NULL THEN excluded.descricao_final ELSE descricao_final END,
       descricao_inicial=CASE WHEN descricao_inicial IS NULL THEN excluded.descricao_inicial ELSE descricao_inicial END,
-      trajeto=CASE WHEN excluded.trajeto IS NOT NULL THEN excluded.trajeto ELSE trajeto END,
+      trajeto=CASE WHEN excluded.trajeto IS NOT NULL AND trajeto IS NOT NULL AND trajeto != excluded.trajeto THEN trajeto || ' | ' || excluded.trajeto WHEN excluded.trajeto IS NOT NULL THEN excluded.trajeto ELSE trajeto END,
       atualizado_em=datetime('now','localtime')
   `, [d.os, d.unidade, d.equipe, d.veiculo, d.servico, d.status, d.data,
       d.guarda, d.horario, d.dia_semana, d.telefone, d.subestacoes,
