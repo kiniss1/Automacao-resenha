@@ -628,12 +628,30 @@
     grid.innerHTML=lista.map(renderCard).join('');
   }
 
+  function hojeStr(){
+    const d=new Date();
+    return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  }
+
+  function isHoje(os){
+    const h = hojeStr();
+    if(os.data && os.data.substring(0,10)===h) return true;
+    // criado_em format: "YYYY-MM-DD ..." compare with today
+    if(os.criado_em){
+      const d=new Date(); 
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+      if(os.criado_em.startsWith(y+'-'+m+'-'+day)) return true;
+    }
+    return false;
+  }
+
   function renderCard(os){
     const partes=(os.servico||'—').split(' | ');
     const principal=e(partes[0]);
     const osDisplay=displayOs(os.os);
     const st = os.status || 'Andamento';
     const hasApr = !!os.apr_path;
+    const collapsed = !isHoje(os); // colapsa automaticamente se não for hoje
 
     const btns=STATUS.map(s=>{
       const active=st===s;
@@ -643,7 +661,7 @@
         (active?'disabled':'')+'>'+s+'</button>';
     }).join('');
 
-    return '<div class="os-card" id="card-'+os.id+'">'+
+    return '<div class="os-card'+(collapsed?' collapsed':'')+'" id="card-'+os.id+'">'+
       '<div class="card-accent" data-s="'+e(st)+'"></div>'+
       '<div class="card-inner">'+
         '<div class="card-top">'+
@@ -651,7 +669,7 @@
             '<span class="unidade">'+e(os.unidade)+'</span>'+
             (osDisplay?'<span class="os-num">'+e(osDisplay)+'</span>':'')+
           '</div>'+
-          '<button class="btn-collapse" onclick="toggleCollapse('+os.id+',this)" title="Minimizar">▾</button>'+
+          '<button class="btn-collapse" onclick="toggleCollapse('+os.id+',this)" title="'+(collapsed?'Expandir':'Minimizar')+'">'+(collapsed?'▸':'▾')+'</button>'+
         '</div>'+
         '<div class="card-body">'+
           '<div class="card-servico" onclick="openModal('+os.id+')">'+principal+'</div>'+
@@ -973,6 +991,17 @@
       const b=document.getElementById('btnTema');if(b)b.textContent='🌑';
     });
   }
+
+  // Pré-filtra por hoje
+  (function(){
+    const d=new Date();
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+    const today=y+'-'+m+'-'+day;
+    const de=document.getElementById('filterDataDe');
+    const ate=document.getElementById('filterDataAte');
+    if(de && !de.value) de.value=today;
+    if(ate && !ate.value) ate.value=today;
+  })();
 
   load(); checkBot();
   setInterval(checkBot,15_000);
