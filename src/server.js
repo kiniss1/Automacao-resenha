@@ -423,6 +423,27 @@ function startServer() {
     }
   });
 
+  // ── Atualizar Trajeto ────────────────────────────────────────────────────
+  app.post('/api/trajeto/:id', express.json(), (req, res) => {
+    try {
+      const id     = parseInt(req.params.id, 10);
+      const pontos = req.body?.pontos || '';
+      const os     = db.buscarPorId(id);
+      if (!os) return res.status(404).json({ ok: false, error: 'OS não encontrada' });
+      // Concatena com trajeto existente
+      const trajetoAtual = os.trajeto || '';
+      const novoTrajeto  = trajetoAtual
+        ? trajetoAtual + ' | ' + pontos
+        : pontos;
+      db.run(`UPDATE ordens_servico SET trajeto=?, atualizado_em=datetime('now','localtime') WHERE id=?`,
+        [novoTrajeto, id]);
+      const updated = db.buscarPorId(id);
+      res.json({ ok: true, data: updated });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // ── SharePoint Queue ─────────────────────────────────────────────────────
   // Gestor clica "Enviar ao SharePoint" → adiciona à fila
   app.post('/api/sp-enviar/:id', express.json(), (req, res) => {
