@@ -96,7 +96,7 @@
     <span>OOMC — Check-in / Check-out de Colaboradores</span>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <button id="btnTema" onclick="toggleTema()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:.8rem;cursor:pointer">🌙 Escuro</button>
+    <button id="btnTema" onclick="toggleTema()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:.8rem;cursor:pointer">🌙 Tema: Escuro</button>
     <div class="nav-links">
     <a href="/" class="nav-link">🔧 Manutenção</a>
     <a href="/manutencao.html" class="nav-link active">⚙️ Operação</a>
@@ -177,12 +177,12 @@
   function toggleTema(){
     const isLight = document.body.classList.toggle('light');
     const btn = document.getElementById('btnTema');
-    btn.textContent = isLight ? '🌑 Escuro' : '🌙 Escuro';
+    btn.textContent = isLight ? '☀️ Tema: Claro' : '🌙 Tema: Escuro';
     localStorage.setItem('tema_op', isLight ? 'light' : 'dark');
   }
   if(localStorage.getItem('tema_op')==='light'){
     document.body.classList.add('light');
-    document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('btnTema');if(b)b.textContent='🌑 Escuro';});
+    document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('btnTema');if(b)b.textContent='☀️ Tema: Claro';});
   }
 
   async function init() {
