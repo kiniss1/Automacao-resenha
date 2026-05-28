@@ -298,6 +298,9 @@
     .sp-badge.nao{color:var(--muted);border-color:var(--border2);background:transparent}
     .sp-badge.fila{color:var(--orange);border-color:var(--orange-border);background:var(--orange-bg)}
     .sp-badge.ok{color:var(--green);border-color:var(--green-border);background:var(--green-bg)}
+    .btn-wa{background:#25d366;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+    .btn-wa:hover{opacity:.85}
+    .btn-wa:disabled{opacity:.4;cursor:default}
     .btn-sp{background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;transition:opacity .15s;white-space:nowrap}
     .btn-sp:hover{opacity:.85}
     .btn-sp:disabled{opacity:.4;cursor:default}
@@ -416,7 +419,16 @@
 
       <div class="modal-footer" id="modalFooter"></div>
 
-      <!-- SharePoint -->
+      <!-- Enviar Resumo WA -->
+    <div style="padding:10px 0;border-top:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:.78rem;color:var(--muted)">💬 Enviar resumo ao grupo WhatsApp</span>
+        <button class="btn-wa" id="btnEnviarWA" onclick="enviarResumoWA()">📤 Enviar Resumo</button>
+      </div>
+      <div id="waMsgFeedback" style="font-size:.72rem;margin-top:5px;min-height:14px"></div>
+    </div>
+
+    <!-- SharePoint -->
     <div id="spSection" style="display:none">
       <div style="border-top:1px solid var(--border);padding:12px 0 0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -819,6 +831,25 @@
       if(card) card.querySelectorAll('.btn-status').forEach(b=>b.disabled=false);
       document.querySelectorAll('.modal-btn').forEach(b=>b.disabled=false);
     }
+  }
+
+  // ── Enviar Resumo WhatsApp ────────────────────────────────────────────────
+  async function enviarResumoWA(){
+    if(!_currentId) return;
+    const btn = document.getElementById('btnEnviarWA');
+    const fb  = document.getElementById('waMsgFeedback');
+    btn.disabled=true; btn.textContent='⏳ Enviando...';
+    fb.textContent='';
+    try{
+      const res=await fetch('/api/os/'+_currentId+'/enviar-resumo',{method:'POST'}).then(r=>r.json());
+      if(!res.ok) throw new Error(res.error);
+      fb.style.color='var(--green)'; fb.textContent='✅ '+res.msg;
+      toast('✅ Resumo enviado ao WhatsApp!');
+    }catch(e){
+      fb.style.color='var(--red)'; fb.textContent='❌ '+e.message;
+      toast('❌ '+e.message,'err');
+    }
+    btn.disabled=false; btn.textContent='📤 Enviar Resumo';
   }
 
   // ── SharePoint ────────────────────────────────────────────────────────────
