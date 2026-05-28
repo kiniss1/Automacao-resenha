@@ -858,6 +858,41 @@
       document.getElementById('aprCard_'+idx).appendChild(done);
     }catch(e){alert('Erro: '+e.message);btn.disabled=false;btn.textContent='📤 Enviar APR';}
   }
+
+  // ── Submit Trajeto ───────────────────────────────────────────────────────
+  async function submeterTrajeto() {
+    if (!_trajetoOsData) { showMsg('⚠️ Carregue uma OS primeiro.','err'); return; }
+    var novosItens = document.querySelectorAll('#trajetoNovoWrap .trajeto-item');
+    if (!novosItens.length) { showMsg('⚠️ Adicione pelo menos um ponto de trajeto.','err'); return; }
+
+    var novosTrechos = Array.from(novosItens).map(function(item){
+      var t2   = item.querySelector('.traj-tipo').value;
+      var hora = item.querySelector('.traj-hora').value;
+      var seEl = item.querySelector('.traj-se');
+      var se   = (seEl && seEl.style.display !== 'none') ? seEl.value : '';
+      return t2 + (se ? ' '+se : '') + (hora ? ' '+hora : '');
+    }).filter(Boolean).join(' | ');
+
+    var btn = document.getElementById('btnSubmit');
+    btn.disabled = true; btn.textContent = '⏳ Salvando...';
+
+    try {
+      var res = await fetch('/api/trajeto/'+_trajetoOsData.id, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ pontos: novosTrechos })
+      }).then(function(r){ return r.json(); });
+
+      if (!res.ok) throw new Error(res.error || 'Erro desconhecido');
+      showMsg('✅ Trajeto atualizado! ' + novosTrechos, 'ok');
+      _trajetoOsData = res.data;
+      carregarTrajetoOS();
+    } catch(e) {
+      showMsg('❌ Erro: '+e.message, 'err');
+    }
+    btn.disabled = false; btn.textContent = '📍 Salvar Trajeto';
+  }
+
 </script>
 </body>
 </html>
