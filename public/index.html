@@ -323,7 +323,7 @@
   <div class="header-right">
     <a href="/atividade.html" class="hbtn primary">+ Nova Atividade</a>
     <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
-    <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙</button>
+    <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Tema: Escuro</button>
     <div class="bot-badge">
       <div class="dot" id="botDot"></div>
       <span id="botLabel">Verificando...</span>
@@ -982,13 +982,13 @@
   // ── Tema ──────────────────────────────────────────────────────────────
   function toggleTema(){
     const isLight=document.body.classList.toggle('light');
-    document.getElementById('btnTema').textContent=isLight?'🌑':'🌙';
+    document.getElementById('btnTema').textContent=isLight?'☀️ Tema: Claro':'🌙 Tema: Escuro';
     localStorage.setItem('tema',isLight?'light':'dark');
   }
   if(localStorage.getItem('tema')==='light'){
     document.body.classList.add('light');
     document.addEventListener('DOMContentLoaded',()=>{
-      const b=document.getElementById('btnTema');if(b)b.textContent='🌑';
+      const b=document.getElementById('btnTema');if(b)b.textContent='☀️ Tema: Claro';
     });
   }
 
