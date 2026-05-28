@@ -42,6 +42,7 @@
     .type-tab:last-child{border-radius:0 8px 8px 0;border-left:none}
     .type-tab.active-inicial{background:#052e16;border-color:var(--green);color:var(--green)}
     .type-tab.active-final{background:var(--orange-bg);border-color:var(--orange);color:var(--orange)}
+    .type-tab.active-trajeto{background:var(--primary-bg);border-color:var(--primary);color:var(--primary)}
 
     .card{background:var(--surface);border:1px solid var(--border);padding:18px 24px;display:flex;flex-direction:column;gap:12px;border-top:none}
     .card:last-of-type{border-radius:0 0 14px 14px}
@@ -151,6 +152,7 @@
   <div class="type-tabs">
     <button class="type-tab active-inicial" id="tabInicial" onclick="setTipo('inicial')">▶ Início</button>
     <button class="type-tab" id="tabFinal" onclick="setTipo('final')">◀ Final</button>
+    <button class="type-tab" id="tabTrajeto" onclick="setTipo('trajeto')">📍 Trajeto</button>
   </div>
 
   <!-- LOOKUP (só no Final) -->
@@ -212,6 +214,26 @@
     <div class="section-label">🧰 Finalizar Atividades</div>
     <div id="osListFinal"></div>
     <button class="btn-add" id="btnAddOsFinal" style="display:none" onclick="addOutraOS()">+ Carregar outra OS</button>
+  </div>
+
+  <!-- Atualizar Trajeto (aba trajeto) -->
+  <div class="card" id="cardTrajetoUpdate" style="display:none">
+    <div class="section-label">📍 Atualizar Trajeto em Andamento</div>
+    <div class="os-lookup-box">
+      <h3>🔍 Digite o número da OS</h3>
+      <input type="text" class="os-lookup-input" id="trajetoOsInput"
+        inputmode="numeric" placeholder="Ex: 3257260621"
+        oninput="onTrajetoOsInput(this.value)"/>
+      <div id="trajetoOsResult" style="display:none"></div>
+    </div>
+    <!-- Trajeto atual (somente leitura) -->
+    <div id="trajetoAtualWrap" style="display:none">
+      <div class="section-label" style="margin-bottom:6px">Trajeto registrado até agora</div>
+      <div id="trajetoAtualList"></div>
+      <div style="font-size:.7rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px">➕ Adicionar próximo ponto</div>
+      <div id="trajetoNovoWrap"></div>
+      <button class="btn-add" onclick="addTrajetoNovo()">+ Adicionar ponto</button>
+    </div>
   </div>
 
   <!-- Trajeto -->
@@ -684,6 +706,82 @@
     var div=document.createElement('div'); div.className='result-msg '+type; div.textContent=msg;
     area.insertBefore(div,area.firstChild);
     div.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+
+  // ── Aba Trajeto ───────────────────────────────────────────────────────────
+  var _trajetoOsData = null;
+  var _trajetoTimer = null;
+  var _trajetoCount = 0;
+
+  function onTrajetoOsInput(val) {
+    clearTimeout(_trajetoTimer);
+    var inp = document.getElementById('trajetoOsInput');
+    var res = document.getElementById('trajetoOsResult');
+    var wrap = document.getElementById('trajetoAtualWrap');
+    wrap.style.display = 'none';
+    if (!val || val.trim().length < 3) { inp.className='os-lookup-input'; res.style.display='none'; return; }
+    _trajetoTimer = setTimeout(function(){
+      fetch('/api/os').then(function(r){ return r.json(); }).then(function(data){
+        var os = data.data.find(function(o){ return o.os === val.trim(); });
+        if (!os) {
+          inp.className='os-lookup-input err';
+          res.className='lookup-result err'; res.style.display='block';
+          res.textContent='❌ OS não encontrada.'; return;
+        }
+        if (os.status === 'Concluído') {
+          inp.className='os-lookup-input err';
+          res.className='lookup-result err'; res.style.display='block';
+          res.textContent='⚠️ OS já Concluída — não é possível atualizar trajeto.'; return;
+        }
+        inp.className='os-lookup-input ok';
+        _trajetoOsData = os;
+        res.className='lookup-result ok'; res.style.display='block';
+        res.innerHTML='<strong>OS '+os.os+'</strong> — '+(os.unidade||'')+'<br>'+
+          '📌 '+os.status+'<br>'+
+          '<button class="btn-load" onclick="carregarTrajetoOS()" style="margin-top:8px">✅ Carregar OS</button>';
+      }).catch(function(){});
+    }, 500);
+  }
+
+  function carregarTrajetoOS() {
+    var os = _trajetoOsData; if (!os) return;
+    var wrap = document.getElementById('trajetoAtualWrap');
+    var list = document.getElementById('trajetoAtualList');
+    var novoWrap = document.getElementById('trajetoNovoWrap');
+    // Mostra trajeto atual
+    var pontos = (os.trajeto || '').split(' | ').filter(Boolean);
+    if (pontos.length) {
+      list.innerHTML = pontos.map(function(p, i){
+        return '<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text);display:flex;gap:8px">'+
+          '<span style="color:var(--muted);min-width:16px">'+(i+1)+'.</span><span>'+p+'</span></div>';
+      }).join('');
+    } else {
+      list.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:6px 0">Nenhum ponto registrado ainda.</div>';
+    }
+    novoWrap.innerHTML = '';
+    _trajetoCount = 0;
+    wrap.style.display = '';
+    document.getElementById('trajetoOsResult').style.display = 'none';
+  }
+
+  function removeTrajNovo(n){ var el=document.getElementById('tnovo-'+n); if(el) el.remove(); }
+
+  function addTrajetoNovo() {
+    _trajetoCount++;
+    var n = _trajetoCount;
+    var subOpts = SUBESTACOES.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
+    var tipoOpts = TIPOS_TRAJETO.map(function(t){ return '<option>'+t+'</option>'; }).join('');
+    var now = new Date().toTimeString().slice(0,5);
+    var item = document.createElement('div');
+    item.className = 'trajeto-item'; item.id = 'tnovo-'+n;
+    item.innerHTML =
+      '<select class="traj-tipo" onchange="toggleSeSel(this)">'+tipoOpts+'</select>'+
+      '<select class="sub-sel traj-se">'+subOpts+'</select>'+
+      '<input type="time" class="traj-hora" value="'+now+'"/>'+
+      '<button class="btn-remove" onclick="removeTrajNovo('+n+')">✕</button>';
+    document.getElementById('trajetoNovoWrap').appendChild(item);
+    toggleSeSel(item.querySelector('.traj-tipo'));
+    item.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
   // ── APR ───────────────────────────────────────────────────────────────────
