@@ -323,6 +323,49 @@ function startServer() {
     return linhas.join('\n').trim();
   }
 
+  // ── Envio manual WhatsApp ─────────────────────────────────────────────────
+  app.post('/api/os/:id/enviar-resumo', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const os = db.buscarPorId(id);
+      if (!os) return res.status(404).json({ ok: false, error: 'OS não encontrada' });
+
+      const tipo = os.descricao_final ? 'final' : 'inicial';
+      const baseUrl = process.env.PUBLIC_URL || ('https://' + req.headers.host);
+      const aprLink = baseUrl + '/apr.html?os=' + encodeURIComponent(os.os);
+
+      const ordens = [{
+        os:       os.os,
+        unidade:  os.unidade,
+        servico:  os.descricao_inicial || os.servico || '',
+        status:   os.status,
+        aprLink:  os.apr_path ? aprLink : null,
+      }];
+
+      const msgWA = formatMsgWhatsApp({
+        tipo,
+        guarda:     os.guarda,
+        horario:    os.horario,
+        dia_semana: os.dia_semana,
+        data:       os.data,
+        equipe:     os.equipe,
+        telefone:   os.telefone,
+        veiculo:    os.veiculo,
+        ordens,
+      });
+
+      if (!global._waClient || !global._grupoId) {
+        return res.status(503).json({ ok: false, error: 'Bot WhatsApp não conectado' });
+      }
+
+      const chat = await global._waClient.getChatById(global._grupoId);
+      await chat.sendMessage(msgWA);
+      res.json({ ok: true, msg: 'Resumo enviado ao grupo!' });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // ── APR upload/serve ──────────────────────────────────────────────────────
   const multer = require('multer');
   const APR_DIR = process.env.APR_DIR || '/data/apr';
