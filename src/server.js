@@ -423,6 +423,36 @@ function startServer() {
     }
   });
 
+  // ── Edição completa de OS (painel gestor) ───────────────────────────────
+  app.patch('/api/os/:id/edit', express.json(), (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const b  = req.body;
+      const os = db.buscarPorId(id);
+      if (!os) return res.status(404).json({ ok: false, error: 'OS não encontrada' });
+
+      const fields = [];
+      const vals   = [];
+      const map = {
+        os:'os', unidade:'unidade', guarda:'guarda', horario:'horario',
+        equipe:'equipe', telefone:'telefone', veiculo:'veiculo',
+        descricao_inicial:'descricao_inicial', descricao_final:'descricao_final',
+        status:'status', trajeto:'trajeto', data:'data',
+      };
+      for (const [key, col] of Object.entries(map)) {
+        if (b[key] !== undefined) { fields.push(col+'=?'); vals.push(b[key]||null); }
+      }
+      if (!fields.length) return res.json({ ok: true, data: os });
+
+      vals.push(id);
+      db.run(`UPDATE ordens_servico SET ${fields.join(',')} WHERE id=?`, vals);
+      const updated = db.buscarPorId(id);
+      res.json({ ok: true, data: updated });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // ── Atualizar Trajeto ────────────────────────────────────────────────────
   app.post('/api/trajeto/:id', express.json(), (req, res) => {
     try {
