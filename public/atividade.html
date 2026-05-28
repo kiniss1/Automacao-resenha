@@ -291,12 +291,17 @@
     tipo=t;
     document.getElementById('tabInicial').className='type-tab'+(t==='inicial'?' active-inicial':'');
     document.getElementById('tabFinal').className='type-tab'+(t==='final'?' active-final':'');
-    document.getElementById('btnSubmit').textContent=t==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';
+    document.getElementById('tabTrajeto').className='type-tab'+(t==='trajeto'?' active-trajeto':'');
+    document.getElementById('btnSubmit').textContent=t==='inicial'?'▶ Registrar Início':t==='trajeto'?'📍 Salvar Trajeto':'◀ Registrar Conclusão';
+    // Cards visíveis por modo
+    document.getElementById('cardResenha').style.display=t==='trajeto'?'none':'';
+    document.getElementById('cardEquipe').style.display=t==='trajeto'?'none':'';
     document.getElementById('cardOsInicial').style.display=t==='inicial'?'':'none';
     document.getElementById('cardOsFinal').style.display=t==='final'?'':'none';
     document.getElementById('lookupCard').style.display=t==='final'?'':'none';
+    document.getElementById('cardTrajetoUpdate').style.display=t==='trajeto'?'':'none';
+    document.getElementById('cardTrajeto').style.display=t==='trajeto'?'none':'';
     if(t==='final'){
-      // Reset
       document.getElementById('lookupInput').value='';
       document.getElementById('lookupInput').className='lookup-input';
       document.getElementById('lookupResult').style.display='none';
@@ -305,6 +310,13 @@
       document.getElementById('resultArea').innerHTML='';
       _osFinaisCarregados={}; _finalLocked=false; _membrosFinais=[];
       unlockAll();
+    }
+    if(t==='trajeto'){
+      document.getElementById('trajetoOsInput').value='';
+      document.getElementById('trajetoOsInput').className='os-lookup-input';
+      document.getElementById('trajetoOsResult').style.display='none';
+      document.getElementById('trajetoAtualWrap').style.display='none';
+      _trajetoOsData=null;
     }
   }
 
