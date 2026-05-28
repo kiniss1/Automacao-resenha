@@ -144,7 +144,7 @@
 <body>
 <div class="page">
   <div class="page-header">
-    <div class="page-header-top"><button class="btn-tema" id="btnTema" onclick="toggleTema()">🌙 Escuro</button></div>
+    <div class="page-header-top"><button class="btn-tema" id="btnTema" onclick="toggleTema()">🌙 Tema: Escuro</button></div>
     <h1>⚡ Registro de Atividade</h1>
     <p>OOMC — Manutenção Alta Tensão</p>
   </div>
@@ -265,10 +265,10 @@
   // ── Tema ──────────────────────────────────────────────────────────────────
   function toggleTema(){
     var l=document.body.classList.toggle('light');
-    document.getElementById('btnTema').textContent=l?'🌑 Escuro':'🌙 Escuro';
+    document.getElementById('btnTema').textContent=l?'☀️ Tema: Claro':'🌙 Tema: Escuro';
     localStorage.setItem('tema_atv',l?'light':'dark');
   }
-  if(localStorage.getItem('tema_atv')==='light') document.body.classList.add('light');
+  if(localStorage.getItem('tema_atv')==='light'){ document.body.classList.add('light'); document.addEventListener('DOMContentLoaded',function(){ var b=document.getElementById('btnTema'); if(b) b.textContent='☀️ Tema: Claro'; }); }
 
   // ── Init ──────────────────────────────────────────────────────────────────
   function autoHorario(){
