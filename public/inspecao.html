@@ -304,9 +304,31 @@
     <input id="fmNome" placeholder="SE Frei Caneca"/>
     <label>Descrição <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
     <textarea id="fmDesc" rows="2" placeholder="Breve descrição da subestação..."></textarea>
+
+    <!-- Copiar campos — só aparece em nova ficha -->
+    <div id="fmCopiarWrap" style="margin-top:16px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">
+        📋 Copiar perguntas de outra SE?
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:600;color:var(--text)">
+          <input type="radio" name="fmCopiar" value="nao" id="fmCopiarNao" checked onchange="toggleCopiarSE()" style="width:auto;margin:0;accent-color:var(--primary)"/>
+          Não, criar em branco
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:600;color:var(--text)">
+          <input type="radio" name="fmCopiar" value="sim" id="fmCopiarSim" onchange="toggleCopiarSE()" style="width:auto;margin:0;accent-color:var(--primary)"/>
+          Sim, copiar de:
+        </label>
+        <select id="fmCopiarSE" onchange="onCopiarSEChange()" style="display:none;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:.83rem;outline:none;flex:1;min-width:160px;font-family:inherit">
+          <option value="">Selecione a SE...</option>
+        </select>
+      </div>
+      <div id="fmCopiarPreview" style="display:none;margin-top:10px;padding:8px 12px;background:var(--primary-bg);border:1px solid var(--primary-dark);border-radius:7px;font-size:.75rem;color:var(--muted)"></div>
+    </div>
+
     <div class="modal-footer">
       <button class="btn-sm outline" onclick="fecharModal('fichaModal')">Cancelar</button>
-      <button class="btn-sm" onclick="salvarFicha()">Salvar Ficha</button>
+      <button class="btn-sm" id="btnSalvarFicha" onclick="salvarFicha()">Salvar Ficha</button>
     </div>
   </div>
 </div>
@@ -649,8 +671,45 @@ function abrirNovaFicha() {
     document.getElementById('fmNome').value   = '';
     document.getElementById('fmDesc').value   = '';
     document.getElementById('fmCodigo').disabled = false;
+    // Resetar copiar
+    document.getElementById('fmCopiarNao').checked = true;
+    document.getElementById('fmCopiarSE').style.display = 'none';
+    document.getElementById('fmCopiarSE').value = '';
+    document.getElementById('fmCopiarPreview').style.display = 'none';
+    document.getElementById('fmCopiarWrap').style.display = '';
+    // Popular select com fichas existentes
+    const sel = document.getElementById('fmCopiarSE');
+    sel.innerHTML = '<option value="">Selecione a SE...</option>';
+    _fichas.forEach(f => {
+      const o = document.createElement('option');
+      o.value = f.id;
+      o.textContent = f.codigo_se + ' — ' + f.nome_se;
+      sel.appendChild(o);
+    });
     abrirModal('fichaModal');
   });
+}
+
+function toggleCopiarSE() {
+  const sim = document.getElementById('fmCopiarSim').checked;
+  document.getElementById('fmCopiarSE').style.display = sim ? '' : 'none';
+  if (!sim) {
+    document.getElementById('fmCopiarPreview').style.display = 'none';
+    document.getElementById('fmCopiarSE').value = '';
+  }
+}
+
+async function onCopiarSEChange() {
+  const fichaId = document.getElementById('fmCopiarSE').value;
+  const prev    = document.getElementById('fmCopiarPreview');
+  if (!fichaId) { prev.style.display = 'none'; return; }
+  try {
+    const r = await fetch('/api/inspecao/fichas/' + fichaId).then(r=>r.json());
+    const campos = r.data?.campos || [];
+    prev.style.display = '';
+    prev.innerHTML = '✓ <strong>' + campos.length + ' campo(s)</strong> serão copiados de '
+      + '<strong>' + (r.data?.nome_se||'') + '</strong>';
+  } catch(e) { prev.style.display = 'none'; }
 }
 
 async function editarFicha(id) {
@@ -663,6 +722,7 @@ async function editarFicha(id) {
     document.getElementById('fmNome').value     = f.nome_se;
     document.getElementById('fmDesc').value     = f.descricao || '';
     document.getElementById('fmCodigo').disabled = true;
+    document.getElementById('fmCopiarWrap').style.display = 'none'; // não aparece na edição
     abrirModal('fichaModal');
   });
 }
@@ -675,6 +735,11 @@ async function salvarFicha() {
     descricao:  document.getElementById('fmDesc').value.trim(),
   };
   if (!body.codigo_se || !body.nome_se) return toast('Preencha código e nome', 'err');
+
+  const btnSalvar = document.getElementById('btnSalvarFicha');
+  btnSalvar.disabled = true;
+  btnSalvar.textContent = '⏳ Salvando...';
+
   try {
     let r;
     if (id) {
@@ -682,11 +747,51 @@ async function salvarFicha() {
     } else {
       r = await fetch('/api/inspecao/fichas', { method:'POST', headers: authH(), body: JSON.stringify(body) }).then(r=>r.json());
     }
-    if (!r.ok) return toast(r.error || 'Erro', 'err');
+    if (!r.ok) {
+      btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar Ficha';
+      return toast(r.error || 'Erro', 'err');
+    }
+
+    // Copiar campos se nova ficha e opção selecionada
+    if (!id) {
+      const copiarSim  = document.getElementById('fmCopiarSim').checked;
+      const origemId   = document.getElementById('fmCopiarSE').value;
+      if (copiarSim && origemId) {
+        btnSalvar.textContent = '⏳ Copiando campos...';
+        await copiarCamposDe(origemId, r.data.id);
+      }
+    }
+
     fecharModal('fichaModal');
-    toast(id ? 'Ficha atualizada' : 'Ficha criada', 'ok');
+    toast(id ? 'Ficha atualizada' : 'Ficha criada' + (document.getElementById('fmCopiarSim')?.checked && document.getElementById('fmCopiarSE')?.value ? ' com campos copiados' : ''), 'ok');
     loadFichas();
-  } catch(e) { toast('Erro: ' + e.message, 'err'); }
+  } catch(e) {
+    toast('Erro: ' + e.message, 'err');
+  } finally {
+    btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar Ficha';
+  }
+}
+
+async function copiarCamposDe(origemFichaId, destinoFichaId) {
+  const r = await fetch('/api/inspecao/fichas/' + origemFichaId).then(r=>r.json());
+  const campos = r.data?.campos || [];
+  if (!campos.length) return;
+  for (const c of campos) {
+    let opcoes = null;
+    try { opcoes = c.opcoes ? JSON.parse(c.opcoes) : null; } catch(e) {}
+    await fetch('/api/inspecao/fichas/' + destinoFichaId + '/campos', {
+      method: 'POST',
+      headers: authH(),
+      body: JSON.stringify({
+        label:       c.label,
+        tipo:        c.tipo,
+        opcoes:      opcoes,
+        obrigatorio: !!c.obrigatorio,
+        grupo:       c.grupo || null,
+        ordem:       c.ordem ?? 0,
+      })
+    });
+  }
 }
 
 async function toggleAtiva(id, ativa) {
