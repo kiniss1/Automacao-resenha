@@ -89,12 +89,13 @@
     .se-bar-fill{height:100%;background:var(--primary);border-radius:5px;transition:width .5s}
     .se-bar-count{font-size:.72rem;color:var(--muted);width:30px;text-align:left}
 
-    /* Gráfico linha dias */
-    .sparkline-wrap{height:80px;display:flex;align-items:flex-end;gap:3px}
-    .spark-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default}
-    .spark-bar{width:100%;background:var(--primary);border-radius:3px 3px 0 0;min-height:2px;transition:height .4s}
-    .spark-bar:hover{opacity:.75}
-    .spark-lbl{font-size:.6rem;color:var(--muted);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);height:28px;overflow:hidden;text-align:center}
+    /* Card inspeção hoje */
+    .hoje-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;transition:border-color .15s}
+    .hoje-card:hover{border-color:var(--primary)}
+    .hoje-card .hc-se{font-size:.7rem;font-weight:700;color:var(--primary);letter-spacing:.08em}
+    .hoje-card .hc-tecnico{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .hoje-card .hc-hora{font-size:.72rem;color:var(--muted)}
+    .hoje-card .hc-status{margin-top:2px}
 
     /* Tabela recentes */
     .insp-table{width:100%;border-collapse:collapse;font-size:.8rem}
@@ -230,10 +231,22 @@
       <div id="seBarras"><div class="spinner"></div></div>
     </div>
     <div class="dash-card">
-      <div class="dash-card-title">Inspeções por Dia</div>
-      <div class="sparkline-wrap" id="sparkline" style="height:90px"></div>
+      <div class="dash-card-title">Inspeções por Colaborador</div>
+      <div id="colabBarras"><div class="spinner"></div></div>
     </div>
   </div>
+
+  <div class="dash-card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="dash-card-title" style="margin-bottom:0">Inspeções de Hoje</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="hojeTotalBadge" style="font-size:1.2rem;font-weight:800;color:var(--primary)">–</span>
+        <span style="font-size:.72rem;color:var(--muted)">inspeção(ões)</span>
+      </div>
+    </div>
+    <div id="hojeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px"></div>
+  </div>
+
   <div class="dash-card" style="margin-bottom:0">
     <div class="dash-card-title">Últimas Inspeções</div>
     <div style="overflow-x:auto">
@@ -513,10 +526,14 @@ async function loadDash() {
   if (de)  params.set('dataDe',  de);
   if (ate) params.set('dataAte', ate);
 
+  const hoje = new Date().toISOString().slice(0,10);
+  const hojeParams = new URLSearchParams({ dataDe: hoje, dataAte: hoje });
+
   try {
-    const [dashR, preR] = await Promise.all([
+    const [dashR, preR, hojeR] = await Promise.all([
       fetch('/api/inspecao/dashboard?' + params).then(r => r.json()),
       fetch('/api/inspecao/preenchimentos?' + params).then(r => r.json()),
+      fetch('/api/inspecao/preenchimentos?' + hojeParams).then(r => r.json()),
     ]);
 
     if (!dashR.ok) return;
@@ -530,26 +547,43 @@ async function loadDash() {
     // Barras SE
     const maxSE = Math.max(...(d.porSE?.map(s => s.total) || [1]), 1);
     document.getElementById('seBarras').innerHTML = (d.porSE?.length ? d.porSE : []).map(se => `
-      <div class="se-bar-row" title="${se.nome_se||se.codigo_se}: ${se.total} inspeções">
-        <div class="se-bar-label">${se.codigo_se}</div>
+      <div class="se-bar-row" title="${se.nome_se||se.codigo_se}: ${se.total} inspeção(ões)">
+        <div class="se-bar-label" style="width:52px;font-size:.72rem">${se.codigo_se}</div>
         <div class="se-bar-track"><div class="se-bar-fill" style="width:${Math.round(se.total/maxSE*100)}%"></div></div>
         <div class="se-bar-count">${se.total}</div>
       </div>
     `).join('') || '<div class="empty-msg">Nenhum dado no período</div>';
 
-    // Sparkline por dia
-    const dias = d.porDia || [];
-    const maxD = Math.max(...dias.map(d=>d.total), 1);
-    document.getElementById('sparkline').innerHTML = dias.length
-      ? dias.map(dia => `
-          <div class="spark-col" title="${dia.dia}: ${dia.total}">
-            <div class="spark-bar" style="height:${Math.max(4,Math.round(dia.total/maxD*70))}px"></div>
-            <div class="spark-lbl">${dia.dia.slice(5)}</div>
-          </div>`)
-        .join('')
-      : '<div class="empty-msg" style="width:100%">Sem dados</div>';
+    // Barras por colaborador
+    const porColab = d.porColab || [];
+    const maxColab = Math.max(...porColab.map(c => c.total), 1);
+    document.getElementById('colabBarras').innerHTML = porColab.length
+      ? porColab.map(c => `
+          <div class="se-bar-row" title="${c.nome_tecnico||c.matricula||'—'}: ${c.total} inspeção(ões)">
+            <div class="se-bar-label" style="width:90px;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right" title="${c.nome_tecnico||''}">
+              ${c.nome_tecnico ? c.nome_tecnico.split(' ')[0] : (c.matricula||'—')}
+            </div>
+            <div class="se-bar-track"><div class="se-bar-fill" style="width:${Math.round(c.total/maxColab*100)}%;background:var(--orange)"></div></div>
+            <div class="se-bar-count">${c.total}</div>
+          </div>
+        `).join('')
+      : '<div class="empty-msg">Nenhum dado no período</div>';
 
-    // Recentes (últimos 10)
+    // Inspeções de hoje
+    const hojeList = hojeR?.data || [];
+    document.getElementById('hojeTotalBadge').textContent = hojeList.length;
+    document.getElementById('hojeGrid').innerHTML = hojeList.length
+      ? hojeList.map(p => `
+          <div class="hoje-card" onclick="verPreenchimento(${p.id})" style="cursor:pointer">
+            <div class="hc-se">${p.codigo_se} — ${p.nome_se||''}</div>
+            <div class="hc-tecnico">${p.nome_tecnico||'—'}</div>
+            <div class="hc-hora">⏰ ${p.hora_insp||p.data_insp||'—'}</div>
+            <div class="hc-status"><span class="badge ${p.status==='Concluído'?'ok':'pend'}" style="font-size:.65rem">${p.status}</span></div>
+          </div>
+        `).join('')
+      : '<div class="empty-msg" style="grid-column:1/-1;padding:18px">Nenhuma inspeção realizada hoje</div>';
+
+    // Recentes (últimos 10 do período filtrado)
     const prec = preR?.data || [];
     document.getElementById('dashRecentes').innerHTML = prec.slice(0,10).map(p => `
       <tr>
