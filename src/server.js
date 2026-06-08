@@ -661,7 +661,7 @@ function startServer() {
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
-  app.get('/api/inspecao/preenchimentos', authSup, (req, res) => {
+  app.get('/api/inspecao/preenchimentos', (req, res) => {
     try {
       const { ficha_id, codigo_se, dataDe, dataAte, status } = req.query;
       res.json({ ok: true, data: insp.listarPreenchimentos({ ficha_id, codigo_se, dataDe, dataAte, status }) });
@@ -695,7 +695,7 @@ function startServer() {
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
-  app.delete('/api/inspecao/preenchimentos/:id', authSup, (req, res) => {
+  app.delete('/api/inspecao/preenchimentos/:id', (req, res) => {
     try { insp.deletarPreenchimento(parseInt(req.params.id)); res.json({ ok: true }); }
     catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
@@ -723,7 +723,7 @@ function startServer() {
     }
   );
 
-  app.get('/api/inspecao/dashboard', authSup, (req, res) => {
+  app.get('/api/inspecao/dashboard', (req, res) => {
     try {
       const { dataDe, dataAte } = req.query;
       res.json({ ok: true, data: insp.statsDashboard(dataDe, dataAte) });
