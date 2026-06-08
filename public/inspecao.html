@@ -426,7 +426,12 @@ async function doLogin() {
     localStorage.setItem('insp_token', TOKEN);
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('userBadge').style.display = 'inline-flex';
-    init();
+    // Executa ação que estava esperando o login
+    if (_pendingAuthCallback) {
+      const cb = _pendingAuthCallback;
+      _pendingAuthCallback = null;
+      cb();
+    }
   } catch(e) { document.getElementById('loginErr').style.display = 'block'; }
 }
 
@@ -440,20 +445,32 @@ function authH() { return { 'x-insp-token': TOKEN, 'Content-Type': 'application/
 
 // ── Inicialização ─────────────────────────────────────────────────────────
 async function init() {
-  // Verifica token salvo
+  // Login overlay fechado por padrão — só abre ao tentar ação protegida
+  document.getElementById('loginOverlay').style.display = 'none';
+
+  // Se já tem token salvo, valida silenciosamente
   if (TOKEN) {
-    // testa token fazendo uma chamada autenticada simples
     try {
       const r = await fetch('/api/inspecao/fichas', { headers: { 'x-insp-token': TOKEN } });
-      if (r.status === 403) { TOKEN = ''; localStorage.removeItem('insp_token'); return; }
-      document.getElementById('loginOverlay').style.display = 'none';
-      document.getElementById('userBadge').style.display = 'inline-flex';
-    } catch(e) { return; }
+      if (r.status === 403) { TOKEN = ''; localStorage.removeItem('insp_token'); }
+      else document.getElementById('userBadge').style.display = 'inline-flex';
+    } catch(e) {}
   }
+
   filtroHoje();
   loadFichas();
   loadHistoricoSESelect();
 }
+
+// Exige login antes de executar ação protegida
+function requireAuth(callback) {
+  if (TOKEN) { callback(); return; }
+  // Abre o overlay e guarda o callback para executar após login
+  _pendingAuthCallback = callback;
+  document.getElementById('loginOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('loginUser').focus(), 100);
+}
+let _pendingAuthCallback = null;
 
 // ── Tabs ──────────────────────────────────────────────────────────────────
 function setTab(name) {
@@ -498,8 +515,8 @@ async function loadDash() {
 
   try {
     const [dashR, preR] = await Promise.all([
-      fetch('/api/inspecao/dashboard?' + params, { headers: authH() }).then(r => r.json()),
-      fetch('/api/inspecao/preenchimentos?' + params, { headers: authH() }).then(r => r.json()),
+      fetch('/api/inspecao/dashboard?' + params).then(r => r.json()),
+      fetch('/api/inspecao/preenchimentos?' + params).then(r => r.json()),
     ]);
 
     if (!dashR.ok) return;
@@ -552,7 +569,7 @@ async function loadDash() {
 async function loadFichas() {
   document.getElementById('fichaGrid').innerHTML = '<div class="spinner"></div>';
   try {
-    const r = await fetch('/api/inspecao/fichas', { headers: authH() }).then(r => r.json());
+    const r = await fetch('/api/inspecao/fichas').then(r => r.json());
     _fichas = r.data || [];
     renderFichas();
   } catch(e) { document.getElementById('fichaGrid').innerHTML = '<div class="empty-msg">Erro ao carregar</div>'; }
@@ -591,25 +608,29 @@ async function renderFichas() {
 }
 
 function abrirNovaFicha() {
-  document.getElementById('fichaModalId').value = '';
-  document.getElementById('fichaModalTitle').textContent = 'Nova Ficha de Inspeção';
-  document.getElementById('fmCodigo').value = '';
-  document.getElementById('fmNome').value   = '';
-  document.getElementById('fmDesc').value   = '';
-  document.getElementById('fmCodigo').disabled = false;
-  abrirModal('fichaModal');
+  requireAuth(() => {
+    document.getElementById('fichaModalId').value = '';
+    document.getElementById('fichaModalTitle').textContent = 'Nova Ficha de Inspeção';
+    document.getElementById('fmCodigo').value = '';
+    document.getElementById('fmNome').value   = '';
+    document.getElementById('fmDesc').value   = '';
+    document.getElementById('fmCodigo').disabled = false;
+    abrirModal('fichaModal');
+  });
 }
 
 async function editarFicha(id) {
-  const f = _fichas.find(f => f.id === id);
-  if (!f) return;
-  document.getElementById('fichaModalId').value = id;
-  document.getElementById('fichaModalTitle').textContent = 'Editar Ficha';
-  document.getElementById('fmCodigo').value   = f.codigo_se;
-  document.getElementById('fmNome').value     = f.nome_se;
-  document.getElementById('fmDesc').value     = f.descricao || '';
-  document.getElementById('fmCodigo').disabled = true;
-  abrirModal('fichaModal');
+  requireAuth(() => {
+    const f = _fichas.find(f => f.id === id);
+    if (!f) return;
+    document.getElementById('fichaModalId').value = id;
+    document.getElementById('fichaModalTitle').textContent = 'Editar Ficha';
+    document.getElementById('fmCodigo').value   = f.codigo_se;
+    document.getElementById('fmNome').value     = f.nome_se;
+    document.getElementById('fmDesc').value     = f.descricao || '';
+    document.getElementById('fmCodigo').disabled = true;
+    abrirModal('fichaModal');
+  });
 }
 
 async function salvarFicha() {
@@ -635,19 +656,23 @@ async function salvarFicha() {
 }
 
 async function toggleAtiva(id, ativa) {
-  try {
-    await fetch(`/api/inspecao/fichas/${id}`, { method:'PATCH', headers: authH(), body: JSON.stringify({ ativa: !ativa }) }).then(r=>r.json());
-    loadFichas();
-  } catch(e) { toast('Erro', 'err'); }
+  requireAuth(async () => {
+    try {
+      await fetch(`/api/inspecao/fichas/${id}`, { method:'PATCH', headers: authH(), body: JSON.stringify({ ativa: !ativa }) }).then(r=>r.json());
+      loadFichas();
+    } catch(e) { toast('Erro', 'err'); }
+  });
 }
 
 async function deletarFicha(id, nome) {
-  if (!confirm(`Excluir a ficha "${nome}"? Todos os campos e preenchimentos serão apagados.`)) return;
-  try {
-    await fetch(`/api/inspecao/fichas/${id}`, { method:'DELETE', headers: authH() });
-    toast('Ficha excluída', 'ok');
-    loadFichas();
-  } catch(e) { toast('Erro', 'err'); }
+  requireAuth(async () => {
+    if (!confirm(`Excluir a ficha "${nome}"? Todos os campos e preenchimentos serão apagados.`)) return;
+    try {
+      await fetch(`/api/inspecao/fichas/${id}`, { method:'DELETE', headers: authH() });
+      toast('Ficha excluída', 'ok');
+      loadFichas();
+    } catch(e) { toast('Erro', 'err'); }
+  });
 }
 
 function abrirFormLink(fichaId) {
@@ -665,13 +690,15 @@ let _camposFichaId = null;
 let _campos = [];
 
 async function abrirCampos(fichaId) {
-  _camposFichaId = fichaId;
-  const f = _fichas.find(f => f.id === fichaId);
-  document.getElementById('camposModalTitle').textContent  = 'Campos — ' + (f?.nome_se||'');
-  document.getElementById('camposModalSubtitle').textContent = f?.codigo_se || '';
-  document.getElementById('camposModalFichaId').value = fichaId;
-  await recarregarCampos();
-  abrirModal('camposModal');
+  requireAuth(async () => {
+    _camposFichaId = fichaId;
+    const f = _fichas.find(f => f.id === fichaId);
+    document.getElementById('camposModalTitle').textContent  = 'Campos — ' + (f?.nome_se||'');
+    document.getElementById('camposModalSubtitle').textContent = f?.codigo_se || '';
+    document.getElementById('camposModalFichaId').value = fichaId;
+    await recarregarCampos();
+    abrirModal('camposModal');
+  });
 }
 
 async function recarregarCampos() {
@@ -806,7 +833,7 @@ async function deletarCampo(id) {
 // ── Histórico ─────────────────────────────────────────────────────────────
 async function loadHistoricoSESelect() {
   try {
-    const r = await fetch('/api/inspecao/fichas', { headers: authH() }).then(r=>r.json());
+    const r = await fetch('/api/inspecao/fichas').then(r=>r.json());
     const sel = document.getElementById('hSE');
     (r.data||[]).forEach(f => {
       const o = document.createElement('option');
@@ -828,7 +855,7 @@ async function loadHistorico() {
   if (st)  params.set('status', st);
   document.getElementById('histTbody').innerHTML = '<tr><td colspan="8"><div class="spinner"></div></td></tr>';
   try {
-    const r = await fetch('/api/inspecao/preenchimentos?' + params, { headers: authH() }).then(r=>r.json());
+    const r = await fetch('/api/inspecao/preenchimentos?' + params).then(r=>r.json());
     const data = r.data || [];
     document.getElementById('histTbody').innerHTML = data.length
       ? data.map(p => `
@@ -859,7 +886,7 @@ function limparFiltrosHist() {
 async function apagarPreenchimento(id) {
   if (!confirm('Apagar este preenchimento?')) return;
   try {
-    await fetch(`/api/inspecao/preenchimentos/${id}`, { method:'DELETE', headers: authH() });
+    await fetch(`/api/inspecao/preenchimentos/${id}`, { method:'DELETE' });
     toast('Removido', 'ok');
     loadHistorico();
     loadDash();
@@ -869,7 +896,7 @@ async function apagarPreenchimento(id) {
 // ── Visualizar preenchimento ───────────────────────────────────────────────
 async function verPreenchimento(id) {
   try {
-    const r = await fetch(`/api/inspecao/preenchimentos/${id}`, { headers: authH() }).then(r=>r.json());
+    const r = await fetch(`/api/inspecao/preenchimentos/${id}`).then(r=>r.json());
     if (!r.ok) return toast('Erro ao carregar', 'err');
     const p = r.data;
     document.getElementById('verModalTitle').textContent =
