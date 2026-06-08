@@ -245,12 +245,14 @@ function statsDashboard(dataDe, dataAte) {
                      LEFT JOIN inspecao_fichas f ON f.id=p.ficha_id
                      WHERE 1=1 ${dateFilter}
                      GROUP BY p.codigo_se ORDER BY total DESC`, params);
-  const porDia = all(`SELECT date(p.criado_em) as dia, COUNT(*) as total
-                      FROM inspecao_preenchimentos p
-                      WHERE 1=1 ${dateFilter}
-                      GROUP BY dia ORDER BY dia ASC LIMIT 30`, params);
+  const porColab = all(`SELECT p.matricula, p.nome_tecnico, COUNT(*) as total
+                        FROM inspecao_preenchimentos p
+                        WHERE 1=1 ${dateFilter}
+                          AND (p.matricula IS NOT NULL OR p.nome_tecnico IS NOT NULL)
+                        GROUP BY p.matricula, p.nome_tecnico
+                        ORDER BY total DESC LIMIT 20`, params);
 
-  return { total: total?.c || 0, concluidas: concluidas?.c || 0, porSE, porDia };
+  return { total: total?.c || 0, concluidas: concluidas?.c || 0, porSE, porColab };
 }
 
 module.exports = {
