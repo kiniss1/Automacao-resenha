@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inspeção SE — OOMC</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d1a19;--surface:#112220;--surface2:#163330;--border:#1e3836;--border2:#2a4f4c;
+      --text:#e8f4f3;--muted:#7aaba7;--muted2:#4a7572;
+      --primary:#009B91;--primary-bg:#0d2e2c;--primary-dark:#005852;
+      --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
+      --orange:#F5AA41;--orange-bg:#2d1f00;--orange-border:#EB8C0A;
+      --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+    }
+    body.light{
+      --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
+      --text:#414141;--muted:#7F7F7F;--muted2:#CDCDCD;
+      --primary:#009B91;--primary-bg:#e0f5f4;--primary-dark:#005852;
+      --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
+      --orange:#F5AA41;--orange-bg:#fff4e0;--orange-border:#EB8C0A;
+      --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+    .page-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+    .ph-left{display:flex;align-items:center;gap:10px}
+    .ph-logo{width:30px;height:30px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .ph-left h1{font-size:14px;font-weight:700;line-height:1.2}
+    .ph-left span{font-size:11px;color:var(--muted)}
+    .btn-tema{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:5px 10px;font-size:.75rem;cursor:pointer}
+
+    .form-wrap{max-width:680px;margin:0 auto;padding:20px 16px 60px}
+
+    /* Identif */
+    .identif-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px}
+    .identif-card h2{font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+    .identif-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:480px){.identif-grid{grid-template-columns:1fr}}
+    .field label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+    .field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
+
+    /* Grupos de campos */
+    .grupo{margin-bottom:22px}
+    .grupo-title{font-size:.72rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;padding:8px 14px;background:var(--primary-bg);border:1px solid var(--primary-dark);border-radius:8px;margin-bottom:10px}
+
+    /* Campo individual */
+    .campo-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
+    .campo-wrap.obrig .campo-label::after{content:' *';color:var(--red)}
+    .campo-label{font-size:.82rem;font-weight:600;margin-bottom:10px;display:block}
+    .campo-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+    .campo-input:focus{border-color:var(--primary)}
+    .campo-input.err-field{border-color:var(--red)}
+
+    /* Múltipla escolha */
+    .opcoes-list{display:flex;flex-direction:column;gap:7px}
+    .opcao-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s}
+    .opcao-item:hover{border-color:var(--border2)}
+    .opcao-item.selected{border-color:var(--primary);background:var(--primary-bg)}
+    .opcao-item input[type=radio]{width:16px;height:16px;accent-color:var(--primary);flex-shrink:0}
+    .opcao-item label{font-size:.85rem;cursor:pointer;flex:1}
+
+    /* Sim/Não */
+    .sn-row{display:flex;gap:10px}
+    .sn-btn{flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+    .sn-btn:hover{border-color:var(--border2)}
+    .sn-btn.sel-sim{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+    .sn-btn.sel-nao{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+
+    /* Upload foto */
+    .foto-area{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s;position:relative}
+    .foto-area:hover{border-color:var(--primary)}
+    .foto-area.has-foto{border-style:solid;border-color:var(--primary);background:var(--primary-bg)}
+    .foto-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .foto-area .fa-icon{font-size:1.8rem;margin-bottom:6px}
+    .foto-area .fa-lbl{font-size:.78rem;color:var(--muted)}
+    .foto-area .fa-name{font-size:.78rem;color:var(--primary);font-weight:600;margin-top:4px}
+    .foto-preview{width:100%;max-height:220px;object-fit:contain;border-radius:8px;margin-top:10px;border:1px solid var(--border);display:none}
+
+    /* Botões */
+    .btn-primary{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px 24px;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .15s;width:100%;margin-top:6px}
+    .btn-primary:hover{opacity:.88}
+    .btn-primary:disabled{opacity:.4;cursor:default}
+
+    /* Progress */
+    .progress-bar-wrap{background:var(--border);border-radius:6px;height:6px;margin-bottom:20px;overflow:hidden}
+    .progress-bar-fill{height:100%;background:var(--primary);border-radius:6px;transition:width .3s}
+    .progress-lbl{font-size:.72rem;color:var(--muted);margin-bottom:6px;text-align:right}
+
+    /* Loading / success */
+    .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .success-screen{text-align:center;padding:60px 20px}
+    .success-screen .ico{font-size:4rem;margin-bottom:16px}
+    .success-screen h2{font-size:1.3rem;font-weight:700;margin-bottom:8px}
+    .success-screen p{font-size:.88rem;color:var(--muted)}
+
+    #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:.83rem;opacity:0;transition:all .2s;z-index:200;white-space:nowrap}
+    #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+    #toast.ok{border-color:var(--green-border);color:var(--green)}
+    #toast.err{border-color:var(--red-border);color:var(--red)}
+
+    .not-found{text-align:center;padding:80px 20px;color:var(--muted)}
+    .not-found h2{font-size:1.1rem;margin-bottom:8px;color:var(--text)}
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="ph-left">
+    <div class="ph-logo">🔍</div>
+    <div>
+      <h1 id="pageTitle">Inspeção de Subestação</h1>
+      <span>OOMC — Manutenção Alta Tensão</span>
+    </div>
+  </div>
+  <button class="btn-tema" onclick="toggleTema()">🌙 Tema</button>
+</div>
+
+<div class="form-wrap" id="formWrap">
+  <div class="spinner"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Tema ──────────────────────────────────────────────────────────────────
+function toggleTema() {
+  document.body.classList.toggle('light');
+  localStorage.setItem('insp_form_tema', document.body.classList.contains('light') ? 'light' : 'dark');
+}
+if (localStorage.getItem('insp_form_tema') === 'light') document.body.classList.add('light');
+
+// ── Estado ────────────────────────────────────────────────────────────────
+let _ficha     = null;
+let _campos    = [];
+let _preId     = null;
+let _respostas = {};     // campo_id → { texto, opcao, fotoFile, fotoPath }
+let _uploadQueue = {};   // campo_id → Promise
+
+// ── Init ──────────────────────────────────────────────────────────────────
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const fichaId = params.get('ficha');
+  if (!fichaId) return renderNotFound('Nenhuma ficha especificada na URL.');
+  try {
+    const r = await fetch(`/api/inspecao/fichas/${fichaId}`).then(r=>r.json());
+    if (!r.ok || !r.data) return renderNotFound('Ficha não encontrada.');
+    _ficha  = r.data;
+    _campos = r.data.campos || [];
+    document.getElementById('pageTitle').textContent = `Inspeção — ${_ficha.codigo_se}`;
+    renderForm();
+  } catch(e) { renderNotFound('Erro ao carregar ficha.'); }
+}
+
+// ── Render form ───────────────────────────────────────────────────────────
+function renderForm() {
+  const wrap = document.getElementById('formWrap');
+  const total = _campos.length;
+
+  // Agrupar por grupo
+  const grupos = {};
+  _campos.forEach(c => {
+    const g = c.grupo || '__sem_grupo__';
+    if (!grupos[g]) grupos[g] = [];
+    grupos[g].push(c);
+  });
+
+  wrap.innerHTML = `
+    <!-- Cabeçalho SE -->
+    <div style="background:var(--primary);border-radius:12px;padding:18px 20px;margin-bottom:20px;color:#fff">
+      <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;opacity:.8;margin-bottom:2px">FICHA DE INSPEÇÃO</div>
+      <div style="font-size:1.2rem;font-weight:800">${_ficha.nome_se}</div>
+      ${_ficha.descricao?`<div style="font-size:.78rem;opacity:.8;margin-top:4px">${_ficha.descricao}</div>`:''}
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-lbl"><span id="progLbl">0</span> / ${total} campos preenchidos</div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div>
+
+    <!-- Identificação técnico -->
+    <div class="identif-card">
+      <h2>Identificação</h2>
+      <div class="identif-grid">
+        <div class="field">
+          <label>Data da Inspeção *</label>
+          <input type="date" id="iData" value="${new Date().toISOString().slice(0,10)}"/>
+        </div>
+        <div class="field">
+          <label>Hora</label>
+          <input type="time" id="iHora" value="${new Date().toTimeString().slice(0,5)}"/>
+        </div>
+        <div class="field">
+          <label>Matrícula *</label>
+          <input type="text" id="iMatricula" inputmode="numeric" placeholder="ex: 4008402" oninput="onMatricula(this.value)"/>
+        </div>
+        <div class="field">
+          <label>Nome do Técnico</label>
+          <input type="text" id="iNome" placeholder="Preenchido automaticamente"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campos dinâmicos -->
+    ${Object.entries(grupos).map(([grupo, campos]) => `
+      <div class="grupo">
+        ${grupo !== '__sem_grupo__' ? `<div class="grupo-title">📌 ${grupo}</div>` : ''}
+        ${campos.map(c => renderCampo(c)).join('')}
+      </div>
+    `).join('')}
+
+    <!-- Obs geral -->
+    <div class="identif-card">
+      <h2>Observações Gerais</h2>
+      <textarea id="iObs" class="campo-input" rows="3" placeholder="Registre observações adicionais..."></textarea>
+    </div>
+
+    <button class="btn-primary" id="btnEnviar" onclick="enviar()">✅ Concluir Inspeção</button>
+    <button class="btn-primary" style="background:transparent;border:1px solid var(--border);color:var(--muted);margin-top:8px" onclick="salvarRascunho()">💾 Salvar Rascunho</button>
+  `;
+}
+
+function renderCampo(c) {
+  const obrigCls = c.obrigatorio ? 'obrig' : '';
+  let inputHtml = '';
+
+  if (c.tipo === 'multipla_escolha') {
+    let opcoes = [];
+    try { opcoes = JSON.parse(c.opcoes || '[]'); } catch(e) {}
+    inputHtml = `<div class="opcoes-list">
+      ${opcoes.map((op,i) => `
+        <div class="opcao-item" onclick="selecionarOpcao(${c.id},${i},this)">
+          <input type="radio" name="campo_${c.id}" value="${op}" id="c${c.id}op${i}"/>
+          <label for="c${c.id}op${i}">${op}</label>
+        </div>
+      `).join('')}
+    </div>`;
+  } else if (c.tipo === 'sim_nao') {
+    inputHtml = `<div class="sn-row">
+      <button class="sn-btn" id="c${c.id}_sim" onclick="toggleSN(${c.id},'Sim',this)">✓ Sim</button>
+      <button class="sn-btn" id="c${c.id}_nao" onclick="toggleSN(${c.id},'Não',this)">✗ Não</button>
+    </div>`;
+  } else if (c.tipo === 'upload_foto') {
+    inputHtml = `
+      <div class="foto-area" id="fa_${c.id}" onclick="">
+        <input type="file" accept="image/*" capture="environment" onchange="onFotoChange(${c.id},this)" id="fi_${c.id}"/>
+        <div class="fa-icon">📷</div>
+        <div class="fa-lbl">Toque para tirar foto ou selecionar arquivo</div>
+        <div class="fa-name" id="fn_${c.id}"></div>
+      </div>
+      <img class="foto-preview" id="fp_${c.id}" src="" alt="preview"/>
+    `;
+  } else if (c.tipo === 'numero') {
+    inputHtml = `<input type="number" class="campo-input" id="campo_${c.id}" placeholder="0" oninput="onTexto(${c.id},this.value)" step="any"/>`;
+  } else {
+    inputHtml = `<input type="text" class="campo-input" id="campo_${c.id}" placeholder="Informe a resposta..." oninput="onTexto(${c.id},this.value)"/>`;
+  }
+
+  return `
+    <div class="campo-wrap ${obrigCls}" id="cw_${c.id}">
+      <span class="campo-label">${c.label}</span>
+      ${inputHtml}
+    </div>
+  `;
+}
+
+// ── Interações ────────────────────────────────────────────────────────────
+function selecionarOpcao(campoId, idx, el) {
+  el.closest('.opcoes-list').querySelectorAll('.opcao-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input[type=radio]').checked = true;
+  _respostas[campoId] = { opcao: el.querySelector('label').textContent };
+  atualizarProgress();
+}
+
+function toggleSN(campoId, val, btn) {
+  const cwEl = btn.closest('.campo-wrap');
+  cwEl.querySelector('.sn-btn.sel-sim')?.classList.remove('sel-sim');
+  cwEl.querySelector('.sn-btn.sel-nao')?.classList.remove('sel-nao');
+  btn.classList.add(val === 'Sim' ? 'sel-sim' : 'sel-nao');
+  _respostas[campoId] = { opcao: val };
+  atualizarProgress();
+}
+
+function onTexto(campoId, val) {
+  _respostas[campoId] = { texto: val };
+  atualizarProgress();
+}
+
+function onFotoChange(campoId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const fa   = document.getElementById('fa_' + campoId);
+  const fn   = document.getElementById('fn_' + campoId);
+  const fp   = document.getElementById('fp_' + campoId);
+  fa.classList.add('has-foto');
+  fn.textContent = file.name;
+  const url  = URL.createObjectURL(file);
+  fp.src     = url;
+  fp.style.display = 'block';
+  _respostas[campoId] = { fotoFile: file };
+  atualizarProgress();
+}
+
+async function onMatricula(val) {
+  if (val.length >= 5) {
+    try {
+      const r = await fetch('/api/colaborador/' + val).then(r=>r.json());
+      if (r.data) {
+        document.getElementById('iNome').value = r.data.nome;
+      }
+    } catch(e){}
+  }
+}
+
+function atualizarProgress() {
+  const total = _campos.length;
+  const preenchidos = Object.keys(_respostas).filter(id => {
+    const r = _respostas[id];
+    return r.texto?.trim() || r.opcao || r.fotoFile || r.fotoPath;
+  }).length;
+  const pct = total > 0 ? Math.round(preenchidos / total * 100) : 0;
+  document.getElementById('progBar').style.width = pct + '%';
+  document.getElementById('progLbl').textContent = preenchidos;
+}
+
+// ── Envio ─────────────────────────────────────────────────────────────────
+async function criarOuUsarPreenchimento(status) {
+  const data  = document.getElementById('iData').value;
+  const hora  = document.getElementById('iHora').value;
+  const mat   = document.getElementById('iMatricula').value.trim();
+  const nome  = document.getElementById('iNome').value.trim();
+  const obs   = document.getElementById('iObs').value.trim();
+
+  if (!data || !mat) { toast('Preencha a data e matrícula', 'err'); throw new Error('missing'); }
+
+  const [y,m,d] = data.split('-');
+  const dataFmt = `${d}/${m}/${y}`;
+
+  if (_preId) {
+    // já existe, só atualiza obs geral se necessário
+    return _preId;
+  }
+
+  const r = await fetch('/api/inspecao/preenchimentos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ficha_id:     _ficha.id,
+      codigo_se:    _ficha.codigo_se,
+      matricula:    mat,
+      nome_tecnico: nome || null,
+      data_insp:    dataFmt,
+      hora_insp:    hora || null,
+      obs_geral:    obs || null,
+    })
+  }).then(r => r.json());
+
+  if (!r.ok) throw new Error(r.error || 'Erro ao criar preenchimento');
+  _preId = r.data.id;
+  return _preId;
+}
+
+async function salvarTodasRespostas(preId) {
+  const campos = _campos;
+  for (const c of campos) {
+    const resp = _respostas[c.id];
+    if (!resp) continue;
+
+    if (c.tipo === 'upload_foto' && resp.fotoFile) {
+      // Upload de foto
+      const fd = new FormData();
+      fd.append('foto', resp.fotoFile);
+      try {
+        const r = await fetch(`/api/inspecao/preenchimentos/${preId}/campo/${c.id}/foto`, {
+          method: 'POST', body: fd
+        }).then(r => r.json());
+        if (r.ok) resp.fotoPath = r.foto_path;
+      } catch(e) { console.error('[FOTO]', e); }
+    } else {
+      await fetch(`/api/inspecao/preenchimentos/${preId}/respostas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campo_id:       c.id,
+          resposta_texto: resp.texto  || null,
+          resposta_opcao: resp.opcao  || null,
+        })
+      });
+    }
+  }
+}
+
+async function validarObrigatorios() {
+  let erros = [];
+  for (const c of _campos) {
+    if (!c.obrigatorio) continue;
+    const resp = _respostas[c.id];
+    const preenchido = resp && (resp.texto?.trim() || resp.opcao || resp.fotoFile || resp.fotoPath);
+    const cwEl = document.getElementById('cw_' + c.id);
+    if (!preenchido) {
+      erros.push(c.label);
+      cwEl?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      const inp = cwEl?.querySelector('.campo-input');
+      inp?.classList.add('err-field');
+    } else {
+      cwEl?.querySelector('.campo-input')?.classList.remove('err-field');
+    }
+  }
+  return erros;
+}
+
+async function enviar() {
+  const erros = await validarObrigatorios();
+  if (erros.length) {
+    toast(`${erros.length} campo(s) obrigatório(s) não preenchido(s)`, 'err');
+    return;
+  }
+  const btn = document.getElementById('btnEnviar');
+  btn.disabled  = true;
+  btn.textContent = '⏳ Enviando...';
+  try {
+    const preId = await criarOuUsarPreenchimento('Concluído');
+    await salvarTodasRespostas(preId);
+    await fetch(`/api/inspecao/preenchimentos/${preId}/concluir`, { method:'POST' });
+    renderSuccess();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✅ Concluir Inspeção';
+    if (e.message !== 'missing') toast('Erro ao enviar: ' + e.message, 'err');
+  }
+}
+
+async function salvarRascunho() {
+  try {
+    const preId = await criarOuUsarPreenchimento('Rascunho');
+    await salvarTodasRespostas(preId);
+    toast('Rascunho salvo!', 'ok');
+  } catch(e) {
+    if (e.message !== 'missing') toast('Erro: ' + e.message, 'err');
+  }
+}
+
+// ── Telas ─────────────────────────────────────────────────────────────────
+function renderSuccess() {
+  document.getElementById('formWrap').innerHTML = `
+    <div class="success-screen">
+      <div class="ico">✅</div>
+      <h2>Inspeção Concluída!</h2>
+      <p style="margin-bottom:6px">${_ficha.nome_se} — ${new Date().toLocaleDateString('pt-BR')}</p>
+      <p>Suas respostas foram registradas com sucesso.</p>
+      <button class="btn-primary" style="max-width:260px;margin:28px auto 0" onclick="location.reload()">Nova Inspeção</button>
+    </div>
+  `;
+}
+
+function renderNotFound(msg) {
+  document.getElementById('formWrap').innerHTML = `
+    <div class="not-found">
+      <div style="font-size:3rem;margin-bottom:12px">⚠️</div>
+      <h2>Formulário não encontrado</h2>
+      <p>${msg}</p>
+    </div>
+  `;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function toast(msg, tipo='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'show ' + tipo;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.className = '', 3200);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inspeções — OOMC</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d1a19;--surface:#112220;--surface2:#163330;--border:#1e3836;--border2:#2a4f4c;
+      --text:#e8f4f3;--muted:#7aaba7;--muted2:#4a7572;
+      --primary:#009B91;--primary-bg:#0d2e2c;--primary-dark:#005852;
+      --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
+      --orange:#F5AA41;--orange-bg:#2d1f00;--orange-border:#EB8C0A;
+      --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+      --violet:#c084fc;--violet-bg:#1e0a3c;--violet-border:#7e22ce;
+    }
+    body.light{
+      --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
+      --text:#414141;--muted:#7F7F7F;--muted2:#CDCDCD;
+      --primary:#009B91;--primary-bg:#e0f5f4;--primary-dark:#005852;
+      --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
+      --orange:#F5AA41;--orange-bg:#fff4e0;--orange-border:#EB8C0A;
+      --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
+      --violet:#7e22ce;--violet-bg:#f3e8ff;--violet-border:#c084fc;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+    /* ── Header ─────────────────────────── */
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+    .hdr-left{display:flex;align-items:center;gap:10px}
+    .hdr-logo{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .hdr-left h1{font-size:15px;font-weight:700}
+    .hdr-left span{font-size:11px;color:var(--muted)}
+    .hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .hbtn{background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;text-decoration:none;transition:all .15s}
+    .hbtn:hover{border-color:var(--primary);color:var(--primary)}
+    .hbtn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .hbtn.primary:hover{opacity:.88}
+    #userBadge{font-size:12px;color:var(--primary);font-weight:600;padding:5px 10px;background:var(--primary-bg);border-radius:6px;display:none}
+
+    /* ── Login overlay ───────────────────── */
+    #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
+    .login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;width:340px;max-width:92vw}
+    .login-box h2{font-size:1.1rem;font-weight:700;margin-bottom:6px}
+    .login-box p{font-size:.8rem;color:var(--muted);margin-bottom:24px}
+    .login-box label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+    .login-box input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.9rem;outline:none;margin-bottom:14px;font-family:inherit}
+    .login-box input:focus{border-color:var(--primary)}
+    .btn-login{width:100%;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:11px;font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .btn-login:hover{opacity:.88}
+    #loginErr{color:var(--red);font-size:.78rem;margin-top:6px;display:none}
+
+    /* ── Tabs ────────────────────────────── */
+    .tabs{display:flex;gap:4px;padding:16px 24px 0;flex-wrap:wrap}
+    .tab{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px 8px 0 0;padding:9px 18px;font-size:.83rem;cursor:pointer;border-bottom:none;transition:all .15s;font-family:inherit}
+    .tab.active{background:var(--surface);color:var(--text);border-color:var(--border);border-bottom-color:var(--surface);font-weight:600}
+    .tab-content{display:none;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:0 8px 8px 8px;margin:0 24px 24px}
+    .tab-content.active{display:block}
+
+    /* ── Dashboard ───────────────────────── */
+    .dash-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+    .dash-filters input,.dash-filters select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.83rem;outline:none;font-family:inherit}
+    .dash-filters input:focus,.dash-filters select:focus{border-color:var(--primary)}
+    .btn-sm{background:var(--primary);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+    .btn-sm:hover{opacity:.88}
+    .btn-sm.outline{background:transparent;border:1px solid var(--border2);color:var(--muted)}
+    .btn-sm.outline:hover{border-color:var(--primary);color:var(--primary)}
+
+    .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+    .kpi{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+    .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kpi-color,var(--primary))}
+    .kpi .num{font-size:2rem;font-weight:800;color:var(--kpi-color,var(--text));line-height:1}
+    .kpi .lbl{font-size:.72rem;color:var(--muted);margin-top:5px;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+    .kpi.green{--kpi-color:var(--green)}
+    .kpi.orange{--kpi-color:var(--orange)}
+    .kpi.red{--kpi-color:var(--red)}
+    .kpi.violet{--kpi-color:var(--violet)}
+
+    .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+    @media(max-width:760px){.dash-grid{grid-template-columns:1fr}}
+    .dash-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px}
+    .dash-card-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+
+    /* Barras SE */
+    .se-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .se-bar-label{font-size:.78rem;font-weight:600;width:60px;flex-shrink:0;text-align:right;color:var(--muted)}
+    .se-bar-track{flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+    .se-bar-fill{height:100%;background:var(--primary);border-radius:5px;transition:width .5s}
+    .se-bar-count{font-size:.72rem;color:var(--muted);width:30px;text-align:left}
+
+    /* Gráfico linha dias */
+    .sparkline-wrap{height:80px;display:flex;align-items:flex-end;gap:3px}
+    .spark-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default}
+    .spark-bar{width:100%;background:var(--primary);border-radius:3px 3px 0 0;min-height:2px;transition:height .4s}
+    .spark-bar:hover{opacity:.75}
+    .spark-lbl{font-size:.6rem;color:var(--muted);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);height:28px;overflow:hidden;text-align:center}
+
+    /* Tabela recentes */
+    .insp-table{width:100%;border-collapse:collapse;font-size:.8rem}
+    .insp-table th{background:var(--bg);color:var(--muted);font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+    .insp-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+    .insp-table tr:last-child td{border-bottom:none}
+    .insp-table tr:hover td{background:var(--surface2)}
+    .badge{display:inline-flex;align-items:center;gap:4px;border-radius:5px;padding:2px 8px;font-size:.7rem;font-weight:600}
+    .badge.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+    .badge.pend{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border)}
+    .btn-icon{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 9px;font-size:.75rem;cursor:pointer;transition:all .15s}
+    .btn-icon:hover{border-color:var(--primary);color:var(--primary)}
+
+    /* ── Fichas ──────────────────────────── */
+    .ficha-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px}
+    .ficha-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border-color .15s;cursor:default}
+    .ficha-card:hover{border-color:var(--primary)}
+    .ficha-card .fc-code{font-size:.7rem;font-weight:700;color:var(--primary);letter-spacing:.1em;margin-bottom:4px}
+    .ficha-card .fc-name{font-size:.95rem;font-weight:700;margin-bottom:4px}
+    .ficha-card .fc-desc{font-size:.75rem;color:var(--muted);margin-bottom:12px;min-height:18px}
+    .ficha-card .fc-footer{display:flex;align-items:center;justify-content:space-between;gap:6px}
+    .fc-campos{font-size:.72rem;color:var(--muted)}
+    .fc-btns{display:flex;gap:5px}
+    .fc-inactive{opacity:.45}
+
+    /* ── Modal ───────────────────────────── */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;z-index:500;padding:24px 16px;overflow-y:auto;backdrop-filter:blur(3px)}
+    .modal-bg.hidden{display:none}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:660px;padding:28px;margin:auto}
+    .modal h3{font-size:1rem;font-weight:700;margin-bottom:18px}
+    .modal label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px;margin-top:12px}
+    .modal input,.modal select,.modal textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;font-family:inherit;resize:vertical}
+    .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--primary)}
+    .modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+    /* ── Campos editor ───────────────────── */
+    .campo-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:50vh;overflow-y:auto}
+    .campo-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:8px;cursor:grab}
+    .campo-item:active{cursor:grabbing}
+    .campo-drag{color:var(--muted2);font-size:14px;flex-shrink:0}
+    .campo-info{flex:1;min-width:0}
+    .campo-info .cl{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .campo-info .ct{font-size:.7rem;color:var(--muted)}
+    .campo-btns{display:flex;gap:4px;flex-shrink:0}
+    .tipo-badge{font-size:.65rem;padding:2px 7px;border-radius:4px;background:var(--primary-bg);color:var(--primary);border:1px solid var(--primary-dark);white-space:nowrap}
+
+    /* ── Visualizar preenchimento ────────── */
+    .resp-group{margin-bottom:18px}
+    .resp-group-title{font-size:.7rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px}
+    .resp-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.82rem}
+    .resp-row:last-child{border-bottom:none}
+    .resp-label{font-weight:600;flex:0 0 55%;color:var(--muted)}
+    .resp-val{flex:1;word-break:break-word}
+    .resp-foto{max-width:200px;max-height:180px;border-radius:8px;border:1px solid var(--border);cursor:zoom-in;margin-top:4px}
+    .resp-sim{color:var(--red);font-weight:700}
+    .resp-nao{color:var(--green);font-weight:700}
+
+    /* ── Spinner / empty ─────────────────── */
+    .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin:30px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty-msg{text-align:center;color:var(--muted);font-size:.85rem;padding:30px}
+
+    /* ── Toast ───────────────────────────── */
+    #toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:.83rem;transform:translateY(80px);opacity:0;transition:all .2s;z-index:1000;max-width:320px}
+    #toast.show{transform:translateY(0);opacity:1}
+    #toast.ok{border-color:var(--green-border);color:var(--green)}
+    #toast.err{border-color:var(--red-border);color:var(--red)}
+
+    /* ── Zoom foto ───────────────────────── */
+    #fotoZoom{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:999;cursor:zoom-out}
+    #fotoZoom.hidden{display:none}
+    #fotoZoom img{max-width:90vw;max-height:90vh;border-radius:10px;border:2px solid var(--border)}
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <h2>🔐 Acesso Supervisor</h2>
+    <p>Sistema de Inspeção de Subestações — OOMC</p>
+    <label>Usuário</label>
+    <input type="text" id="loginUser" placeholder="supervisor" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()"/>
+    <label>Senha</label>
+    <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+    <div id="loginErr">Usuário ou senha incorretos.</div>
+  </div>
+</div>
+
+<header>
+  <div class="hdr-left">
+    <div class="hdr-logo">🔍</div>
+    <div>
+      <h1>Inspeção de Subestações</h1>
+      <span>OOMC — Manutenção Alta Tensão</span>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span id="userBadge">👤 Supervisor</span>
+    <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
+    <a href="/" class="hbtn">🔧 Painel OS</a>
+    <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Tema</button>
+    <button class="hbtn" onclick="doLogout()">Sair</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="setTab('dashboard')">📊 Dashboard</button>
+  <button class="tab" onclick="setTab('fichas')">📋 Fichas por SE</button>
+  <button class="tab" onclick="setTab('historico')">📁 Histórico</button>
+</div>
+
+<!-- ═══ DASHBOARD ════════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-dashboard">
+  <div class="dash-filters">
+    <input type="date" id="dDe"  onchange="loadDash()"/>
+    <input type="date" id="dAte" onchange="loadDash()"/>
+    <button class="btn-sm outline" onclick="filtroHoje()">Hoje</button>
+    <button class="btn-sm outline" onclick="filtroSemana()">Esta semana</button>
+    <button class="btn-sm outline" onclick="filtroMes()">Este mês</button>
+    <button class="btn-sm" onclick="loadDash()">↻ Atualizar</button>
+  </div>
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi"><div class="num" id="kTotal">–</div><div class="lbl">Total de Inspeções</div></div>
+    <div class="kpi green"><div class="num" id="kConcluidas">–</div><div class="lbl">Concluídas</div></div>
+    <div class="kpi orange"><div class="num" id="kPendentes">–</div><div class="lbl">Rascunhos</div></div>
+    <div class="kpi violet"><div class="num" id="kSEs">–</div><div class="lbl">SEs Inspecionadas</div></div>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="dash-card-title">Inspeções por Subestação</div>
+      <div id="seBarras"><div class="spinner"></div></div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Inspeções por Dia</div>
+      <div class="sparkline-wrap" id="sparkline" style="height:90px"></div>
+    </div>
+  </div>
+  <div class="dash-card" style="margin-bottom:0">
+    <div class="dash-card-title">Últimas Inspeções</div>
+    <div style="overflow-x:auto">
+      <table class="insp-table">
+        <thead><tr>
+          <th>Subestação</th><th>Técnico</th><th>Data</th><th>Hora</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="dashRecentes"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FICHAS POR SE ═════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-fichas">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+    <div style="font-size:.85rem;color:var(--muted)">Configure as fichas de inspeção de cada subestação</div>
+    <button class="btn-sm" onclick="abrirNovaFicha()">+ Nova Ficha</button>
+  </div>
+  <div class="ficha-grid" id="fichaGrid"><div class="spinner"></div></div>
+</div>
+
+<!-- ═══ HISTÓRICO ═════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-historico">
+  <div class="dash-filters" style="margin-bottom:16px">
+    <input type="date" id="hDe"/>
+    <input type="date" id="hAte"/>
+    <select id="hSE"><option value="">Todas as SEs</option></select>
+    <select id="hStatus">
+      <option value="">Todos os status</option>
+      <option value="Concluído">Concluído</option>
+      <option value="Rascunho">Rascunho</option>
+    </select>
+    <button class="btn-sm" onclick="loadHistorico()">🔍 Filtrar</button>
+    <button class="btn-sm outline" onclick="limparFiltrosHist()">✕ Limpar</button>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="insp-table">
+      <thead><tr>
+        <th>SE</th><th>Técnico</th><th>Matrícula</th><th>Data</th><th>Hora</th><th>Status</th><th>Campos</th><th></th>
+      </tr></thead>
+      <tbody id="histTbody"><tr><td colspan="8" class="empty-msg">Aplique um filtro para carregar</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ MODAL NOVA/EDITAR FICHA ══════════════════════════════════════════ -->
+<div class="modal-bg hidden" id="fichaModal" onclick="closeIfBg(event,'fichaModal')">
+  <div class="modal">
+    <h3 id="fichaModalTitle">Nova Ficha de Inspeção</h3>
+    <input type="hidden" id="fichaModalId"/>
+    <label>Código da SE <span style="color:var(--muted);font-weight:400">(ex: FCN)</span></label>
+    <input id="fmCodigo" placeholder="FCN"/>
+    <label>Nome completo da Subestação</label>
+    <input id="fmNome" placeholder="SE Frei Caneca"/>
+    <label>Descrição <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
+    <textarea id="fmDesc" rows="2" placeholder="Breve descrição da subestação..."></textarea>
+    <div class="modal-footer">
+      <button class="btn-sm outline" onclick="fecharModal('fichaModal')">Cancelar</button>
+      <button class="btn-sm" onclick="salvarFicha()">Salvar Ficha</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL EDITAR CAMPOS ══════════════════════════════════════════════ -->
+<div class="modal-bg hidden" id="camposModal" onclick="closeIfBg(event,'camposModal')">
+  <div class="modal" style="max-width:700px">
+    <h3 id="camposModalTitle">Campos da Ficha</h3>
+    <input type="hidden" id="camposModalFichaId"/>
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:.78rem;color:var(--muted)" id="camposModalSubtitle"></span>
+      <button class="btn-sm" onclick="abrirNovoCampo()">+ Adicionar Campo</button>
+    </div>
+    <div class="campo-list" id="campoList"></div>
+    <div style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px;font-weight:600">Novo Campo</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label>Rótulo do campo *</label>
+          <input id="ncLabel" placeholder="ex: Manômetro Disjuntor 1433"/>
+        </div>
+        <div>
+          <label>Tipo de resposta</label>
+          <select id="ncTipo" onchange="toggleOpcoes()">
+            <option value="texto">Texto livre</option>
+            <option value="multipla_escolha">Múltipla escolha</option>
+            <option value="upload_foto">Upload de foto</option>
+            <option value="sim_nao">Sim / Não</option>
+            <option value="numero">Número</option>
+          </select>
+        </div>
+        <div>
+          <label>Grupo visual <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
+          <input id="ncGrupo" placeholder="ex: Disjuntores 138kV"/>
+        </div>
+        <div id="ncOpcoesWrap" style="display:none">
+          <label>Opções <span style="color:var(--muted);font-weight:400">(separadas por | )</span></label>
+          <input id="ncOpcoes" placeholder="Bom|Ruim|Outra"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding-top:18px">
+          <input type="checkbox" id="ncObrig" checked style="width:auto;margin:0"/>
+          <label style="margin:0;font-size:.78rem">Obrigatório</label>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-sm" onclick="adicionarCampo()">✓ Adicionar</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm outline" onclick="fecharModal('camposModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL EDITAR CAMPO EXISTENTE ════════════════════════════════════ -->
+<div class="modal-bg hidden" id="editCampoModal" onclick="closeIfBg(event,'editCampoModal')">
+  <div class="modal" style="max-width:480px">
+    <h3>Editar Campo</h3>
+    <input type="hidden" id="ecId"/>
+    <label>Rótulo *</label>
+    <input id="ecLabel"/>
+    <label>Tipo</label>
+    <select id="ecTipo" onchange="toggleOpcoesEdit()">
+      <option value="texto">Texto livre</option>
+      <option value="multipla_escolha">Múltipla escolha</option>
+      <option value="upload_foto">Upload de foto</option>
+      <option value="sim_nao">Sim / Não</option>
+      <option value="numero">Número</option>
+    </select>
+    <label>Grupo</label>
+    <input id="ecGrupo"/>
+    <div id="ecOpcoesWrap">
+      <label>Opções (separadas por | )</label>
+      <input id="ecOpcoes"/>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+      <input type="checkbox" id="ecObrig" style="width:auto;margin:0"/>
+      <label style="margin:0;font-size:.78rem">Obrigatório</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm outline" onclick="fecharModal('editCampoModal')">Cancelar</button>
+      <button class="btn-sm" onclick="salvarEdicaoCampo()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL VISUALIZAR PREENCHIMENTO ══════════════════════════════════ -->
+<div class="modal-bg hidden" id="verModal" onclick="closeIfBg(event,'verModal')">
+  <div class="modal" style="max-width:700px">
+    <h3 id="verModalTitle">Inspeção</h3>
+    <div id="verModalBody" style="max-height:65vh;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn-sm outline" onclick="fecharModal('verModal')">Fechar</button>
+      <button class="btn-sm" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Zoom foto -->
+<div id="fotoZoom" class="hidden" onclick="this.classList.add('hidden')">
+  <img id="fotoZoomImg" src="" alt="foto"/>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Estado global ─────────────────────────────────────────────────────────
+let TOKEN = localStorage.getItem('insp_token') || '';
+let _fichas = [];
+
+// ── Tema ──────────────────────────────────────────────────────────────────
+function toggleTema() {
+  document.body.classList.toggle('light');
+  localStorage.setItem('insp_tema', document.body.classList.contains('light') ? 'light' : 'dark');
+}
+if (localStorage.getItem('insp_tema') === 'light') document.body.classList.add('light');
+
+// ── Login / Auth ──────────────────────────────────────────────────────────
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  document.getElementById('loginErr').style.display = 'none';
+  try {
+    const r = await fetch('/api/inspecao/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: u, senha: p })
+    }).then(r => r.json());
+    if (!r.ok) { document.getElementById('loginErr').style.display = 'block'; return; }
+    TOKEN = r.token;
+    localStorage.setItem('insp_token', TOKEN);
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('userBadge').style.display = 'inline-flex';
+    init();
+  } catch(e) { document.getElementById('loginErr').style.display = 'block'; }
+}
+
+function doLogout() {
+  localStorage.removeItem('insp_token');
+  TOKEN = '';
+  location.reload();
+}
+
+function authH() { return { 'x-insp-token': TOKEN, 'Content-Type': 'application/json' }; }
+
+// ── Inicialização ─────────────────────────────────────────────────────────
+async function init() {
+  // Verifica token salvo
+  if (TOKEN) {
+    // testa token fazendo uma chamada autenticada simples
+    try {
+      const r = await fetch('/api/inspecao/fichas', { headers: { 'x-insp-token': TOKEN } });
+      if (r.status === 403) { TOKEN = ''; localStorage.removeItem('insp_token'); return; }
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('userBadge').style.display = 'inline-flex';
+    } catch(e) { return; }
+  }
+  filtroHoje();
+  loadFichas();
+  loadHistoricoSESelect();
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function setTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['dashboard','fichas','historico'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'dashboard') loadDash();
+  if (name === 'fichas')    loadFichas();
+  if (name === 'historico') loadHistorico();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────
+function filtroHoje() {
+  const h = new Date().toISOString().slice(0,10);
+  document.getElementById('dDe').value  = h;
+  document.getElementById('dAte').value = h;
+  loadDash();
+}
+function filtroSemana() {
+  const hoje = new Date();
+  const dom  = new Date(hoje); dom.setDate(hoje.getDate() - hoje.getDay());
+  document.getElementById('dDe').value  = dom.toISOString().slice(0,10);
+  document.getElementById('dAte').value = hoje.toISOString().slice(0,10);
+  loadDash();
+}
+function filtroMes() {
+  const hoje = new Date();
+  document.getElementById('dDe').value  = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
+  document.getElementById('dAte').value = hoje.toISOString().slice(0,10);
+  loadDash();
+}
+
+async function loadDash() {
+  const de  = document.getElementById('dDe').value;
+  const ate = document.getElementById('dAte').value;
+  const params = new URLSearchParams();
+  if (de)  params.set('dataDe',  de);
+  if (ate) params.set('dataAte', ate);
+
+  try {
+    const [dashR, preR] = await Promise.all([
+      fetch('/api/inspecao/dashboard?' + params, { headers: authH() }).then(r => r.json()),
+      fetch('/api/inspecao/preenchimentos?' + params, { headers: authH() }).then(r => r.json()),
+    ]);
+
+    if (!dashR.ok) return;
+    const d = dashR.data;
+
+    document.getElementById('kTotal').textContent       = d.total;
+    document.getElementById('kConcluidas').textContent  = d.concluidas;
+    document.getElementById('kPendentes').textContent   = d.total - d.concluidas;
+    document.getElementById('kSEs').textContent         = d.porSE?.length || 0;
+
+    // Barras SE
+    const maxSE = Math.max(...(d.porSE?.map(s => s.total) || [1]), 1);
+    document.getElementById('seBarras').innerHTML = (d.porSE?.length ? d.porSE : []).map(se => `
+      <div class="se-bar-row" title="${se.nome_se||se.codigo_se}: ${se.total} inspeções">
+        <div class="se-bar-label">${se.codigo_se}</div>
+        <div class="se-bar-track"><div class="se-bar-fill" style="width:${Math.round(se.total/maxSE*100)}%"></div></div>
+        <div class="se-bar-count">${se.total}</div>
+      </div>
+    `).join('') || '<div class="empty-msg">Nenhum dado no período</div>';
+
+    // Sparkline por dia
+    const dias = d.porDia || [];
+    const maxD = Math.max(...dias.map(d=>d.total), 1);
+    document.getElementById('sparkline').innerHTML = dias.length
+      ? dias.map(dia => `
+          <div class="spark-col" title="${dia.dia}: ${dia.total}">
+            <div class="spark-bar" style="height:${Math.max(4,Math.round(dia.total/maxD*70))}px"></div>
+            <div class="spark-lbl">${dia.dia.slice(5)}</div>
+          </div>`)
+        .join('')
+      : '<div class="empty-msg" style="width:100%">Sem dados</div>';
+
+    // Recentes (últimos 10)
+    const prec = preR?.data || [];
+    document.getElementById('dashRecentes').innerHTML = prec.slice(0,10).map(p => `
+      <tr>
+        <td><strong>${p.codigo_se}</strong><br><span style="font-size:.7rem;color:var(--muted)">${p.nome_se||''}</span></td>
+        <td>${p.nome_tecnico||'—'}</td>
+        <td>${p.data_insp||'—'}</td>
+        <td>${p.hora_insp||'—'}</td>
+        <td><span class="badge ${p.status==='Concluído'?'ok':'pend'}">${p.status}</span></td>
+        <td><button class="btn-icon" onclick="verPreenchimento(${p.id})">Ver</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="6" class="empty-msg">Nenhuma inspeção no período</td></tr>';
+
+  } catch(e) { console.error('[DASH]', e); }
+}
+
+// ── Fichas ────────────────────────────────────────────────────────────────
+async function loadFichas() {
+  document.getElementById('fichaGrid').innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await fetch('/api/inspecao/fichas', { headers: authH() }).then(r => r.json());
+    _fichas = r.data || [];
+    renderFichas();
+  } catch(e) { document.getElementById('fichaGrid').innerHTML = '<div class="empty-msg">Erro ao carregar</div>'; }
+}
+
+async function renderFichas() {
+  if (!_fichas.length) {
+    document.getElementById('fichaGrid').innerHTML = '<div class="empty-msg">Nenhuma ficha criada ainda. Clique em "+ Nova Ficha".</div>';
+    return;
+  }
+  // Busca contagem de campos para cada ficha
+  const fichasComCampos = await Promise.all(_fichas.map(async f => {
+    try {
+      const r = await fetch(`/api/inspecao/fichas/${f.id}/campos`, { headers: authH() }).then(r => r.json());
+      return { ...f, numCampos: r.data?.length || 0 };
+    } catch(e) { return { ...f, numCampos: 0 }; }
+  }));
+
+  document.getElementById('fichaGrid').innerHTML = fichasComCampos.map(f => `
+    <div class="ficha-card ${f.ativa?'':'fc-inactive'}">
+      <div class="fc-code">${f.codigo_se}</div>
+      <div class="fc-name">${f.nome_se}</div>
+      <div class="fc-desc">${f.descricao||'<em style="color:var(--muted2)">Sem descrição</em>'}</div>
+      <div class="fc-footer">
+        <span class="fc-campos">${f.numCampos} campo${f.numCampos!==1?'s':''}</span>
+        <div class="fc-btns">
+          <button class="btn-icon" onclick="abrirFormLink(${f.id})" title="Link do formulário">🔗</button>
+          <button class="btn-icon" onclick="editarFicha(${f.id})" title="Editar ficha">✏️</button>
+          <button class="btn-icon" onclick="abrirCampos(${f.id})" title="Editar campos">📋</button>
+          <button class="btn-icon" style="color:var(--${f.ativa?'orange':'green'})" onclick="toggleAtiva(${f.id},${f.ativa})" title="${f.ativa?'Desativar':'Ativar'}">${f.ativa?'⏸':'▶'}</button>
+          <button class="btn-icon" style="color:var(--red)" onclick="deletarFicha(${f.id},'${f.nome_se}')" title="Excluir">🗑</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function abrirNovaFicha() {
+  document.getElementById('fichaModalId').value = '';
+  document.getElementById('fichaModalTitle').textContent = 'Nova Ficha de Inspeção';
+  document.getElementById('fmCodigo').value = '';
+  document.getElementById('fmNome').value   = '';
+  document.getElementById('fmDesc').value   = '';
+  document.getElementById('fmCodigo').disabled = false;
+  abrirModal('fichaModal');
+}
+
+async function editarFicha(id) {
+  const f = _fichas.find(f => f.id === id);
+  if (!f) return;
+  document.getElementById('fichaModalId').value = id;
+  document.getElementById('fichaModalTitle').textContent = 'Editar Ficha';
+  document.getElementById('fmCodigo').value   = f.codigo_se;
+  document.getElementById('fmNome').value     = f.nome_se;
+  document.getElementById('fmDesc').value     = f.descricao || '';
+  document.getElementById('fmCodigo').disabled = true;
+  abrirModal('fichaModal');
+}
+
+async function salvarFicha() {
+  const id   = document.getElementById('fichaModalId').value;
+  const body = {
+    codigo_se:  document.getElementById('fmCodigo').value.trim().toUpperCase(),
+    nome_se:    document.getElementById('fmNome').value.trim(),
+    descricao:  document.getElementById('fmDesc').value.trim(),
+  };
+  if (!body.codigo_se || !body.nome_se) return toast('Preencha código e nome', 'err');
+  try {
+    let r;
+    if (id) {
+      r = await fetch(`/api/inspecao/fichas/${id}`, { method:'PATCH', headers: authH(), body: JSON.stringify(body) }).then(r=>r.json());
+    } else {
+      r = await fetch('/api/inspecao/fichas', { method:'POST', headers: authH(), body: JSON.stringify(body) }).then(r=>r.json());
+    }
+    if (!r.ok) return toast(r.error || 'Erro', 'err');
+    fecharModal('fichaModal');
+    toast(id ? 'Ficha atualizada' : 'Ficha criada', 'ok');
+    loadFichas();
+  } catch(e) { toast('Erro: ' + e.message, 'err'); }
+}
+
+async function toggleAtiva(id, ativa) {
+  try {
+    await fetch(`/api/inspecao/fichas/${id}`, { method:'PATCH', headers: authH(), body: JSON.stringify({ ativa: !ativa }) }).then(r=>r.json());
+    loadFichas();
+  } catch(e) { toast('Erro', 'err'); }
+}
+
+async function deletarFicha(id, nome) {
+  if (!confirm(`Excluir a ficha "${nome}"? Todos os campos e preenchimentos serão apagados.`)) return;
+  try {
+    await fetch(`/api/inspecao/fichas/${id}`, { method:'DELETE', headers: authH() });
+    toast('Ficha excluída', 'ok');
+    loadFichas();
+  } catch(e) { toast('Erro', 'err'); }
+}
+
+function abrirFormLink(fichaId) {
+  const url = location.origin + '/inspecao-form.html?ficha=' + fichaId;
+  const f   = _fichas.find(f => f.id === fichaId);
+  if (navigator.share) {
+    navigator.share({ title: 'Inspeção ' + (f?.nome_se||''), url }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(() => toast('Link copiado!', 'ok'));
+  }
+}
+
+// ── Campos ────────────────────────────────────────────────────────────────
+let _camposFichaId = null;
+let _campos = [];
+
+async function abrirCampos(fichaId) {
+  _camposFichaId = fichaId;
+  const f = _fichas.find(f => f.id === fichaId);
+  document.getElementById('camposModalTitle').textContent  = 'Campos — ' + (f?.nome_se||'');
+  document.getElementById('camposModalSubtitle').textContent = f?.codigo_se || '';
+  document.getElementById('camposModalFichaId').value = fichaId;
+  await recarregarCampos();
+  abrirModal('camposModal');
+}
+
+async function recarregarCampos() {
+  const r = await fetch(`/api/inspecao/fichas/${_camposFichaId}/campos`, { headers: authH() }).then(r=>r.json());
+  _campos = r.data || [];
+  renderCampoList();
+}
+
+function tipoLabel(t) {
+  const m = { texto:'Texto', multipla_escolha:'Múltipla escolha', upload_foto:'📷 Foto', sim_nao:'Sim/Não', numero:'Número' };
+  return m[t] || t;
+}
+
+function renderCampoList() {
+  const el = document.getElementById('campoList');
+  if (!_campos.length) { el.innerHTML = '<div class="empty-msg">Nenhum campo ainda</div>'; return; }
+  el.innerHTML = _campos.map((c,i) => `
+    <div class="campo-item" draggable="true" data-id="${c.id}" data-idx="${i}">
+      <span class="campo-drag">⠿</span>
+      <div class="campo-info">
+        <div class="cl">${c.label}${c.obrigatorio?'<span style="color:var(--red);margin-left:3px">*</span>':''}</div>
+        <div class="ct">${c.grupo?'<b>'+c.grupo+'</b> · ':''}<span class="tipo-badge">${tipoLabel(c.tipo)}</span></div>
+      </div>
+      <div class="campo-btns">
+        <button class="btn-icon" onclick="abrirEditCampo(${c.id})">✏️</button>
+        <button class="btn-icon" style="color:var(--red)" onclick="deletarCampo(${c.id})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+
+  // drag-and-drop simples
+  let dragIdx = null;
+  el.querySelectorAll('.campo-item').forEach(item => {
+    item.addEventListener('dragstart', () => { dragIdx = parseInt(item.dataset.idx); });
+    item.addEventListener('dragover', e => { e.preventDefault(); item.style.background = 'var(--primary-bg)'; });
+    item.addEventListener('dragleave', () => { item.style.background = ''; });
+    item.addEventListener('drop', async () => {
+      item.style.background = '';
+      const dropIdx = parseInt(item.dataset.idx);
+      if (dragIdx === null || dragIdx === dropIdx) return;
+      const reordenado = [..._campos];
+      const [moved] = reordenado.splice(dragIdx, 1);
+      reordenado.splice(dropIdx, 0, moved);
+      const ordemPayload = reordenado.map((c, i) => ({ id: c.id, ordem: i }));
+      await fetch(`/api/inspecao/fichas/${_camposFichaId}/reordenar`, {
+        method:'POST', headers: authH(), body: JSON.stringify({ ordem: ordemPayload })
+      });
+      await recarregarCampos();
+    });
+  });
+}
+
+function toggleOpcoes() {
+  const t = document.getElementById('ncTipo').value;
+  document.getElementById('ncOpcoesWrap').style.display = t === 'multipla_escolha' ? '' : 'none';
+}
+function toggleOpcoesEdit() {
+  const t = document.getElementById('ecTipo').value;
+  document.getElementById('ecOpcoesWrap').style.display = t === 'multipla_escolha' ? '' : 'none';
+}
+
+async function adicionarCampo() {
+  const label  = document.getElementById('ncLabel').value.trim();
+  const tipo   = document.getElementById('ncTipo').value;
+  const grupo  = document.getElementById('ncGrupo').value.trim();
+  const opStr  = document.getElementById('ncOpcoes').value.trim();
+  const obrig  = document.getElementById('ncObrig').checked;
+  if (!label) return toast('Informe o rótulo do campo', 'err');
+  const opcoes = tipo === 'multipla_escolha' && opStr ? opStr.split('|').map(s=>s.trim()).filter(Boolean) : null;
+  const ordem  = _campos.length;
+  try {
+    const r = await fetch(`/api/inspecao/fichas/${_camposFichaId}/campos`, {
+      method:'POST', headers: authH(),
+      body: JSON.stringify({ label, tipo, opcoes, obrigatorio: obrig, grupo: grupo||null, ordem })
+    }).then(r=>r.json());
+    if (!r.ok) return toast(r.error||'Erro', 'err');
+    document.getElementById('ncLabel').value  = '';
+    document.getElementById('ncGrupo').value  = '';
+    document.getElementById('ncOpcoes').value = '';
+    document.getElementById('ncObrig').checked = true;
+    await recarregarCampos();
+    toast('Campo adicionado', 'ok');
+  } catch(e) { toast('Erro: '+e.message, 'err'); }
+}
+
+function abrirEditCampo(id) {
+  const c = _campos.find(c => c.id === id);
+  if (!c) return;
+  document.getElementById('ecId').value     = c.id;
+  document.getElementById('ecLabel').value  = c.label;
+  document.getElementById('ecTipo').value   = c.tipo;
+  document.getElementById('ecGrupo').value  = c.grupo || '';
+  document.getElementById('ecObrig').checked = !!c.obrigatorio;
+  try {
+    const op = c.opcoes ? JSON.parse(c.opcoes) : [];
+    document.getElementById('ecOpcoes').value = op.join('|');
+  } catch(e) { document.getElementById('ecOpcoes').value = ''; }
+  toggleOpcoesEdit();
+  abrirModal('editCampoModal');
+}
+
+async function salvarEdicaoCampo() {
+  const id     = parseInt(document.getElementById('ecId').value);
+  const label  = document.getElementById('ecLabel').value.trim();
+  const tipo   = document.getElementById('ecTipo').value;
+  const grupo  = document.getElementById('ecGrupo').value.trim();
+  const opStr  = document.getElementById('ecOpcoes').value.trim();
+  const obrig  = document.getElementById('ecObrig').checked;
+  if (!label) return toast('Rótulo obrigatório', 'err');
+  const opcoes = tipo === 'multipla_escolha' && opStr ? opStr.split('|').map(s=>s.trim()).filter(Boolean) : null;
+  try {
+    const r = await fetch(`/api/inspecao/campos/${id}`, {
+      method:'PATCH', headers: authH(),
+      body: JSON.stringify({ label, tipo, opcoes, obrigatorio: obrig, grupo: grupo||null })
+    }).then(r=>r.json());
+    if (!r.ok) return toast(r.error||'Erro', 'err');
+    fecharModal('editCampoModal');
+    await recarregarCampos();
+    toast('Campo atualizado', 'ok');
+  } catch(e) { toast('Erro: '+e.message, 'err'); }
+}
+
+async function deletarCampo(id) {
+  if (!confirm('Excluir este campo?')) return;
+  try {
+    await fetch(`/api/inspecao/campos/${id}`, { method:'DELETE', headers: authH() });
+    await recarregarCampos();
+    toast('Campo removido', 'ok');
+  } catch(e) { toast('Erro', 'err'); }
+}
+
+// ── Histórico ─────────────────────────────────────────────────────────────
+async function loadHistoricoSESelect() {
+  try {
+    const r = await fetch('/api/inspecao/fichas', { headers: authH() }).then(r=>r.json());
+    const sel = document.getElementById('hSE');
+    (r.data||[]).forEach(f => {
+      const o = document.createElement('option');
+      o.value = f.codigo_se; o.textContent = f.codigo_se + ' — ' + f.nome_se;
+      sel.appendChild(o);
+    });
+  } catch(e){}
+}
+
+async function loadHistorico() {
+  const de  = document.getElementById('hDe').value;
+  const ate = document.getElementById('hAte').value;
+  const se  = document.getElementById('hSE').value;
+  const st  = document.getElementById('hStatus').value;
+  const params = new URLSearchParams();
+  if (de)  params.set('dataDe', de);
+  if (ate) params.set('dataAte', ate);
+  if (se)  params.set('codigo_se', se);
+  if (st)  params.set('status', st);
+  document.getElementById('histTbody').innerHTML = '<tr><td colspan="8"><div class="spinner"></div></td></tr>';
+  try {
+    const r = await fetch('/api/inspecao/preenchimentos?' + params, { headers: authH() }).then(r=>r.json());
+    const data = r.data || [];
+    document.getElementById('histTbody').innerHTML = data.length
+      ? data.map(p => `
+          <tr>
+            <td><strong>${p.codigo_se}</strong></td>
+            <td>${p.nome_tecnico||'—'}</td>
+            <td>${p.matricula||'—'}</td>
+            <td>${p.data_insp||'—'}</td>
+            <td>${p.hora_insp||'—'}</td>
+            <td><span class="badge ${p.status==='Concluído'?'ok':'pend'}">${p.status}</span></td>
+            <td style="color:var(--muted);font-size:.75rem">${p.nome_se||''}</td>
+            <td style="white-space:nowrap">
+              <button class="btn-icon" onclick="verPreenchimento(${p.id})">Ver</button>
+              <button class="btn-icon" style="color:var(--red)" onclick="apagarPreenchimento(${p.id})">🗑</button>
+            </td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="8" class="empty-msg">Nenhum resultado</td></tr>';
+  } catch(e) { document.getElementById('histTbody').innerHTML = '<tr><td colspan="8" class="empty-msg">Erro ao carregar</td></tr>'; }
+}
+
+function limparFiltrosHist() {
+  ['hDe','hAte'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('hSE').value     = '';
+  document.getElementById('hStatus').value = '';
+}
+
+async function apagarPreenchimento(id) {
+  if (!confirm('Apagar este preenchimento?')) return;
+  try {
+    await fetch(`/api/inspecao/preenchimentos/${id}`, { method:'DELETE', headers: authH() });
+    toast('Removido', 'ok');
+    loadHistorico();
+    loadDash();
+  } catch(e) { toast('Erro', 'err'); }
+}
+
+// ── Visualizar preenchimento ───────────────────────────────────────────────
+async function verPreenchimento(id) {
+  try {
+    const r = await fetch(`/api/inspecao/preenchimentos/${id}`, { headers: authH() }).then(r=>r.json());
+    if (!r.ok) return toast('Erro ao carregar', 'err');
+    const p = r.data;
+    document.getElementById('verModalTitle').textContent =
+      `Inspeção ${p.codigo_se} — ${p.data_insp} ${p.hora_insp||''}`;
+
+    // Agrupa respostas por grupo
+    const grupos = {};
+    const resMap = {};
+    (p.respostas||[]).forEach(r => { resMap[r.campo_id] = r; });
+    (p.campos||[]).forEach(c => {
+      const g = c.grupo || '—';
+      if (!grupos[g]) grupos[g] = [];
+      grupos[g].push(c);
+    });
+
+    let html = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;padding:14px;background:var(--bg);border-radius:8px;font-size:.8rem">
+        <div><div style="color:var(--muted);font-size:.7rem">Técnico</div><b>${p.nome_tecnico||'—'}</b></div>
+        <div><div style="color:var(--muted);font-size:.7rem">Matrícula</div><b>${p.matricula||'—'}</b></div>
+        <div><div style="color:var(--muted);font-size:.7rem">Status</div><span class="badge ${p.status==='Concluído'?'ok':'pend'}">${p.status}</span></div>
+      </div>`;
+
+    for (const [grupo, campos] of Object.entries(grupos)) {
+      html += `<div class="resp-group"><div class="resp-group-title">${grupo}</div>`;
+      campos.forEach(c => {
+        const resp = resMap[c.id];
+        let valHtml = '<span style="color:var(--muted2)">—</span>';
+        if (resp) {
+          if (c.tipo === 'upload_foto' && resp.foto_path) {
+            valHtml = `<img class="resp-foto" src="/api/inspecao/foto/${resp.foto_path}" onclick="zoomFoto(this.src)" alt="foto"/>`;
+          } else if (c.tipo === 'sim_nao') {
+            const v = resp.resposta_opcao || resp.resposta_texto || '';
+            valHtml = `<span class="${v.toLowerCase()==='sim'?'resp-sim':'resp-nao'}">${v||'—'}</span>`;
+          } else {
+            const v = resp.resposta_opcao || resp.resposta_texto || '';
+            valHtml = v ? `<span>${v}</span>` : '<span style="color:var(--muted2)">—</span>';
+          }
+        }
+        html += `<div class="resp-row"><div class="resp-label">${c.label}${c.obrigatorio?'<span style="color:var(--red)">*</span>':''}</div><div class="resp-val">${valHtml}</div></div>`;
+      });
+      html += '</div>';
+    }
+
+    if (p.obs_geral) html += `<div style="margin-top:10px;padding:12px;background:var(--bg);border-radius:8px;font-size:.8rem"><b>Obs. Geral:</b> ${p.obs_geral}</div>`;
+
+    document.getElementById('verModalBody').innerHTML = html;
+    abrirModal('verModal');
+  } catch(e) { toast('Erro: '+e.message, 'err'); }
+}
+
+function zoomFoto(src) {
+  document.getElementById('fotoZoomImg').src = src;
+  document.getElementById('fotoZoom').classList.remove('hidden');
+}
+
+// ── Utils modais ──────────────────────────────────────────────────────────
+function abrirModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
+function closeIfBg(e, id) { if (e.target === document.getElementById(id)) fecharModal(id); }
+
+function toast(msg, tipo='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'show ' + tipo;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.className = '', 3000);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
