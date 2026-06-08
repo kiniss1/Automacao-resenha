@@ -51,6 +51,10 @@ async function init() {
   const checkin = require('./checkin');
   checkin.setDb(db);
 
+  // Inicializa tabelas de inspeção
+  const dbInsp = require('./db_inspecao');
+  dbInsp.setDb(db);
+
   persist();
   console.log('[DB] Banco iniciado:', DB_PATH);
 }
@@ -105,8 +109,6 @@ function listarOS({ status, unidade, search, dataDe, dataAte } = {}) {
     cond.push('(os LIKE ? OR equipe LIKE ? OR servico LIKE ? OR veiculo LIKE ?)');
     const s = '%' + search + '%'; params.push(s, s, s, s);
   }
-  // Filtro de data — campo "data" está no formato DD/MM/AAAA
-  // Converte para comparação: transforma input YYYY-MM-DD → DD/MM/AAAA
   if (dataDe) {
     const [y,m,d] = dataDe.split('-');
     cond.push("data >= ?"); params.push(`${d}/${m}/${y}`);
