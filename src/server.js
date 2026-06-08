@@ -70,7 +70,6 @@ function startServer() {
       </body></html>
     `);
 
-    // Encerra o processo após responder — Railway reinicia automaticamente
     setTimeout(() => process.exit(0), 1000);
   });
 
@@ -133,7 +132,6 @@ function startServer() {
   app.get('/api/checkin/ativo/:matricula', (req, res) => {
     try {
       const c = require('./checkin');
-      // Reusa get interno via listarAtivos filtrado
       const ativos = c.listarAtivos();
       const ativo = ativos.find(a => a.matricula === req.params.matricula) || null;
       res.json({ ok: true, data: ativo });
@@ -201,7 +199,6 @@ function startServer() {
 
       const registradas = [];
 
-      // Deduplica ordens pelo código de OS antes de processar
       const ordensDedup = [];
       const osVistas = new Set();
       for (const o of ordens) {
@@ -209,6 +206,7 @@ function startServer() {
         if (!osVistas.has(key)) { osVistas.add(key); ordensDedup.push(o); }
       }
       console.log('[ATIVIDADE] Recebido', ordens.length, 'ordens,', ordensDedup.length, 'únicas, tipo:', tipo);
+
       for (const o of ordensDedup) {
         if (!o.servico && !o.descricao_inicial && !o.descricao_final) continue;
 
@@ -221,14 +219,11 @@ function startServer() {
         }
 
         const status = tipo === 'final' ? (o.status || 'Concluído') : 'Andamento';
-        // descricao_inicial → título do card (imutável após criação)
-        // descricao_final   → o que foi feito (só no final)
         const descInicial = tipo === 'inicial' ? (o.servico || o.descricao_inicial || null) : null;
         const descFinal   = tipo === 'final'   ? (o.servico || o.descricao_final   || null) : null;
-        // servico = sempre o planejado (descricao_inicial); no final não sobrescreve
         const servicoBase = tipo === 'inicial'
           ? (descInicial || '')
-          : (o.descricao_inicial || o.servico || ''); // preserva o que já estava
+          : (o.descricao_inicial || o.servico || '');
         const servicoFull = trajeto ? servicoBase + ' | Trajeto: ' + trajeto : servicoBase;
 
         db.inserirOS({
@@ -254,7 +249,6 @@ function startServer() {
         registradas.push({ os: osId, unidade: o.unidade, status, servico: servicoFull });
       }
 
-      // Envia mensagem de confirmação no WhatsApp
       try {
         const botState = require('./state');
         if (botState.isReady() && global._waClient) {
@@ -263,17 +257,15 @@ function startServer() {
           const msgWA = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: ordensComLink });
 
           if (global._grupoId) {
-            // Envio direto pelo ID salvo — mais rápido e confiável
             const chat = await global._waClient.getChatById(global._grupoId);
             await chat.sendMessage(msgWA);
             console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo.');
           } else {
-            // Fallback: busca pelos chats
             const grupoNome = process.env.GRUPO_NOME || 'Resenha';
             const chats = await global._waClient.getChats();
             const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
             if (grupo) {
-              global._grupoId = grupo.id._serialized; // salva para próxima vez
+              global._grupoId = grupo.id._serialized;
               await grupo.sendMessage(msgWA);
               console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo (fallback).');
             } else {
@@ -367,7 +359,7 @@ function startServer() {
   });
 
   // ── APR upload/serve ──────────────────────────────────────────────────────
-  const multer = require('multer');
+  const multer  = require('multer');
   const APR_DIR = process.env.APR_DIR || '/data/apr';
   require('fs').mkdirSync(APR_DIR, { recursive: true });
 
@@ -377,7 +369,7 @@ function startServer() {
   });
   const upload = multer({
     storage,
-    limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
+    limits: { fileSize: 15 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
       cb(null, file.mimetype.startsWith('image/'));
     },
@@ -386,10 +378,7 @@ function startServer() {
   app.post('/api/os/:id/apr', upload.single('apr'), (req, res) => {
     try {
       const id   = parseInt(req.params.id, 10);
-      const fs   = require('fs');
-      const path = require('path');
       if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado.' });
-      // Renomeia para frente explícito
       const newPath = path.join(APR_DIR, 'apr_' + id + '_frente.jpg');
       fs.renameSync(req.file.path, newPath);
       db.updateAprPath(id, newPath);
@@ -399,14 +388,10 @@ function startServer() {
     }
   });
 
-  // Upload verso
   app.post('/api/os/:id/apr-verso', upload.single('apr'), (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado.' });
-      // Renomeia para verso
-      const fs   = require('fs');
-      const path = require('path');
       const newPath = path.join(APR_DIR, 'apr_' + id + '_verso.jpg');
       fs.renameSync(req.file.path, newPath);
       db.updateAprVersoPath(id, newPath);
@@ -419,28 +404,19 @@ function startServer() {
   app.get('/api/os/:id/apr', (req, res) => {
     try {
       const id  = parseInt(req.params.id, 10);
-      const fs  = require('fs');
-      const path = require('path');
-
-      // Tenta o caminho salvo no banco primeiro
-      const os = db.buscarPorId(id);
+      const os  = db.buscarPorId(id);
       if (os && os.apr_path && fs.existsSync(os.apr_path)) {
         res.setHeader('Content-Type', 'image/jpeg');
         res.setHeader('Cache-Control', 'private, max-age=3600');
         return fs.createReadStream(os.apr_path).pipe(res);
       }
-
-      // Fallback: tenta o caminho padrão baseado no ID
-      const APR_DIR = process.env.APR_DIR || '/data/apr';
       const fallback = path.join(APR_DIR, 'apr_' + id + '.jpg');
       if (fs.existsSync(fallback)) {
-        // Atualiza o banco com o caminho correto
         db.updateAprPath(id, fallback);
         res.setHeader('Content-Type', 'image/jpeg');
         res.setHeader('Cache-Control', 'private, max-age=3600');
         return fs.createReadStream(fallback).pipe(res);
       }
-
       res.status(404).json({ ok: false, error: 'APR não encontrada.' });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
@@ -450,10 +426,7 @@ function startServer() {
   app.get('/api/os/:id/apr-verso', (req, res) => {
     try {
       const id   = parseInt(req.params.id, 10);
-      const fs   = require('fs');
-      const path = require('path');
       const os   = db.buscarPorId(id);
-      const APR_DIR = process.env.APR_DIR || '/data/apr';
       const filePath = (os && os.apr_verso_path && fs.existsSync(os.apr_verso_path))
         ? os.apr_verso_path
         : path.join(APR_DIR, 'apr_' + id + '_verso.jpg');
@@ -503,11 +476,8 @@ function startServer() {
       const pontos = req.body?.pontos || '';
       const os     = db.buscarPorId(id);
       if (!os) return res.status(404).json({ ok: false, error: 'OS não encontrada' });
-      // Concatena com trajeto existente
       const trajetoAtual = os.trajeto || '';
-      const novoTrajeto  = trajetoAtual
-        ? trajetoAtual + ' | ' + pontos
-        : pontos;
+      const novoTrajeto  = trajetoAtual ? trajetoAtual + ' | ' + pontos : pontos;
       db.run(`UPDATE ordens_servico SET trajeto=?, atualizado_em=datetime('now','localtime') WHERE id=?`,
         [novoTrajeto, id]);
       const updated = db.buscarPorId(id);
@@ -518,15 +488,12 @@ function startServer() {
   });
 
   // ── SharePoint Queue ─────────────────────────────────────────────────────
-  // Gestor clica "Enviar ao SharePoint" → adiciona à fila
   app.post('/api/sp-enviar/:id', express.json(), (req, res) => {
     try {
       const id   = parseInt(req.params.id, 10);
       const peso = req.body?.peso || null;
       const os   = db.buscarPorId(id);
       if (!os) return res.status(404).json({ ok: false, error: 'OS não encontrada' });
-      // Permite reenvio — sempre coloca na fila novamente
-      // Armazena o peso junto (reutiliza campo trajeto não — usa campo auxiliar)
       db.run('UPDATE ordens_servico SET sp_enviado=2, sp_peso=? WHERE id=?', [peso, id]);
       res.json({ ok: true, msg: 'OS adicionada à fila do SharePoint' });
     } catch(e) {
@@ -534,7 +501,6 @@ function startServer() {
     }
   });
 
-  // sync.js no PC consulta esta rota para pegar OS pendentes
   app.get('/api/sp-queue', (req, res) => {
     try {
       const pending = db.all(
@@ -546,7 +512,6 @@ function startServer() {
     }
   });
 
-  // sync.js chama esta rota após enviar com sucesso ao SP
   app.post('/api/sp-confirmado/:id', (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
@@ -557,7 +522,6 @@ function startServer() {
     }
   });
 
-  // sync.js chama se falhar — volta para sp_enviado=0 (não enviado)
   app.post('/api/sp-falhou/:id', (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
@@ -571,6 +535,202 @@ function startServer() {
   app.get('/api/bot-status', (_req, res) => {
     res.json({ ready: state.isReady(), hasQR: !!state.getQR() });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ── INSPEÇÃO DE SUBESTAÇÕES ────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  const insp      = require('./db_inspecao');
+  const INSP_DIR  = process.env.INSP_IMG_DIR || path.join(__dirname, '..', 'data', 'insp_imgs');
+  fs.mkdirSync(INSP_DIR, { recursive: true });
+
+  const insp_storage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, INSP_DIR),
+    filename:    (_req, file,  cb) => {
+      const ext = path.extname(file.originalname) || '.jpg';
+      cb(null, 'insp_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + ext);
+    }
+  });
+  const insp_upload = multer({
+    storage: insp_storage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const ok = /^image\/(jpeg|png|gif|webp)$/i.test(file.mimetype);
+      cb(null, ok);
+    }
+  });
+
+  app.get('/api/inspecao/foto/:filename', (req, res) => {
+    try {
+      const fp = path.join(INSP_DIR, path.basename(req.params.filename));
+      if (!fs.existsSync(fp)) return res.status(404).json({ ok: false });
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      fs.createReadStream(fp).pipe(res);
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/inspecao/login', express.json(), (req, res) => {
+    const { usuario, senha } = req.body || {};
+    const USER = process.env.INSP_USER || 'supervisor';
+    const PASS = process.env.INSP_PASS || 'supervisor';
+    if (usuario === USER && senha === PASS) {
+      return res.json({ ok: true, token: 'insp_sup_' + Buffer.from(USER+':'+PASS).toString('base64') });
+    }
+    res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
+  });
+
+  function authSup(req, res, next) {
+    const USER = process.env.INSP_USER || 'supervisor';
+    const PASS = process.env.INSP_PASS || 'supervisor';
+    const expected = 'insp_sup_' + Buffer.from(USER+':'+PASS).toString('base64');
+    const tok = req.headers['x-insp-token'] || req.query.token;
+    if (tok !== expected) return res.status(403).json({ ok: false, error: 'Não autorizado' });
+    next();
+  }
+
+  app.get('/api/inspecao/fichas', (req, res) => {
+    try { res.json({ ok: true, data: insp.listarFichas() }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/api/inspecao/fichas/:id', (req, res) => {
+    try {
+      const f = isNaN(req.params.id)
+        ? insp.buscarFichaPorCodigo(req.params.id)
+        : insp.buscarFicha(parseInt(req.params.id));
+      if (!f) return res.status(404).json({ ok: false, error: 'Ficha não encontrada' });
+      const campos = insp.listarCampos(f.id);
+      res.json({ ok: true, data: { ...f, campos } });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/inspecao/fichas', authSup, express.json(), (req, res) => {
+    try {
+      const { codigo_se, nome_se, descricao } = req.body;
+      if (!codigo_se || !nome_se) return res.status(400).json({ ok: false, error: 'codigo_se e nome_se obrigatórios' });
+      const f = insp.criarFicha({ codigo_se, nome_se, descricao });
+      res.json({ ok: true, data: f });
+    } catch(e) {
+      if (e.message?.includes('UNIQUE')) return res.status(409).json({ ok: false, error: 'Código SE já existe' });
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  app.patch('/api/inspecao/fichas/:id', authSup, express.json(), (req, res) => {
+    try {
+      const f = insp.atualizarFicha(parseInt(req.params.id), req.body);
+      res.json({ ok: true, data: f });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/api/inspecao/fichas/:id', authSup, (req, res) => {
+    try { insp.deletarFicha(parseInt(req.params.id)); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/api/inspecao/fichas/:fichaId/campos', (req, res) => {
+    try { res.json({ ok: true, data: insp.listarCampos(parseInt(req.params.fichaId)) }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/inspecao/fichas/:fichaId/campos', authSup, express.json(), (req, res) => {
+    try {
+      const ficha_id = parseInt(req.params.fichaId);
+      const { label, tipo, opcoes, obrigatorio, grupo, ordem } = req.body;
+      if (!label) return res.status(400).json({ ok: false, error: 'label obrigatório' });
+      const c = insp.criarCampo({ ficha_id, label, tipo, opcoes, obrigatorio, grupo, ordem });
+      res.json({ ok: true, data: c });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.patch('/api/inspecao/campos/:id', authSup, express.json(), (req, res) => {
+    try {
+      const c = insp.atualizarCampo(parseInt(req.params.id), req.body);
+      res.json({ ok: true, data: c });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/api/inspecao/campos/:id', authSup, (req, res) => {
+    try { insp.deletarCampo(parseInt(req.params.id)); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/inspecao/fichas/:fichaId/reordenar', authSup, express.json(), (req, res) => {
+    try {
+      insp.reordenarCampos(parseInt(req.params.fichaId), req.body.ordem || []);
+      res.json({ ok: true });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/api/inspecao/preenchimentos', authSup, (req, res) => {
+    try {
+      const { ficha_id, codigo_se, dataDe, dataAte, status } = req.query;
+      res.json({ ok: true, data: insp.listarPreenchimentos({ ficha_id, codigo_se, dataDe, dataAte, status }) });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/api/inspecao/preenchimentos/:id', (req, res) => {
+    try {
+      const p = insp.buscarPreenchimento(parseInt(req.params.id));
+      if (!p) return res.status(404).json({ ok: false, error: 'Não encontrado' });
+      const respostas = insp.listarRespostas(p.id);
+      const campos    = insp.listarCampos(p.ficha_id);
+      res.json({ ok: true, data: { ...p, respostas, campos } });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/inspecao/preenchimentos', express.json(), (req, res) => {
+    try {
+      const { ficha_id, codigo_se, matricula, nome_tecnico, data_insp, hora_insp, obs_geral } = req.body;
+      if (!ficha_id || !codigo_se || !data_insp)
+        return res.status(400).json({ ok: false, error: 'ficha_id, codigo_se e data_insp obrigatórios' });
+      const p = insp.criarPreenchimento({ ficha_id, codigo_se, matricula, nome_tecnico, data_insp, hora_insp, obs_geral });
+      res.json({ ok: true, data: p });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/inspecao/preenchimentos/:id/concluir', (req, res) => {
+    try {
+      const p = insp.concluirPreenchimento(parseInt(req.params.id));
+      res.json({ ok: true, data: p });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/api/inspecao/preenchimentos/:id', authSup, (req, res) => {
+    try { insp.deletarPreenchimento(parseInt(req.params.id)); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/inspecao/preenchimentos/:id/respostas', express.json(), (req, res) => {
+    try {
+      const preenchimento_id = parseInt(req.params.id);
+      const { campo_id, resposta_texto, resposta_opcao } = req.body;
+      if (!campo_id) return res.status(400).json({ ok: false, error: 'campo_id obrigatório' });
+      const r = insp.salvarResposta({ preenchimento_id, campo_id, resposta_texto, resposta_opcao });
+      res.json({ ok: true, data: r });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/inspecao/preenchimentos/:preId/campo/:campoId/foto',
+    insp_upload.single('foto'), (req, res) => {
+      try {
+        if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
+        const preenchimento_id = parseInt(req.params.preId);
+        const campo_id         = parseInt(req.params.campoId);
+        const foto_path        = req.file.filename;
+        const r = insp.salvarResposta({ preenchimento_id, campo_id, foto_path });
+        res.json({ ok: true, data: r, foto_path });
+      } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+    }
+  );
+
+  app.get('/api/inspecao/dashboard', authSup, (req, res) => {
+    try {
+      const { dataDe, dataAte } = req.query;
+      res.json({ ok: true, data: insp.statsDashboard(dataDe, dataAte) });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
 
   app.listen(PORT, () => {
     console.log(`[SERVER] Painel rodando em http://localhost:${PORT}`);
