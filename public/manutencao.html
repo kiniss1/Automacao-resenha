@@ -98,9 +98,11 @@
   <div style="display:flex;align-items:center;gap:8px">
     <button id="btnTema" onclick="toggleTema()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:.8rem;cursor:pointer">🌙 Tema: Escuro</button>
     <div class="nav-links">
-    <a href="/" class="nav-link">🔧 Manutenção</a>
-    <a href="/manutencao.html" class="nav-link active">⚙️ Operação</a>
-  </div></div>
+      <a href="/" class="nav-link">🔧 Manutenção</a>
+      <a href="/manutencao.html" class="nav-link active">⚙️ Operação</a>
+      <a href="/inspecao.html" class="nav-link">🔍 Inspeção</a>
+    </div>
+  </div>
 </header>
 
 <div class="stats-bar">
@@ -189,13 +191,11 @@
     const {data} = await fetch('/api/subestacoes').then(r=>r.json());
     _subs = data;
 
-    // Popula select
     const sel = document.getElementById('fSub');
     data.forEach(s => {
       const o = document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
     });
 
-    // Gera QR cards
     const grid = document.getElementById('qrGrid');
     grid.innerHTML = data.map(s => {
       const url = location.origin + '/checkin.html?sub=' + s;
@@ -210,7 +210,6 @@
     loadCheckins();
     loadStats();
 
-    // Restaura estado do toggle
     if (localStorage.getItem('qrVisible') === '0') {
       document.getElementById('qrGrid').style.display = 'none';
       const btn = document.getElementById('btnToggleQr');
@@ -225,8 +224,6 @@
       const {data} = await fetch('/api/checkin/stats').then(r=>r.json());
       document.getElementById('sAtivos').textContent = data.ativos||0;
       document.getElementById('sTotal').textContent  = data.total||0;
-
-      // Conta subestações com ativos
       const {data: ativos} = await fetch('/api/checkin/ativos').then(r=>r.json());
       const subs = new Set((ativos||[]).map(a=>a.subestacao));
       document.getElementById('sSubs').textContent = subs.size;
