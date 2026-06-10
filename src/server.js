@@ -83,9 +83,10 @@ function startServer() {
     }
   });
 
-  app.get('/api/stats', (_req, res) => {
+  app.get('/api/stats', (req, res) => {
     try {
-      res.json({ ok: true, data: db.estatisticas() });
+      const { dataDe, dataAte } = req.query;
+      res.json({ ok: true, data: db.estatisticas({ dataDe, dataAte }) });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
