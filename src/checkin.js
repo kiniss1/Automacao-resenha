@@ -230,4 +230,8 @@ function estatisticasCheckin() {
   return get(`SELECT COUNT(*) as total, SUM(status='Ativo') as ativos, SUM(status='Encerrado') as encerrados FROM checkins`);
 }
 
-module.exports = { setDb, fazerCheckin, fazerCheckout, listarAtivos, listarHistorico, estatisticasCheckin, buscarColaborador, COLABORADORES, SUBESTACOES };
+function deletarCheckin(id) {
+  run(`DELETE FROM checkins WHERE id=?`, [id]);
+}
+
+module.exports = { setDb, fazerCheckin, fazerCheckout, listarAtivos, listarHistorico, estatisticasCheckin, buscarColaborador, deletarCheckin, COLABORADORES, SUBESTACOES };
