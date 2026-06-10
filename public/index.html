@@ -170,6 +170,14 @@
     .btn-sp{background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;transition:opacity .15s;white-space:nowrap}
     .btn-sp:hover{opacity:.85}
     .btn-sp:disabled{opacity:.4;cursor:default}
+    /* ── Toggle hoje/geral ── */
+    .stats-toggle{display:flex;align-items:center;gap:8px;padding:0 20px 10px;margin-top:-6px}
+    .toggle-label{font-size:.75rem;color:var(--muted);font-weight:600;transition:color .2s}
+    .toggle-label.active{color:var(--text)}
+    .toggle-track{width:44px;height:24px;background:var(--border2);border-radius:999px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;border:1px solid var(--border2)}
+    .toggle-track.on{background:var(--primary)}
+    .toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+    .toggle-track.on .toggle-thumb{transform:translateX(20px)}
     #toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:13px;transform:translateY(80px);opacity:0;transition:all .2s;z-index:300;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
     #toast.show{transform:translateY(0);opacity:1}
     #toast.ok{border-color:var(--green-border);color:var(--green)}
@@ -219,6 +227,13 @@
   <div class="stat-card s-violet"> <div class="num" id="sEtapa">–</div>      <div class="lbl">Etapa Concluída</div></div>
   <div class="stat-card s-green">  <div class="num" id="sConcluido">–</div>  <div class="lbl">Concluído</div></div>
   <div class="stat-card s-red">    <div class="num" id="sCancelado">–</div>  <div class="lbl">Cancelado</div></div>
+</div>
+<div class="stats-toggle">
+  <span class="toggle-label active" id="lblHoje">Hoje</span>
+  <div class="toggle-track" id="statsToggle" onclick="toggleStats()">
+    <div class="toggle-thumb"></div>
+  </div>
+  <span class="toggle-label" id="lblGeral">Geral</span>
 </div>
 
 <div class="filters">
@@ -408,9 +423,29 @@
     }catch{}
   }
 
+  let _statsGeral = false;
+
+  function toggleStats() {
+    _statsGeral = !_statsGeral;
+    const track = document.getElementById('statsToggle');
+    const lblH  = document.getElementById('lblHoje');
+    const lblG  = document.getElementById('lblGeral');
+    track.classList.toggle('on', _statsGeral);
+    lblH.classList.toggle('active', !_statsGeral);
+    lblG.classList.toggle('active', _statsGeral);
+    loadStats();
+  }
+
   async function loadStats(){
     try{
-      const {data}=await fetch('/api/stats').then(r=>r.json());
+      const p = new URLSearchParams();
+      if (!_statsGeral) {
+        const d = new Date();
+        const hoje = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        p.set('dataDe', hoje);
+        p.set('dataAte', hoje);
+      }
+      const {data}=await fetch('/api/stats?' + p).then(r=>r.json());
       document.getElementById('sTotal').textContent    =data.total    ||0;
       document.getElementById('sAndamento').textContent=data.andamento||0;
       document.getElementById('sEtapa').textContent    =data.etapa    ||0;
