@@ -178,6 +178,14 @@ function startServer() {
     catch(err) { res.status(500).json({ ok: false, error: err.message }); }
   });
 
+  app.delete('/api/checkin/:id', (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      checkin.deletarCheckin(id);
+      res.json({ ok: true });
+    } catch(err) { res.status(500).json({ ok: false, error: err.message }); }
+  });
+
   app.get('/api/qrcode', async (req, res) => {
     try {
       const qrcode = require('qrcode');
