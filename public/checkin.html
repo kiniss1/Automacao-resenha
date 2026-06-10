@@ -3,96 +3,78 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>Check-in / Check-out</title>
+  <title>Check-in SE — OOMC</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --bg:#0d1a19;--surface:#112220;--surface2:#163330;--border:#1e3836;--border2:#2a4f4c;
+      --bg:#0d1a19;--surface:#112220;--border:#1e3836;--border2:#2a4f4c;
       --text:#e8f4f3;--muted:#7aaba7;--muted2:#4a7572;
       --primary:#009B91;--primary-bg:#0d2e2c;--primary-dark:#005852;
-      --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
-      --orange:#F5AA41;--orange-bg:#2d1f00;--orange-border:#EB8C0A;
-      --gray:#7F7F7F;--gray-bg:#1e1e1e;--gray-border:#414141;
+      --green:#009B91;--green-bg:#0d2e2c;--green-border:#1a5c58;
+      --orange:#F5AA41;--orange-bg:#2d1f00;
       --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
-      --violet:#50EBE1;--violet-bg:#0d2e2c;--violet-border:#009B91;
-      --cyan:#50EBE1;--beige:#FACD91;
     }
-    body.light{
-      --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
-      --text:#414141;--muted:#7F7F7F;--muted2:#CDCDCD;
-      --primary:#009B91;--primary-bg:#e0f5f4;--primary-dark:#005852;
-      --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
-      --orange:#F5AA41;--orange-bg:#fff4e0;--orange-border:#EB8C0A;
-      --gray:#7F7F7F;--gray-bg:#f0f0f0;--gray-border:#CDCDCD;
-      --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
-      --violet:#009B91;--violet-bg:#e0f5f4;--violet-border:#005852;
-      --cyan:#50EBE1;--beige:#FACD91;
-    }
-    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px 12px 40px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:440px;overflow:hidden}
+    .card-header{background:var(--primary);padding:24px 22px 20px;text-align:center}
+    .sub-badge{display:inline-block;background:rgba(255,255,255,.2);border-radius:999px;padding:4px 14px;font-size:.72rem;font-weight:700;letter-spacing:.08em;margin-bottom:8px}
+    .card-header h1{font-size:1.25rem;font-weight:800;color:#fff;margin-bottom:4px}
+    .card-header p{font-size:.78rem;color:rgba(255,255,255,.75)}
 
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:460px;padding:24px;display:flex;flex-direction:column;gap:18px}
+    .tabs{display:flex;border-bottom:1px solid var(--border)}
+    .tab{flex:1;padding:12px;background:transparent;border:none;color:var(--muted);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+    .tab.active{color:var(--primary);border-bottom:2px solid var(--primary)}
+    .tab:hover:not(.active){color:var(--text)}
 
-    .card-header{text-align:center}
-    .sub-badge{display:inline-block;background:var(--primary);color:#fff;font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:999px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
-    .card-header h1{font-size:1.25rem;font-weight:700}
-    .card-header p{font-size:.82rem;color:var(--muted);margin-top:4px}
+    .panel{display:none;padding:20px}
+    .panel.active{display:block}
 
-    .tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
-    .tab{flex:1;background:transparent;border:none;color:var(--muted);padding:10px;font-size:.85rem;cursor:pointer;transition:background .15s,color .15s;font-weight:600}
-    .tab.active{background:var(--primary);color:#fff}
-
-    .panel{display:none}
-    .panel.active{display:flex;flex-direction:column;gap:14px}
-
-    .field{display:flex;flex-direction:column;gap:6px}
-    .field label{font-size:.8rem;font-weight:600;color:var(--muted)}
-    .field input,.field select,.field textarea{
-      background:var(--bg);border:1px solid var(--border);color:var(--text);
-      border-radius:8px;padding:12px 14px;font-size:1rem;outline:none;width:100%;
-      transition:border-color .15s;font-family:'Segoe UI',system-ui,sans-serif;
-    }
-    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
-    .field textarea{resize:none;height:72px}
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+    .field select,.field textarea,.field input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 13px;font-size:.9rem;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+    .field select:focus,.field textarea:focus,.field input:focus{border-color:var(--primary)}
+    .field textarea{resize:vertical;min-height:72px}
 
     /* Colaboradores */
-    .colab-list{display:flex;flex-direction:column;gap:8px}
-    .colab-row{display:flex;gap:8px;align-items:center}
-    .colab-row input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none}
-    .colab-row input:focus{border-color:var(--primary)}
-    .colab-row input.identified{border-color:var(--green);color:var(--green)}
-    .colab-row input.error{border-color:var(--red)}
-    .colab-name{font-size:.72rem;color:var(--green);margin-top:2px;min-height:16px;padding-left:2px}
+    .colab-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+    .colab-wrap{display:flex;flex-direction:column;gap:4px}
+    .colab-row{display:flex;gap:6px;align-items:center}
+    .colab-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:.88rem;outline:none;font-family:inherit}
+    .colab-input:focus{border-color:var(--primary)}
+    .colab-input.identified{border-color:var(--primary);background:var(--primary-bg)}
+    .colab-input.error{border-color:var(--red);background:var(--red-bg)}
+    .colab-name{font-size:.72rem;padding-left:4px}
     .colab-name.error{color:var(--red)}
-    .colab-wrap{flex:1;display:flex;flex-direction:column}
-
-    .btn-add-colab{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:8px;font-size:.82rem;cursor:pointer;transition:all .15s;width:100%;text-align:center}
+    .btn-remove{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;width:34px;height:38px;cursor:pointer;font-size:.85rem;flex-shrink:0}
+    .btn-remove:hover{border-color:var(--red);color:var(--red)}
+    .btn-add-colab{background:transparent;border:1px dashed var(--border2);color:var(--muted);border-radius:8px;padding:8px;font-size:.78rem;width:100%;cursor:pointer;transition:all .15s}
     .btn-add-colab:hover{border-color:var(--primary);color:var(--primary)}
 
-    .btn-remove{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:8px 10px;font-size:.8rem;cursor:pointer;line-height:1;flex-shrink:0;transition:background .15s}
-    .btn-remove:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
-
-    .btn{width:100%;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .15s;font-family:inherit}
     .btn:hover{opacity:.88}
-    .btn:disabled{opacity:.4;cursor:default}
-    .btn-checkin{background:var(--green);color:#fff}
-    .btn-checkout{background:var(--red);color:#fff}
+    .btn:disabled{opacity:.45;cursor:default}
+    .btn-checkin{background:var(--primary);color:#fff}
+    .btn-checkout-out{background:var(--red);color:#fff}
 
-    .result{border-radius:10px;padding:14px 16px;font-size:.88rem;line-height:1.7;display:none;white-space:pre-wrap}
-    .result.ok  {background:var(--green-bg); border:1px solid #14532d; color:var(--green)}
-    .result.err {background:var(--red-bg);   border:1px solid #7f1d1d; color:var(--red)}
-    .result.warn{background:var(--orange-bg);border:1px solid #7c2d12; color:var(--orange)}
+    /* Result */
+    .result{border-radius:10px;padding:13px 15px;font-size:.83rem;font-weight:600;white-space:pre-line;line-height:1.5;display:none;margin-bottom:14px}
+    .result.ok{background:var(--green-bg);border:1px solid var(--green-border);color:#5eead4}
+    .result.err{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+    .result.warn{background:var(--orange-bg);border:1px solid #7a4a00;color:var(--orange)}
     .result.show{display:block}
 
-    .ativos-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;display:none}
+    /* Ativos */
+    .ativos-box{display:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:14px}
     .ativos-box.show{display:block}
-    .ativos-title{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
-    .ativo-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:.82rem}
+    .ativos-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+    .ativo-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
     .ativo-item:last-child{border-bottom:none}
-    .ativo-nome{font-weight:600}
-    .ativo-sub{color:var(--primary);font-size:.75rem}
-    .ativo-hora{color:var(--muted);font-size:.72rem}
+    .ativo-nome{font-size:.82rem;font-weight:600}
+    .ativo-sub{font-size:.7rem;color:var(--muted)}
+    .ativo-hora{font-size:.72rem;color:var(--primary);font-weight:600}
 
-    .checkout-ativos{display:flex;flex-direction:column;gap:8px}
+    /* Checkout list */
+    .checkout-list{display:flex;flex-direction:column;gap:8px}
     .checkout-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;gap:10px}
     .checkout-item-info{display:flex;flex-direction:column;gap:2px}
     .checkout-item-nome{font-size:.9rem;font-weight:600}
@@ -100,6 +82,17 @@
     .checkout-item-btn{background:var(--red);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap}
     .checkout-item-btn:hover{opacity:.85}
     .checkout-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:20px 0}
+
+    /* ── Prompt de inspeção ── */
+    .insp-prompt{display:none;margin-top:14px;background:var(--primary-bg);border:1px solid var(--primary-dark);border-radius:12px;padding:16px}
+    .insp-prompt.show{display:block}
+    .insp-prompt-title{font-size:.72rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .insp-prompt-msg{font-size:.88rem;font-weight:600;margin-bottom:14px;line-height:1.4}
+    .insp-prompt-btns{display:flex;gap:8px}
+    .btn-insp-sim{flex:1;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:.88rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .btn-insp-sim:hover{opacity:.88}
+    .btn-insp-nao{flex:1;background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:9px;padding:10px;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-insp-nao:hover{border-color:var(--muted);color:var(--text)}
   </style>
 </head>
 <body>
@@ -117,9 +110,21 @@
 
   <!-- CHECKIN -->
   <div class="panel active" id="panelCheckin">
+    <div class="result" id="resultCheckin"></div>
+
+    <!-- Prompt inspeção — aparece após check-in bem sucedido -->
+    <div class="insp-prompt" id="inspecaoPrompt">
+      <div class="insp-prompt-title">🔍 Inspeção disponível</div>
+      <div class="insp-prompt-msg" id="inspecaoPromptMsg">Deseja realizar a inspeção desta SE agora?</div>
+      <div class="insp-prompt-btns">
+        <button class="btn-insp-sim" id="btnInspSim" onclick="irParaInspecao()">Sim, fazer inspeção</button>
+        <button class="btn-insp-nao" onclick="fecharPromptInspecao()">Não agora</button>
+      </div>
+    </div>
+
     <div class="field">
       <label>Subestação</label>
-      <select id="subIn"></select>
+      <select id="subIn" onchange="onSubChange()"></select>
     </div>
 
     <div class="field">
@@ -134,35 +139,40 @@
     </div>
 
     <button class="btn btn-checkin" id="btnCheckin" onclick="doCheckin()">✅ Registrar Entrada</button>
+
+    <div class="ativos-box" id="ativosBox">
+      <div class="ativos-title">Em campo agora</div>
+      <div id="ativosList"></div>
+    </div>
   </div>
 
   <!-- CHECKOUT -->
   <div class="panel" id="panelCheckout">
+    <div class="result" id="resultCheckout"></div>
     <div class="field">
       <label>Subestação</label>
-      <select id="subOut"></select>
+      <select id="subOut" onchange="loadCheckoutAtivos(this.value)"></select>
     </div>
-    <div id="checkoutAtivos" class="checkout-ativos">
-      <div class="checkout-empty">Selecione a subestação para ver quem está em campo.</div>
+    <div class="checkout-list" id="checkoutAtivos">
+      <div class="checkout-empty">Selecione a subestação acima.</div>
     </div>
-  </div>
-
-  <div class="result" id="result"></div>
-
-  <div class="ativos-box" id="ativosBox">
-    <div class="ativos-title">🟢 Em campo agora nesta subestação</div>
-    <div id="ativosList"></div>
   </div>
 </div>
 
 <script>
-  const params  = new URLSearchParams(location.search);
-  const subParam = (params.get('sub') || '').toUpperCase();
   const MAX_COLAB = 6;
+  const params    = new URLSearchParams(location.search);
+  const subParam  = params.get('sub') || '';
+
+  let _inspecaoFichaId  = null;
+  let _inspecaoFichaNome = null;
 
   // ── Init ──────────────────────────────────────────────────────────────────
-  fetch('/api/subestacoes').then(r=>r.json()).then(({data}) => {
-    [document.getElementById('subIn'), document.getElementById('subOut')].forEach(sel => {
+  async function init() {
+    const { data } = await fetch('/api/subestacoes').then(r => r.json());
+
+    ['subIn','subOut'].forEach(id => {
+      const sel = document.getElementById(id);
       data.forEach(s => {
         const o = document.createElement('option');
         o.value = s; o.textContent = s;
@@ -170,64 +180,61 @@
         sel.appendChild(o);
       });
     });
-    document.getElementById('subBadge').textContent = '⚡ ' + (subParam || data[0]);
-    if (subParam) {
-      loadAtivos(subParam);
-      loadCheckoutAtivos(subParam);
+
+    const sub = subParam || data[0] || '';
+    if (sub) {
+      document.getElementById('subBadge').textContent = '⚡ ' + sub;
+      loadAtivos(sub);
+      loadCheckoutAtivos(sub);
     }
-  });
 
-  document.getElementById('subIn').addEventListener('change', function() {
-    loadAtivos(this.value);
-  });
+    addColabRow();
+  }
 
-  document.getElementById('subOut').addEventListener('change', function() {
-    loadCheckoutAtivos(this.value);
-  });
+  function onSubChange() {
+    const sub = document.getElementById('subIn').value;
+    document.getElementById('subBadge').textContent = '⚡ ' + sub;
+    loadAtivos(sub);
+    fecharPromptInspecao();
+  }
 
-  // Inicia com 1 campo de matrícula
-  addColabRow();
-
-  // ── Colaboradores dinâmicos ───────────────────────────────────────────────
+  // ── Colaboradores ─────────────────────────────────────────────────────────
   function addColabRow() {
     const list = document.getElementById('colabList');
-    if (list.children.length >= MAX_COLAB) return;
+    const idx  = list.children.length;
+    if (idx >= MAX_COLAB) return;
 
-    const idx = list.children.length;
     const wrap = document.createElement('div');
     wrap.className = 'colab-wrap';
     wrap.innerHTML = `
       <div class="colab-row">
-        <input type="number" inputmode="numeric" placeholder="Matrícula ${idx === 0 ? '(responsável)' : (idx + 1) + 'º colaborador'}"
-          oninput="lookupColab(this)" class="colab-input" data-idx="${idx}"/>
+        <input type="text" inputmode="numeric" class="colab-input" data-idx="${idx}"
+               placeholder="${idx === 0 ? 'Matrícula (responsável)' : idx + 'º colaborador'}"
+               oninput="lookupColab(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();addColabRow()}"/>
         ${idx > 0 ? `<button class="btn-remove" onclick="removeColab(this)" title="Remover">✕</button>` : ''}
       </div>
       <div class="colab-name" id="colabName${idx}"></div>
     `;
     list.appendChild(wrap);
-
-    // Oculta botão de adicionar se atingiu o máximo
-    document.getElementById('btnAddColab').style.display =
-      list.children.length >= MAX_COLAB ? 'none' : '';
+    document.getElementById('btnAddColab').style.display = list.children.length >= MAX_COLAB ? 'none' : '';
   }
 
   function removeColab(btn) {
     btn.closest('.colab-wrap').remove();
-    // Renumera placeholders
     document.querySelectorAll('.colab-input').forEach((inp, i) => {
-      inp.placeholder = i === 0 ? 'Matrícula (responsável)' : `${i + 1}º colaborador`;
+      inp.placeholder = i === 0 ? 'Matrícula (responsável)' : `${i}º colaborador`;
       inp.dataset.idx = i;
       const nameEl = inp.closest('.colab-wrap').querySelector('.colab-name');
-      if (nameEl) nameEl.id = `colabName${i}`;
+      if (nameEl) nameEl.id = 'colabName' + i;
     });
     document.getElementById('btnAddColab').style.display = '';
   }
 
   async function lookupColab(inp) {
-    const mat = inp.value.trim();
+    const mat    = inp.value.trim();
     const nameEl = inp.closest('.colab-wrap').querySelector('.colab-name');
     if (mat.length >= 4) {
-      const {data} = await fetch('/api/colaborador/' + mat).then(r=>r.json());
+      const { data } = await fetch('/api/colaborador/' + mat).then(r => r.json());
       if (data) {
         inp.classList.add('identified'); inp.classList.remove('error');
         nameEl.textContent = '✓ ' + data.nome; nameEl.className = 'colab-name';
@@ -241,44 +248,42 @@
     }
   }
 
-  // ── Checkin ───────────────────────────────────────────────────────────────
+  // ── Check-in ───────────────────────────────────────────────────────────────
   async function doCheckin() {
     const subestacao = document.getElementById('subIn').value;
     const atividade  = document.getElementById('atividadeIn').value.trim();
     const matriculas = [...document.querySelectorAll('.colab-input')]
       .map(i => i.value.trim()).filter(Boolean);
 
-    if (!matriculas.length) { showResult('Informe pelo menos uma matrícula.', 'err'); return; }
-    if (!atividade) { showResult('Descreva a atividade a executar.', 'err'); return; }
+    if (!matriculas.length) { showResult('checkin', 'Informe pelo menos uma matrícula.', 'err'); return; }
+    if (!atividade)          { showResult('checkin', 'Descreva a atividade a executar.', 'err'); return; }
 
     const btn = document.getElementById('btnCheckin');
     btn.disabled = true; btn.textContent = '⏳ Registrando...';
 
-    const resultados = [];
-    const erros = [];
+    fecharPromptInspecao();
 
+    const resultados = [], erros = [];
     for (const matricula of matriculas) {
       try {
         const res = await fetch('/api/checkin', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ matricula, subestacao, atividade })
-        }).then(r=>r.json());
-
+        }).then(r => r.json());
         if (res.erro) erros.push(`✗ ${res.msg}`);
         else resultados.push(`✓ ${res.nome || matricula}`);
-      } catch(e) { erros.push(`✗ Erro ao registrar matrícula ${matricula}`); }
+      } catch(e) { erros.push(`✗ Erro ao registrar ${matricula}`); }
     }
 
     let msg = '';
     if (resultados.length) msg += `✅ Entradas registradas em ${subestacao}:\n${resultados.join('\n')}`;
-    if (erros.length) msg += (msg ? '\n\n' : '') + `⚠️ Problemas:\n${erros.join('\n')}`;
+    if (erros.length)      msg += (msg ? '\n\n' : '') + `⚠️ Problemas:\n${erros.join('\n')}`;
 
     const type = erros.length && !resultados.length ? 'err' : resultados.length && erros.length ? 'warn' : 'ok';
-    showResult(msg, type);
+    showResult('checkin', msg, type);
 
     if (resultados.length) {
-      // Limpa campos
       document.getElementById('atividadeIn').value = '';
       document.querySelectorAll('.colab-input').forEach(i => {
         i.value = ''; i.classList.remove('identified','error');
@@ -286,17 +291,47 @@
       document.querySelectorAll('.colab-name').forEach(n => n.textContent = '');
       loadAtivos(subestacao);
       loadCheckoutAtivos(subestacao);
+      // Verifica se existe ficha de inspeção para essa SE
+      ofereceInspecao(subestacao);
     }
 
     btn.disabled = false; btn.textContent = '✅ Registrar Entrada';
   }
 
-  // ── Checkout por lista ────────────────────────────────────────────────────
+  // ── Oferta de inspeção após check-in ─────────────────────────────────────
+  async function ofereceInspecao(codigoSE) {
+    _inspecaoFichaId   = null;
+    _inspecaoFichaNome = null;
+    try {
+      const r = await fetch('/api/inspecao/fichas/' + encodeURIComponent(codigoSE)).then(r => r.json());
+      if (!r.ok || !r.data || !r.data.ativa) return; // sem ficha ou inativa
+      _inspecaoFichaId   = r.data.id;
+      _inspecaoFichaNome = r.data.nome_se;
+      const campos = r.data.campos?.length || 0;
+
+      document.getElementById('inspecaoPromptMsg').innerHTML =
+        `Existe uma ficha de inspeção para <strong>${r.data.nome_se}</strong> com ${campos} campo(s).<br>Deseja realizá-la agora?`;
+      document.getElementById('inspecaoPrompt').classList.add('show');
+    } catch(e) { /* sem ficha, sem problema */ }
+  }
+
+  function irParaInspecao() {
+    if (!_inspecaoFichaId) return;
+    location.href = '/inspecao-form.html?ficha=' + _inspecaoFichaId;
+  }
+
+  function fecharPromptInspecao() {
+    document.getElementById('inspecaoPrompt').classList.remove('show');
+    _inspecaoFichaId   = null;
+    _inspecaoFichaNome = null;
+  }
+
+  // ── Check-out ──────────────────────────────────────────────────────────────
   async function loadCheckoutAtivos(sub) {
     const box = document.getElementById('checkoutAtivos');
     if (!sub) return;
     try {
-      const {data} = await fetch('/api/checkin/ativos?sub=' + sub).then(r=>r.json());
+      const { data } = await fetch('/api/checkin/ativos?sub=' + sub).then(r => r.json());
       if (!data || !data.length) {
         box.innerHTML = '<div class="checkout-empty">Nenhum colaborador em campo nesta subestação.</div>';
         return;
@@ -305,10 +340,10 @@
         <div class="checkout-item" id="ci-${c.id}">
           <div class="checkout-item-info">
             <div class="checkout-item-nome">${c.nome || c.matricula}</div>
-            <div class="checkout-item-det">${c.subestacao} · desde ${c.entrada.split(' ')[1] || c.entrada}</div>
+            <div class="checkout-item-det">${c.subestacao} · desde ${(c.entrada||'').split(' ')[1] || c.entrada}</div>
             <div class="checkout-item-det" style="color:var(--muted)">${c.atividade || '—'}</div>
           </div>
-          <button class="checkout-item-btn" onclick="doCheckout('${c.matricula}', '${c.subestacao}', this)">Registrar Saída</button>
+          <button class="checkout-item-btn" onclick="doCheckout('${c.matricula}','${c.subestacao}',this)">Registrar Saída</button>
         </div>
       `).join('');
     } catch(e) { box.innerHTML = '<div class="checkout-empty">Erro ao carregar.</div>'; }
@@ -319,29 +354,31 @@
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matricula })
-      }).then(r=>r.json());
+      }).then(r => r.json());
 
-      if (res.erro) { showResult('⚠️ ' + res.msg, 'warn'); btn.disabled=false; btn.textContent='Registrar Saída'; }
-      else {
+      if (res.erro) {
+        showResult('checkout', '⚠️ ' + res.msg, 'warn');
+        btn.disabled = false; btn.textContent = 'Registrar Saída';
+      } else {
         const item = document.getElementById('ci-' + res.checkin.id);
         if (item) item.remove();
-        showResult(`✅ Saída registrada!\n${res.checkin.nome || matricula} saiu de ${subestacao}`, 'ok');
+        showResult('checkout', `✅ Saída registrada!\n${res.checkin.nome || matricula} saiu de ${subestacao}`, 'ok');
         loadAtivos(subestacao);
-        // Se não tem mais itens
-        if (!document.getElementById('checkoutAtivos').children.length) {
-          loadCheckoutAtivos(subestacao);
-        }
+        if (!document.getElementById('checkoutAtivos').children.length) loadCheckoutAtivos(subestacao);
       }
-    } catch(e) { showResult('Erro de conexão.', 'err'); btn.disabled=false; btn.textContent='Registrar Saída'; }
+    } catch(e) {
+      showResult('checkout', 'Erro de conexão.', 'err');
+      btn.disabled = false; btn.textContent = 'Registrar Saída';
+    }
   }
 
-  // ── Ativos na subestação ──────────────────────────────────────────────────
+  // ── Ativos na subestação ───────────────────────────────────────────────────
   async function loadAtivos(sub) {
     try {
-      const {data} = await fetch('/api/checkin/ativos?sub=' + sub).then(r=>r.json());
-      const box = document.getElementById('ativosBox');
+      const { data } = await fetch('/api/checkin/ativos?sub=' + sub).then(r => r.json());
+      const box  = document.getElementById('ativosBox');
       const list = document.getElementById('ativosList');
       if (!data || !data.length) { box.classList.remove('show'); return; }
       list.innerHTML = data.map(c => `
@@ -357,25 +394,28 @@
     } catch(e) {}
   }
 
+  // ── Tabs ───────────────────────────────────────────────────────────────────
   function setTab(tab) {
-    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='checkin')||(i===1&&tab==='checkout')));
+    document.querySelectorAll('.tab').forEach((t, i) =>
+      t.classList.toggle('active', (i===0&&tab==='checkin') || (i===1&&tab==='checkout')));
     document.getElementById('panelCheckin').classList.toggle('active', tab==='checkin');
     document.getElementById('panelCheckout').classList.toggle('active', tab==='checkout');
-    hideResult();
     if (tab === 'checkout') {
       const sub = document.getElementById('subOut').value;
       if (sub) loadCheckoutAtivos(sub);
     }
   }
 
-  function showResult(msg, type) {
-    const el = document.getElementById('result');
+  // ── Utils ──────────────────────────────────────────────────────────────────
+  function showResult(panel, msg, type) {
+    const id = panel === 'checkin' ? 'resultCheckin' : 'resultCheckout';
+    const el = document.getElementById(id);
     el.textContent = msg; el.className = 'result show ' + type;
     clearTimeout(el._t);
-    el._t = setTimeout(() => el.classList.remove('show'), 8000);
+    el._t = setTimeout(() => el.classList.remove('show'), 9000);
   }
 
-  function hideResult() { document.getElementById('result').classList.remove('show'); }
+  init();
 </script>
 </body>
 </html>
