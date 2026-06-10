@@ -631,7 +631,7 @@ async function loadDash() {
           <div class="hoje-card" onclick="verPreenchimento(${p.id})" style="cursor:pointer">
             <div class="hc-se">${p.codigo_se} — ${p.nome_se||''}</div>
             <div class="hc-tecnico">${p.nome_tecnico||'—'}</div>
-            <div class="hc-hora">⏰ ${p.hora_insp||p.data_insp||'—'}</div>
+            <div class="hc-hora">⏰ ${p.hora_insp ? p.hora_insp + (p.data_insp ? ' ' + p.data_insp : '') : p.data_insp||'—'}</div>
             <div class="hc-status"><span class="badge ${p.status==='Concluído'?'ok':'pend'}" style="font-size:.65rem">${p.status}</span></div>
           </div>
         `).join('')
@@ -1216,6 +1216,19 @@ async function confirmarDelecao() {
 document.getElementById('deleteModal').addEventListener('click', function(e) {
   if (e.target === this) fecharDeleteModal();
 });
+
+// ── Formatação de data/hora ──────────────────────────────────────────────
+function formatDT(s) {
+  if (!s || s === '—') return '—';
+  // YYYY-MM-DD HH:MM:SS → HH:MM:SS DD/MM/YYYY
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2}:\d{2})/);
+  if (m) return `${m[4]} ${m[3]}/${m[2]}/${m[1]}`;
+  // YYYY-MM-DD → DD/MM/YYYY
+  const d = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (d) return `${d[3]}/${d[2]}/${d[1]}`;
+  // HH:MM → HH:MM
+  return s;
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 init();
