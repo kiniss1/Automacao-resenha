@@ -1198,11 +1198,12 @@ async function confirmarDelecao() {
     localStorage.setItem('insp_token', TOKEN);
     document.getElementById('userBadge').style.display = 'inline-flex';
 
+    // Salvar callback ANTES de fechar (fecharDeleteModal zera _deleteCallback)
+    const cb = _deleteCallback;
     fecharDeleteModal();
-    if (_deleteCallback) {
-      try { await _deleteCallback(); }
+    if (cb) {
+      try { await cb(); }
       catch(e) { toast('Erro ao excluir: ' + e.message, 'err'); }
-      _deleteCallback = null;
     }
   } catch(e) {
     document.getElementById('delErr').textContent = 'Erro de conexão.';
