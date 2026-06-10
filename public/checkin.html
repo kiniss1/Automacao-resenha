@@ -417,8 +417,7 @@
     document.getElementById('ccCargo').textContent   = colab.cargo || '';
     document.getElementById('ccSub').textContent     = ativo.subestacao;
     document.getElementById('ccAtiv').textContent    = ativo.atividade || '—';
-    const horaEntrada = (ativo.entrada||'').split(' ')[1] || ativo.entrada;
-    document.getElementById('ccEntrada').textContent = horaEntrada;
+    document.getElementById('ccEntrada').textContent = formatDT(ativo.entrada);
     card.style.display = 'block';
   }
 
@@ -468,7 +467,7 @@ ${res.checkin.nome || mat} saiu de ${res.checkin.subestacao}`, 'ok');
             <div class="ativo-nome">${c.nome || c.matricula}</div>
             <div class="ativo-sub">${c.subestacao} · ${c.atividade || '—'}</div>
           </div>
-          <div class="ativo-hora">${(c.entrada||'').split(' ')[1] || c.entrada}</div>
+          <div class="ativo-hora">${formatDT(c.entrada)}</div>
         </div>
       `).join('');
       box.classList.add('show');
@@ -494,6 +493,15 @@ ${res.checkin.nome || mat} saiu de ${res.checkin.subestacao}`, 'ok');
     el.textContent = msg; el.className = 'result show ' + type;
     clearTimeout(el._t);
     el._t = setTimeout(() => el.classList.remove('show'), 9000);
+  }
+
+  function formatDT(s) {
+    if (!s || s === '—') return '—';
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2}:\d{2})/);
+    if (m) return `${m[4]} ${m[3]}/${m[2]}/${m[1]}`;
+    const d = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (d) return `${d[3]}/${d[2]}/${d[1]}`;
+    return s;
   }
 
   init();
