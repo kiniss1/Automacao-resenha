@@ -83,6 +83,17 @@
     .checkout-item-btn:hover{opacity:.85}
     .checkout-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:20px 0}
 
+    /* ── Checkout por matrícula ── */
+    .checkout-card{background:var(--bg);border:1px solid var(--primary-dark);border-radius:12px;padding:16px;margin-bottom:14px}
+    .checkout-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .checkout-card-nome{font-size:.95rem;font-weight:700}
+    .checkout-card-cargo{font-size:.72rem;color:var(--muted);margin-top:2px}
+    .checkout-card-badge{background:var(--green-bg);color:#5eead4;border:1px solid var(--green-border);border-radius:999px;padding:3px 10px;font-size:.68rem;font-weight:700;white-space:nowrap}
+    .checkout-card-info{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding:12px;background:var(--surface);border-radius:8px}
+    .checkout-card-row{display:flex;align-items:center;justify-content:space-between;font-size:.8rem;gap:10px}
+    .checkout-card-row span:first-child{color:var(--muted);white-space:nowrap}
+    .checkout-empty-card{text-align:center;padding:28px 16px;background:var(--bg);border:1px dashed var(--border);border-radius:12px;color:var(--muted);margin-top:4px}
+
     /* ── Prompt de inspeção ── */
     .insp-prompt{display:none;margin-top:14px;background:var(--primary-bg);border:1px solid var(--primary-dark);border-radius:12px;padding:16px}
     .insp-prompt.show{display:block}
@@ -150,11 +161,51 @@
   <div class="panel" id="panelCheckout">
     <div class="result" id="resultCheckout"></div>
     <div class="field">
-      <label>Subestação</label>
-      <select id="subOut" onchange="loadCheckoutAtivos(this.value)"></select>
+      <label>Matrícula</label>
+      <div class="colab-wrap">
+        <div class="colab-row">
+          <input type="text" inputmode="numeric" id="checkoutMatricula"
+                 class="colab-input" placeholder="Digite sua matrícula..."
+                 oninput="lookupCheckout(this)"
+                 onkeydown="if(event.key==='Enter') confirmarCheckout()"/>
+        </div>
+        <div class="colab-name" id="checkoutNome"></div>
+      </div>
     </div>
-    <div class="checkout-list" id="checkoutAtivos">
-      <div class="checkout-empty">Selecione a subestação acima.</div>
+
+    <!-- Card do colaborador ativo -->
+    <div class="checkout-card" id="checkoutCard" style="display:none">
+      <div class="checkout-card-header">
+        <div>
+          <div class="checkout-card-nome" id="ccNome"></div>
+          <div class="checkout-card-cargo" id="ccCargo"></div>
+        </div>
+        <span class="checkout-card-badge">Em campo</span>
+      </div>
+      <div class="checkout-card-info">
+        <div class="checkout-card-row">
+          <span>⚡ Subestação</span>
+          <strong id="ccSub"></strong>
+        </div>
+        <div class="checkout-card-row">
+          <span>🔧 Atividade</span>
+          <span id="ccAtiv" style="text-align:right;max-width:55%"></span>
+        </div>
+        <div class="checkout-card-row">
+          <span>⏰ Entrada</span>
+          <strong id="ccEntrada"></strong>
+        </div>
+      </div>
+      <button class="btn btn-checkout-out" id="btnCheckout" onclick="confirmarCheckout()">
+        ◀ Registrar Saída
+      </button>
+    </div>
+
+    <!-- Sem check-in ativo -->
+    <div class="checkout-empty-card" id="checkoutSemAtivo" style="display:none">
+      <div style="font-size:2rem;margin-bottom:8px">🔍</div>
+      <div style="font-weight:600;margin-bottom:4px">Sem entrada ativa</div>
+      <div style="font-size:.78rem;color:var(--muted)" id="checkoutSemAtivoMsg"></div>
     </div>
   </div>
 </div>
@@ -171,21 +222,18 @@
   async function init() {
     const { data } = await fetch('/api/subestacoes').then(r => r.json());
 
-    ['subIn','subOut'].forEach(id => {
-      const sel = document.getElementById(id);
-      data.forEach(s => {
-        const o = document.createElement('option');
-        o.value = s; o.textContent = s;
-        if (s === subParam) o.selected = true;
-        sel.appendChild(o);
-      });
+    const sel = document.getElementById('subIn');
+    data.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      if (s === subParam) o.selected = true;
+      sel.appendChild(o);
     });
 
     const sub = subParam || data[0] || '';
     if (sub) {
       document.getElementById('subBadge').textContent = '⚡ ' + sub;
       loadAtivos(sub);
-      loadCheckoutAtivos(sub);
     }
 
     addColabRow();
@@ -326,51 +374,84 @@
     _inspecaoFichaNome = null;
   }
 
-  // ── Check-out ──────────────────────────────────────────────────────────────
-  async function loadCheckoutAtivos(sub) {
-    const box = document.getElementById('checkoutAtivos');
-    if (!sub) return;
-    try {
-      const { data } = await fetch('/api/checkin/ativos?sub=' + sub).then(r => r.json());
-      if (!data || !data.length) {
-        box.innerHTML = '<div class="checkout-empty">Nenhum colaborador em campo nesta subestação.</div>';
-        return;
-      }
-      box.innerHTML = data.map(c => `
-        <div class="checkout-item" id="ci-${c.id}">
-          <div class="checkout-item-info">
-            <div class="checkout-item-nome">${c.nome || c.matricula}</div>
-            <div class="checkout-item-det">${c.subestacao} · desde ${(c.entrada||'').split(' ')[1] || c.entrada}</div>
-            <div class="checkout-item-det" style="color:var(--muted)">${c.atividade || '—'}</div>
-          </div>
-          <button class="checkout-item-btn" onclick="doCheckout('${c.matricula}','${c.subestacao}',this)">Registrar Saída</button>
-        </div>
-      `).join('');
-    } catch(e) { box.innerHTML = '<div class="checkout-empty">Erro ao carregar.</div>'; }
+  // ── Check-out por matrícula ────────────────────────────────────────────────
+  let _checkoutAtivo = null;
+
+  async function lookupCheckout(inp) {
+    const mat = inp.value.trim();
+    const nameEl = document.getElementById('checkoutNome');
+    const card   = document.getElementById('checkoutCard');
+    const semAtivo = document.getElementById('checkoutSemAtivo');
+
+    // Reseta tudo
+    card.style.display     = 'none';
+    semAtivo.style.display = 'none';
+    nameEl.textContent     = '';
+    nameEl.className       = 'colab-name';
+    _checkoutAtivo         = null;
+
+    if (mat.length < 4) { inp.classList.remove('identified','error'); return; }
+
+    // Busca colaborador
+    const { data: colab } = await fetch('/api/colaborador/' + mat).then(r => r.json());
+    if (!colab) {
+      inp.classList.add('error'); inp.classList.remove('identified');
+      nameEl.textContent = '✗ Matrícula não encontrada'; nameEl.className = 'colab-name error';
+      return;
+    }
+    inp.classList.add('identified'); inp.classList.remove('error');
+    nameEl.textContent = '✓ ' + colab.nome; nameEl.className = 'colab-name';
+
+    // Busca check-in ativo
+    const { data: ativo } = await fetch('/api/checkin/ativo/' + mat).then(r => r.json());
+    if (!ativo) {
+      semAtivo.style.display = 'block';
+      document.getElementById('checkoutSemAtivoMsg').textContent =
+        colab.nome + ' não possui entrada ativa no momento.';
+      return;
+    }
+
+    // Exibe card do ativo
+    _checkoutAtivo = ativo;
+    document.getElementById('ccNome').textContent    = ativo.nome || colab.nome;
+    document.getElementById('ccCargo').textContent   = colab.cargo || '';
+    document.getElementById('ccSub').textContent     = ativo.subestacao;
+    document.getElementById('ccAtiv').textContent    = ativo.atividade || '—';
+    const horaEntrada = (ativo.entrada||'').split(' ')[1] || ativo.entrada;
+    document.getElementById('ccEntrada').textContent = horaEntrada;
+    card.style.display = 'block';
   }
 
-  async function doCheckout(matricula, subestacao, btn) {
-    btn.disabled = true; btn.textContent = '⏳';
+  async function confirmarCheckout() {
+    if (!_checkoutAtivo) return;
+    const mat = document.getElementById('checkoutMatricula').value.trim();
+    const btn = document.getElementById('btnCheckout');
+    btn.disabled = true; btn.textContent = '⏳ Registrando saída...';
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matricula })
+        body: JSON.stringify({ matricula: mat })
       }).then(r => r.json());
 
       if (res.erro) {
         showResult('checkout', '⚠️ ' + res.msg, 'warn');
-        btn.disabled = false; btn.textContent = 'Registrar Saída';
+        btn.disabled = false; btn.textContent = '◀ Registrar Saída';
       } else {
-        const item = document.getElementById('ci-' + res.checkin.id);
-        if (item) item.remove();
-        showResult('checkout', `✅ Saída registrada!\n${res.checkin.nome || matricula} saiu de ${subestacao}`, 'ok');
-        loadAtivos(subestacao);
-        if (!document.getElementById('checkoutAtivos').children.length) loadCheckoutAtivos(subestacao);
+        // Limpa tudo
+        document.getElementById('checkoutMatricula').value = '';
+        document.getElementById('checkoutMatricula').classList.remove('identified','error');
+        document.getElementById('checkoutNome').textContent = '';
+        document.getElementById('checkoutCard').style.display = 'none';
+        _checkoutAtivo = null;
+        showResult('checkout',
+          `✅ Saída registrada!
+${res.checkin.nome || mat} saiu de ${res.checkin.subestacao}`, 'ok');
+        loadAtivos(document.getElementById('subIn').value);
       }
     } catch(e) {
       showResult('checkout', 'Erro de conexão.', 'err');
-      btn.disabled = false; btn.textContent = 'Registrar Saída';
+      btn.disabled = false; btn.textContent = '◀ Registrar Saída';
     }
   }
 
@@ -401,8 +482,8 @@
     document.getElementById('panelCheckin').classList.toggle('active', tab==='checkin');
     document.getElementById('panelCheckout').classList.toggle('active', tab==='checkout');
     if (tab === 'checkout') {
-      const sub = document.getElementById('subOut').value;
-      if (sub) loadCheckoutAtivos(sub);
+      // Foca no campo de matrícula automaticamente
+      setTimeout(() => document.getElementById('checkoutMatricula')?.focus(), 80);
     }
   }
 
