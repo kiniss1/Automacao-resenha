@@ -286,8 +286,8 @@
         <td>${c.matricula}</td>
         <td><strong>${c.subestacao}</strong></td>
         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.atividade||''}">${c.atividade||'—'}</td>
-        <td>${c.entrada||'—'}</td>
-        <td>${c.saida||'—'}</td>
+        <td>${formatDT(c.entrada)}</td>
+        <td>${formatDT(c.saida)}</td>
         <td>${c.status==='Ativo'
           ? '<span class="badge-ativo">Em campo</span>'
           : '<span class="badge-enc">Encerrado</span>'}</td>
@@ -381,6 +381,17 @@
   document.getElementById('delCiModal').addEventListener('click', function(e) {
     if (e.target === this) fecharDelCiModal();
   });
+
+  function formatDT(s) {
+    if (!s || s === '—') return '—';
+    // YYYY-MM-DD HH:MM:SS → HH:MM:SS DD/MM/YYYY
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2}:\d{2})/);
+    if (m) return `${m[4]} ${m[3]}/${m[2]}/${m[1]}`;
+    // YYYY-MM-DD → DD/MM/YYYY
+    const d = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (d) return `${d[3]}/${d[2]}/${d[1]}`;
+    return s;
+  }
 
   init();
   setInterval(loadStats, 30_000);
