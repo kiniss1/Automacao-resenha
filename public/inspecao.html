@@ -168,6 +168,22 @@
     #fotoZoom{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:999;cursor:zoom-out}
     #fotoZoom.hidden{display:none}
     #fotoZoom img{max-width:90vw;max-height:90vh;border-radius:10px;border:2px solid var(--border)}
+
+    /* ── Modal confirmar exclusão ────────── */
+    #deleteModal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:600;backdrop-filter:blur(3px)}
+    #deleteModal.hidden{display:none}
+    .del-box{background:var(--surface);border:1px solid var(--red-border);border-radius:14px;padding:28px;width:340px;max-width:92vw}
+    .del-box h3{font-size:.95rem;font-weight:700;margin-bottom:6px;color:var(--red)}
+    .del-box .del-msg{font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
+    .del-box label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+    .del-box input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.9rem;outline:none;font-family:inherit;margin-bottom:4px}
+    .del-box input:focus{border-color:var(--red)}
+    .del-box .del-err{color:var(--red);font-size:.73rem;height:16px;margin-bottom:10px}
+    .del-box .del-btns{display:flex;gap:8px;margin-top:4px}
+    .del-box .btn-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:9px;font-size:.85rem;cursor:pointer}
+    .del-box .btn-del{flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .del-box .btn-del:hover{opacity:.85}
+    .del-box .btn-del:disabled{opacity:.4;cursor:default}
   </style>
 </head>
 <body>
@@ -423,6 +439,22 @@
     <div class="modal-footer">
       <button class="btn-sm outline" onclick="fecharModal('verModal')">Fechar</button>
       <button class="btn-sm" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmar exclusão com senha -->
+<div id="deleteModal" class="hidden">
+  <div class="del-box">
+    <h3>🗑 Confirmar Exclusão</h3>
+    <div class="del-msg" id="delMsg">Esta ação não pode ser desfeita.</div>
+    <label>Senha do supervisor</label>
+    <input type="password" id="delSenha" placeholder="••••••••" autocomplete="off"
+           onkeydown="if(event.key==='Enter')confirmarDelecao()"/>
+    <div class="del-err" id="delErr"></div>
+    <div class="del-btns">
+      <button class="btn-cancel" onclick="fecharDeleteModal()">Cancelar</button>
+      <button class="btn-del" id="btnConfirmarDel" onclick="confirmarDelecao()">Excluir</button>
     </div>
   </div>
 </div>
@@ -804,14 +836,14 @@ async function toggleAtiva(id, ativa) {
 }
 
 async function deletarFicha(id, nome) {
-  requireAuth(async () => {
-    if (!confirm(`Excluir a ficha "${nome}"? Todos os campos e preenchimentos serão apagados.`)) return;
-    try {
+  pedirSenhaParaDeletar(
+    `Excluir a ficha <strong>${nome}</strong>?<br>Todos os campos e inspeções vinculadas serão apagados permanentemente.`,
+    async () => {
       await fetch(`/api/inspecao/fichas/${id}`, { method:'DELETE', headers: authH() });
       toast('Ficha excluída', 'ok');
       loadFichas();
-    } catch(e) { toast('Erro', 'err'); }
-  });
+    }
+  );
 }
 
 function abrirFormLink(fichaId) {
@@ -961,12 +993,15 @@ async function salvarEdicaoCampo() {
 }
 
 async function deletarCampo(id) {
-  if (!confirm('Excluir este campo?')) return;
-  try {
-    await fetch(`/api/inspecao/campos/${id}`, { method:'DELETE', headers: authH() });
-    await recarregarCampos();
-    toast('Campo removido', 'ok');
-  } catch(e) { toast('Erro', 'err'); }
+  const c = _campos.find(c => c.id === id);
+  pedirSenhaParaDeletar(
+    `Excluir o campo <strong>${c?.label || 'selecionado'}</strong>?`,
+    async () => {
+      await fetch(`/api/inspecao/campos/${id}`, { method:'DELETE', headers: authH() });
+      await recarregarCampos();
+      toast('Campo removido', 'ok');
+    }
+  );
 }
 
 // ── Histórico ─────────────────────────────────────────────────────────────
@@ -1023,13 +1058,15 @@ function limparFiltrosHist() {
 }
 
 async function apagarPreenchimento(id) {
-  if (!confirm('Apagar este preenchimento?')) return;
-  try {
-    await fetch(`/api/inspecao/preenchimentos/${id}`, { method:'DELETE' });
-    toast('Removido', 'ok');
-    loadHistorico();
-    loadDash();
-  } catch(e) { toast('Erro', 'err'); }
+  pedirSenhaParaDeletar(
+    'Excluir este preenchimento de inspeção? Todas as respostas e fotos vinculadas serão removidas permanentemente.',
+    async () => {
+      await fetch(`/api/inspecao/preenchimentos/${id}`, { method:'DELETE', headers: authH() });
+      toast('Inspeção removida', 'ok');
+      loadHistorico();
+      loadDash();
+    }
+  );
 }
 
 // ── Visualizar preenchimento ───────────────────────────────────────────────
@@ -1103,6 +1140,73 @@ function toast(msg, tipo='ok') {
   clearTimeout(toast._t);
   toast._t = setTimeout(() => el.className = '', 3000);
 }
+
+// ── Modal exclusão com senha ──────────────────────────────────────────────
+let _deleteCallback = null;
+
+function pedirSenhaParaDeletar(mensagem, callback) {
+  _deleteCallback = callback;
+  document.getElementById('delMsg').innerHTML = mensagem;
+  document.getElementById('delSenha').value   = '';
+  document.getElementById('delErr').textContent = '';
+  document.getElementById('btnConfirmarDel').disabled = false;
+  document.getElementById('btnConfirmarDel').textContent = 'Excluir';
+  document.getElementById('deleteModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('delSenha').focus(), 80);
+}
+
+function fecharDeleteModal() {
+  document.getElementById('deleteModal').classList.add('hidden');
+  _deleteCallback = null;
+}
+
+async function confirmarDelecao() {
+  const senha = document.getElementById('delSenha').value;
+  if (!senha) { document.getElementById('delErr').textContent = 'Informe a senha.'; return; }
+
+  const btn = document.getElementById('btnConfirmarDel');
+  btn.disabled = true;
+  btn.textContent = '⏳ Verificando...';
+  document.getElementById('delErr').textContent = '';
+
+  try {
+    // Valida senha via API de login
+    const r = await fetch('/api/inspecao/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: 'supervisor', senha })
+    }).then(r => r.json());
+
+    if (!r.ok) {
+      document.getElementById('delErr').textContent = 'Senha incorreta.';
+      btn.disabled = false;
+      btn.textContent = 'Excluir';
+      document.getElementById('delSenha').select();
+      return;
+    }
+
+    // Senha correta — salvar token e executar
+    TOKEN = r.token;
+    localStorage.setItem('insp_token', TOKEN);
+    document.getElementById('userBadge').style.display = 'inline-flex';
+
+    fecharDeleteModal();
+    if (_deleteCallback) {
+      try { await _deleteCallback(); }
+      catch(e) { toast('Erro ao excluir: ' + e.message, 'err'); }
+      _deleteCallback = null;
+    }
+  } catch(e) {
+    document.getElementById('delErr').textContent = 'Erro de conexão.';
+    btn.disabled = false;
+    btn.textContent = 'Excluir';
+  }
+}
+
+// Fechar ao clicar fora
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) fecharDeleteModal();
+});
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 init();
