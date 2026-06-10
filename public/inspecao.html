@@ -1033,7 +1033,7 @@ async function loadHistorico() {
     const data = r.data || [];
     document.getElementById('histTbody').innerHTML = data.length
       ? data.map(p => `
-          <tr>
+          <tr id="row-pre-${p.id}">
             <td><strong>${p.codigo_se}</strong></td>
             <td>${p.nome_tecnico||'—'}</td>
             <td>${p.matricula||'—'}</td>
@@ -1061,9 +1061,17 @@ async function apagarPreenchimento(id) {
   pedirSenhaParaDeletar(
     'Excluir este preenchimento de inspeção? Todas as respostas e fotos vinculadas serão removidas permanentemente.',
     async () => {
-      await fetch(`/api/inspecao/preenchimentos/${id}`, { method:'DELETE', headers: authH() });
+      const r = await fetch(`/api/inspecao/preenchimentos/${id}`, { method:'DELETE', headers: authH() }).then(r=>r.json());
+      if (!r.ok) throw new Error(r.error || 'Erro ao excluir');
+      // Remove a linha direto do DOM — não depende de reload
+      const row = document.getElementById('row-pre-' + id);
+      if (row) row.remove();
+      // Se a tabela ficou vazia, mostra mensagem
+      const tbody = document.getElementById('histTbody');
+      if (!tbody.children.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Nenhum registro</td></tr>';
+      }
       toast('Inspeção removida', 'ok');
-      loadHistorico();
       loadDash();
     }
   );
