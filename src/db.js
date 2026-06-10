@@ -133,13 +133,17 @@ function removerOS(id) {
   return os;
 }
 
-function estatisticas() {
+function estatisticas({ dataDe, dataAte } = {}) {
+  const cond = [], params = [];
+  if (dataDe) { cond.push("date(criado_em) >= date(?)"); params.push(dataDe); }
+  if (dataAte) { cond.push("date(criado_em) <= date(?)"); params.push(dataAte); }
+  const where = cond.length ? 'WHERE ' + cond.join(' AND ') : '';
   return get(`SELECT COUNT(*) AS total,
     SUM(status='Andamento')       AS andamento,
     SUM(status='Concluído')       AS concluido,
     SUM(status='Etapa Concluída') AS etapa,
     SUM(status='Cancelado')       AS cancelado
-    FROM ordens_servico`);
+    FROM ordens_servico ${where}`, params);
 }
 
 function buscarPorId(id) {
