@@ -37,6 +37,22 @@
     .nav-link{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
     .nav-link:hover,.nav-link.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 
+    /* ── Modal excluir checkin ── */
+    #delCiModal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px)}
+    #delCiModal.hidden{display:none}
+    .del-ci-box{background:var(--surface);border:1px solid var(--red-border,#7a2020);border-radius:14px;padding:28px;width:340px;max-width:92vw}
+    .del-ci-box h3{font-size:.95rem;font-weight:700;margin-bottom:6px;color:var(--red,#e05a4e)}
+    .del-ci-box .del-ci-msg{font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
+    .del-ci-box label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+    .del-ci-box input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.9rem;outline:none;font-family:inherit;margin-bottom:4px}
+    .del-ci-box input:focus{border-color:var(--red,#e05a4e)}
+    .del-ci-err{color:var(--red,#e05a4e);font-size:.73rem;height:16px;margin-bottom:10px}
+    .del-ci-btns{display:flex;gap:8px;margin-top:4px}
+    .del-ci-btns .btn-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:9px;font-size:.85rem;cursor:pointer}
+    .del-ci-btns .btn-del{flex:1;background:var(--red,#e05a4e);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .del-ci-btns .btn-del:hover{opacity:.85}
+    .del-ci-btns .btn-del:disabled{opacity:.4;cursor:default}
+
     .stats-bar{display:flex;gap:12px;padding:16px 24px;flex-wrap:wrap}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 20px;min-width:100px;text-align:center}
     .stat-card .num{font-size:1.6rem;font-weight:700;line-height:1}
@@ -143,6 +159,7 @@
         <th>Entrada</th>
         <th>Saída</th>
         <th>Status</th>
+        <th></th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -158,6 +175,22 @@
     <div class="modal-btns">
       <button class="modal-print" onclick="printQr()">🖨️ Imprimir</button>
       <button class="modal-close" onclick="document.getElementById('modalBg').classList.add('hidden')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal excluir checkin com senha -->
+<div id="delCiModal" class="hidden">
+  <div class="del-ci-box">
+    <h3>🗑️ Excluir Registro</h3>
+    <div class="del-ci-msg" id="delCiMsg">Esta ação não pode ser desfeita.</div>
+    <label>Senha do supervisor</label>
+    <input type="password" id="delCiSenha" placeholder="••••••••" autocomplete="off"
+           onkeydown="if(event.key==='Enter') confirmarDelCi()"/>
+    <div class="del-ci-err" id="delCiErr"></div>
+    <div class="del-ci-btns">
+      <button class="btn-cancel" onclick="fecharDelCiModal()">Cancelar</button>
+      <button class="btn-del" id="btnConfirmarDelCi" onclick="confirmarDelCi()">Excluir</button>
     </div>
   </div>
 </div>
@@ -248,7 +281,7 @@
       return;
     }
     tbody.innerHTML = data.map(c => `
-      <tr>
+      <tr id="row-ci-${c.id}">
         <td><strong>${c.nome||'—'}</strong></td>
         <td>${c.matricula}</td>
         <td><strong>${c.subestacao}</strong></td>
@@ -258,6 +291,7 @@
         <td>${c.status==='Ativo'
           ? '<span class="badge-ativo">Em campo</span>'
           : '<span class="badge-enc">Encerrado</span>'}</td>
+        <td><button onclick="pedirSenhaDelCi(${c.id}, '${(c.nome||c.matricula).replace(/'/g,'')}')" style="background:transparent;border:1px solid #7a2020;color:#e05a4e;border-radius:6px;padding:3px 9px;font-size:.75rem;cursor:pointer" title="Excluir">🗑</button></td>
       </tr>
     `).join('');
   }
@@ -285,6 +319,59 @@
       <script>window.print();window.close();<\/script>
     </body></html>`);
   }
+
+  // ── Excluir checkin com senha ─────────────────────────────────────────────
+  let _delCiId = null;
+
+  function pedirSenhaDelCi(id, nome) {
+    _delCiId = id;
+    document.getElementById('delCiMsg').innerHTML =
+      'Excluir o registro de <strong>' + nome + '</strong>?<br>Esta ação não pode ser desfeita.';
+    document.getElementById('delCiSenha').value = '';
+    document.getElementById('delCiErr').textContent = '';
+    document.getElementById('btnConfirmarDelCi').disabled = false;
+    document.getElementById('btnConfirmarDelCi').textContent = 'Excluir';
+    document.getElementById('delCiModal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('delCiSenha').focus(), 80);
+  }
+
+  function fecharDelCiModal() {
+    document.getElementById('delCiModal').classList.add('hidden');
+    _delCiId = null;
+  }
+
+  async function confirmarDelCi() {
+    const senha = document.getElementById('delCiSenha').value;
+    if (!senha) { document.getElementById('delCiErr').textContent = 'Informe a senha.'; return; }
+    const btn = document.getElementById('btnConfirmarDelCi');
+    btn.disabled = true; btn.textContent = '⏳ Verificando...';
+    document.getElementById('delCiErr').textContent = '';
+    try {
+      const auth = await fetch('/api/inspecao/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ usuario: 'supervisor', senha })
+      }).then(r => r.json());
+      if (!auth.ok) {
+        document.getElementById('delCiErr').textContent = 'Senha incorreta.';
+        btn.disabled = false; btn.textContent = 'Excluir';
+        document.getElementById('delCiSenha').select();
+        return;
+      }
+      await fetch('/api/checkin/' + _delCiId, { method: 'DELETE' });
+      const row = document.getElementById('row-ci-' + _delCiId);
+      if (row) row.remove();
+      fecharDelCiModal();
+      loadStats();
+    } catch(err) {
+      document.getElementById('delCiErr').textContent = 'Erro: ' + err.message;
+      btn.disabled = false; btn.textContent = 'Excluir';
+    }
+  }
+
+  document.getElementById('delCiModal').addEventListener('click', function(e) {
+    if (e.target === this) fecharDelCiModal();
+  });
 
   init();
   setInterval(loadStats, 30_000);
