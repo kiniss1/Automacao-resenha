@@ -30,12 +30,10 @@
     }
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px;display:flex;justify-content:center}
     .page{width:100%;max-width:520px;display:flex;flex-direction:column;gap:0}
-
     .page-header{background:var(--surface);border:1px solid var(--border);border-radius:14px 14px 0 0;padding:16px 24px;border-bottom:none}
     .page-header-top{display:flex;justify-content:flex-end;margin-bottom:8px}
     .page-header h1{font-size:1.1rem;font-weight:700;text-align:center}
     .page-header p{font-size:.78rem;color:var(--muted);text-align:center;margin-top:3px}
-
     .type-tabs{display:flex;background:var(--surface);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 24px 14px}
     .type-tab{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px;font-size:.85rem;cursor:pointer;font-weight:600;transition:all .15s}
     .type-tab:first-child{border-radius:8px 0 0 8px}
@@ -43,26 +41,35 @@
     .type-tab.active-inicial{background:#052e16;border-color:var(--green);color:var(--green)}
     .type-tab.active-final{background:var(--orange-bg);border-color:var(--orange);color:var(--orange)}
     .type-tab.active-trajeto{background:var(--primary-bg);border-color:var(--primary);color:var(--primary)}
-
     .card{background:var(--surface);border:1px solid var(--border);padding:18px 24px;display:flex;flex-direction:column;gap:12px;border-top:none}
     .card:last-of-type{border-radius:0 0 14px 14px}
     .section-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
     .locked-badge{font-size:.65rem;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-weight:500}
-
     .field{display:flex;flex-direction:column;gap:5px}
     .field label{font-size:.78rem;font-weight:600;color:var(--muted)}
     .field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;width:100%;transition:border-color .15s;font-family:'Segoe UI',system-ui,sans-serif;height:68px}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
     .field-row{display:flex;gap:10px}
     .field-row .field{flex:1}
-
-    /* Locked fields */
-    .locked input,.locked select,.locked textarea{
-      opacity:.6;cursor:not-allowed;pointer-events:none;
-      border-color:var(--border)!important;background:var(--bg)!important;
-    }
+    .locked input,.locked select,.locked textarea{opacity:.6;cursor:not-allowed;pointer-events:none;border-color:var(--border)!important;background:var(--bg)!important}
     .locked{opacity:.85}
 
-    /* OS Lookup */
+    /* ── SE Combobox ── */
+    .se-combo-wrap{position:relative}
+    .se-combo-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 36px 10px 12px;font-size:.95rem;outline:none;width:100%;transition:border-color .15s;font-family:'Segoe UI',system-ui,sans-serif;text-transform:uppercase;letter-spacing:.05em}
+    .se-combo-input:focus{border-color:var(--primary)}
+    .se-combo-input.ok{border-color:var(--green)}
+    .se-combo-input.err{border-color:var(--red)}
+    .se-combo-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.75rem;pointer-events:none}
+    .se-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+    .se-dropdown.open{display:block}
+    .se-dropdown-item{padding:9px 12px;font-size:.88rem;cursor:pointer;transition:background .1s}
+    .se-dropdown-item:hover,.se-dropdown-item.active{background:var(--primary-bg);color:var(--primary)}
+    .se-dropdown-empty{padding:9px 12px;font-size:.82rem;color:var(--muted);font-style:italic}
+    .se-hint{font-size:.7rem;margin-top:2px;min-height:14px}
+    .se-hint.ok{color:var(--green)}
+    .se-hint.err{color:var(--red)}
+
     .lookup-card{background:var(--surface);border:2px solid var(--orange);border-left:4px solid var(--orange);padding:18px 24px;display:flex;flex-direction:column;gap:12px;border-top:none}
     .lookup-title{font-size:.85rem;font-weight:700;color:var(--orange);display:flex;align-items:center;gap:6px}
     .lookup-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px;font-size:1.1rem;outline:none;width:100%;transition:border-color .15s;font-family:'Segoe UI',system-ui,sans-serif;font-weight:600;letter-spacing:.05em}
@@ -74,8 +81,6 @@
     .lookup-result.err{background:var(--red-bg);border:1px solid #7f1d1d;color:var(--red)}
     .btn-load{background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px;font-size:.9rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s}
     .btn-load:hover{opacity:.88}
-
-    /* Colaboradores */
     .colab-wrap{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
     .colab-row{display:flex;gap:6px;align-items:center}
     .colab-mat{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.95rem;outline:none;transition:border-color .15s}
@@ -89,37 +94,27 @@
     .btn-remove:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
     .btn-add{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:7px;font-size:.8rem;cursor:pointer;width:100%;text-align:center;transition:all .15s}
     .btn-add:hover{border-color:var(--primary);color:var(--primary)}
-
-    /* OS items */
     .os-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
     .os-item-header{display:flex;justify-content:space-between;align-items:center}
     .os-item-num{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase}
-
-    /* Trajeto */
     .trajeto-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
     .trajeto-item select,.trajeto-item input{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.85rem;outline:none}
     .trajeto-item select{flex:1;min-width:140px}
     .trajeto-item input[type=time]{width:100px}
-    .trajeto-item select.sub-sel{flex:0 0 90px}
+    .traj-se-input{flex:0 0 90px!important;text-transform:uppercase;letter-spacing:.05em;font-size:.82rem!important;min-width:80px!important;max-width:100px}
     .trajeto-locked{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:6px;border-left:3px solid var(--border)}
-
-    /* Status */
     .status-select{appearance:none;cursor:pointer;font-weight:600}
     .status-Andamento{border-color:var(--orange)!important;color:var(--orange)!important;background:var(--orange-bg)!important}
     .status-Concluído{border-color:var(--green)!important;color:var(--green)!important;background:var(--green-bg)!important}
     .status-Etapa\ Concluída{border-color:var(--violet)!important;color:var(--violet)!important;background:var(--violet-bg)!important}
-    .status-Cancelado{border-color:var(--red)!important;  color:var(--red)!important;  background:var(--red-bg)!important}
-
+    .status-Cancelado{border-color:var(--red)!important;color:var(--red)!important;background:var(--red-bg)!important}
     .btn-submit{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s;margin-top:4px}
     .btn-submit:hover{opacity:.88}
     .btn-submit:disabled{opacity:.4;cursor:default}
-
     #resultArea{display:flex;flex-direction:column;gap:10px;margin-top:4px}
     .result-msg{border-radius:10px;padding:13px 16px;font-size:.88rem;line-height:1.7;white-space:pre-wrap}
-    .result-msg.ok {background:var(--green-bg);border:1px solid #14532d;color:var(--green)}
+    .result-msg.ok{background:var(--green-bg);border:1px solid #14532d;color:var(--green)}
     .result-msg.err{background:var(--red-bg);border:1px solid #7f1d1d;color:var(--red)}
-
-    /* APR */
     .apr-card{background:var(--surface);border:1px solid var(--orange);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
     .apr-card.done{border-color:var(--green)}
     .apr-card-title{font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:space-between}
@@ -226,7 +221,6 @@
         oninput="onTrajetoOsInput(this.value)"/>
       <div id="trajetoOsResult" style="display:none"></div>
     </div>
-    <!-- Trajeto atual (somente leitura) -->
     <div id="trajetoAtualWrap" style="display:none">
       <div class="section-label" style="margin-bottom:6px">Trajeto registrado até agora</div>
       <div id="trajetoAtualList"></div>
@@ -256,9 +250,8 @@
 
 <script>
   var SUBESTACOES=[], tipo='inicial', MAX_COLAB=6, osCount=0, trajetoCount=0;
-  var _membrosFinais=[]; // nomes já resolvidos no modo final
+  var _membrosFinais=[];
   var TIPOS_TRAJETO=['Saída da base','Chegada na SE','Saída da SE','Chegada na base'];
-  var TIPOS_DISPLAY={'Saída da base':'🏠 Saída da base','Chegada na SE':'📍 Chegada na SE','Saída da SE':'📍 Saída da SE','Chegada na base':'🏠 Chegada na base'};
   var _osFinaisPendente=null, _osFinaisCarregados={}, _aprFiles={};
   var _lookupTimer=null, _finalLocked=false;
 
@@ -268,7 +261,7 @@
     document.getElementById('btnTema').textContent=l?'☀️ Tema: Claro':'🌙 Tema: Escuro';
     localStorage.setItem('tema_atv',l?'light':'dark');
   }
-  if(localStorage.getItem('tema_atv')==='light'){ document.body.classList.add('light'); document.addEventListener('DOMContentLoaded',function(){ var b=document.getElementById('btnTema'); if(b) b.textContent='☀️ Tema: Claro'; }); }
+  if(localStorage.getItem('tema_atv')==='light'){document.body.classList.add('light');document.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('btnTema');if(b)b.textContent='☀️ Tema: Claro';});}
 
   // ── Init ──────────────────────────────────────────────────────────────────
   function autoHorario(){
@@ -286,6 +279,106 @@
     addColab(); addOS();
   }).catch(function(){addColab();addOS();});
 
+  // ── SE Combobox ───────────────────────────────────────────────────────────
+  var _activeCombo = null;
+
+  function createSECombo(classes, placeholder) {
+    var wrap = document.createElement('div');
+    wrap.className = 'se-combo-wrap';
+    wrap.innerHTML =
+      '<input type="text" class="se-combo-input '+classes+'" placeholder="'+(placeholder||'Ex: FCN')+'" autocomplete="off" spellcheck="false"/>'+
+      '<span class="se-combo-arrow">▾</span>'+
+      '<div class="se-dropdown"></div>'+
+      '<div class="se-hint"></div>';
+    var inp  = wrap.querySelector('.se-combo-input');
+    var drop = wrap.querySelector('.se-dropdown');
+    var hint = wrap.querySelector('.se-hint');
+
+    function renderDrop(filter) {
+      var val = filter.toUpperCase().trim();
+      var matches = val
+        ? SUBESTACOES.filter(function(s){ return s.startsWith(val) || s.includes(val); })
+        : SUBESTACOES;
+      if (!matches.length) {
+        drop.innerHTML = '<div class="se-dropdown-empty">Nenhuma SE encontrada</div>';
+      } else {
+        drop.innerHTML = matches.slice(0,40).map(function(s){
+          return '<div class="se-dropdown-item" data-val="'+s+'">'+s+'</div>';
+        }).join('');
+        drop.querySelectorAll('.se-dropdown-item').forEach(function(item){
+          item.addEventListener('mousedown', function(e){
+            e.preventDefault();
+            inp.value = item.dataset.val;
+            validarSE(inp, hint);
+            closeDrop();
+          });
+        });
+      }
+      drop.classList.add('open');
+      _activeCombo = wrap;
+    }
+
+    function closeDrop() {
+      drop.classList.remove('open');
+      if (_activeCombo === wrap) _activeCombo = null;
+    }
+
+    inp.addEventListener('input', function(){
+      inp.value = inp.value.toUpperCase();
+      renderDrop(inp.value);
+      validarSE(inp, hint);
+    });
+    inp.addEventListener('focus', function(){ renderDrop(inp.value); });
+    inp.addEventListener('blur', function(){
+      setTimeout(function(){ closeDrop(); validarSE(inp, hint); }, 150);
+    });
+    inp.addEventListener('keydown', function(e){
+      var items = drop.querySelectorAll('.se-dropdown-item');
+      var active = drop.querySelector('.se-dropdown-item.active');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        var next = active ? active.nextElementSibling : items[0];
+        if (next) { if(active) active.classList.remove('active'); next.classList.add('active'); }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        var prev = active ? active.previousElementSibling : null;
+        if (prev) { active.classList.remove('active'); prev.classList.add('active'); }
+      } else if (e.key === 'Enter' && active) {
+        e.preventDefault();
+        inp.value = active.dataset.val;
+        validarSE(inp, hint);
+        closeDrop();
+      } else if (e.key === 'Escape') {
+        closeDrop();
+      }
+    });
+
+    return wrap;
+  }
+
+  function validarSE(inp, hint) {
+    var val = inp.value.trim().toUpperCase();
+    if (!val) { inp.className = inp.className.replace(/ ok| err/g,''); if(hint) hint.textContent=''; return false; }
+    if (SUBESTACOES.indexOf(val) >= 0) {
+      inp.value = val;
+      inp.className = inp.className.replace(/ ok| err/g,'') + ' ok';
+      if (hint) { hint.textContent = '✓ SE válida'; hint.className = 'se-hint ok'; }
+      return true;
+    } else {
+      inp.className = inp.className.replace(/ ok| err/g,'') + ' err';
+      if (hint) { hint.textContent = '✗ SE não encontrada na base'; hint.className = 'se-hint err'; }
+      return false;
+    }
+  }
+
+  // Fechar dropdown ao clicar fora
+  document.addEventListener('click', function(e){
+    if (_activeCombo && !_activeCombo.contains(e.target)) {
+      _activeCombo.querySelector('.se-dropdown').classList.remove('open');
+      _activeCombo = null;
+    }
+  });
+
   // ── Tipo ──────────────────────────────────────────────────────────────────
   function setTipo(t){
     tipo=t;
@@ -293,7 +386,6 @@
     document.getElementById('tabFinal').className='type-tab'+(t==='final'?' active-final':'');
     document.getElementById('tabTrajeto').className='type-tab'+(t==='trajeto'?' active-trajeto':'');
     document.getElementById('btnSubmit').textContent=t==='inicial'?'▶ Registrar Início':t==='trajeto'?'📍 Salvar Trajeto':'◀ Registrar Conclusão';
-    // Cards visíveis por modo
     document.getElementById('cardResenha').style.display=t==='trajeto'?'none':'';
     document.getElementById('cardEquipe').style.display=t==='trajeto'?'none':'';
     document.getElementById('cardOsInicial').style.display=t==='inicial'?'':'none';
@@ -320,21 +412,15 @@
     }
   }
 
-  // ── Lock/unlock fields ────────────────────────────────────────────────────
   function lockAll(){
-    ['cardResenha','cardEquipe'].forEach(function(id){
-      document.getElementById(id).classList.add('locked');
-    });
+    ['cardResenha','cardEquipe'].forEach(function(id){document.getElementById(id).classList.add('locked');});
     document.getElementById('resenhaLockBadge').style.display='';
     document.getElementById('equipeLockBadge').style.display='';
     document.getElementById('trajetoLockBadge').style.display='';
-    // Trajeto NÃO é travado — colaborador pode adicionar pontos de retorno
     _finalLocked=true;
   }
   function unlockAll(){
-    ['cardResenha','cardEquipe'].forEach(function(id){
-      document.getElementById(id).classList.remove('locked');
-    });
+    ['cardResenha','cardEquipe'].forEach(function(id){document.getElementById(id).classList.remove('locked');});
     document.getElementById('resenhaLockBadge').style.display='none';
     document.getElementById('equipeLockBadge').style.display='none';
     document.getElementById('trajetoLockBadge').style.display='none';
@@ -350,25 +436,19 @@
       fetch('/api/os').then(function(r){return r.json();}).then(function(data){
         var os=data.data.find(function(o){return o.os===val.trim();});
         if(os){
-          inp.className='lookup-input ok';
-          _osFinaisPendente=os;
-          var planejado=(os.descricao_inicial||os.servico||'—').split(' | ')[0];
-          res.className='lookup-result ok';
-          res.style.display='block';
-          // Bloqueia se Concluído
           if(os.status==='Concluído'){
             inp.className='lookup-input err';
-            res.className='lookup-result err';
-            res.style.display='block';
+            res.className='lookup-result err';res.style.display='block';
             res.innerHTML='⚠️ OS <strong>'+os.os+'</strong> já tem status <strong>Concluído</strong>.<br>Não é possível registrar nova conclusão.';
           } else {
-            res.className='lookup-result ok';
-            res.style.display='block';
-            var statusBadge = os.status==='Andamento'
-              ? '<span style="background:var(--orange-bg);color:var(--orange);border-radius:4px;padding:1px 7px;font-size:.75rem;font-weight:600">'+os.status+'</span>'
-              : '<span style="background:var(--violet-bg);color:var(--violet);border-radius:4px;padding:1px 7px;font-size:.75rem;font-weight:600">'+os.status+'</span>';
-            res.innerHTML=
-              '<strong>OS '+os.os+'</strong> — '+(os.unidade||'')+' '+statusBadge+'<br>'+
+            inp.className='lookup-input ok';
+            _osFinaisPendente=os;
+            var planejado=(os.descricao_inicial||os.servico||'—').split(' | ')[0];
+            var statusBadge=os.status==='Andamento'
+              ?'<span style="background:var(--orange-bg);color:var(--orange);border-radius:4px;padding:1px 7px;font-size:.75rem;font-weight:600">'+os.status+'</span>'
+              :'<span style="background:var(--violet-bg);color:var(--violet);border-radius:4px;padding:1px 7px;font-size:.75rem;font-weight:600">'+os.status+'</span>';
+            res.className='lookup-result ok';res.style.display='block';
+            res.innerHTML='<strong>OS '+os.os+'</strong> — '+(os.unidade||'')+' '+statusBadge+'<br>'+
               '👷 '+(os.equipe||'—')+'<br>'+
               '📆 '+(os.dia_semana||'')+(os.data?' — '+os.data:'')+'<br>'+
               '🚔 '+(os.veiculo||'—')+'<br>'+
@@ -376,109 +456,50 @@
               '<button class="btn-load" onclick="carregarOS()" style="margin-top:8px">✅ Carregar esta atividade</button>';
           }
         } else {
-          inp.className='lookup-input err';
-          res.className='lookup-result err';
-          res.style.display='block';
-          res.textContent='❌ OS "'+val.trim()+'" não encontrada. Verifique o número.';
+          inp.className='lookup-input err';res.className='lookup-result err';res.style.display='block';
+          res.textContent='❌ OS "'+val.trim()+'" não encontrada.';
         }
       }).catch(function(){});
     },600);
   }
 
   function carregarOS(){
-    var os=_osFinaisPendente;
-    if(!os) return;
-    // Bloqueia se já está concluída
-    if(os.status==='Concluído'){
-      var res=document.getElementById('lookupResult');
-      res.className='lookup-result err';
-      res.style.display='block';
-      res.innerHTML='⚠️ Esta OS já possui status <strong>Concluído</strong> no sistema.<br>Não é possível fazer um novo registro final.';
-      document.getElementById('lookupInput').className='lookup-input err';
-      _osFinaisPendente=null;
-      return;
-    }
-
-    // Preenche campos gerais e trava
+    var os=_osFinaisPendente; if(!os) return;
+    if(os.status==='Concluído') return;
     if(os.guarda) document.getElementById('guarda').value=os.guarda;
     if(os.horario) document.getElementById('horario').value=os.horario;
     if(os.dia_semana) document.getElementById('diaSemana').value=os.dia_semana;
     if(os.data){var p=os.data.split('/');if(p.length===3)document.getElementById('data').value=p[2]+'-'+p[1]+'-'+p[0];}
     if(os.veiculo) document.getElementById('veiculo').value=os.veiculo;
     if(os.telefone) document.getElementById('telefone').value=os.telefone;
-
-    // Armazena nomes já resolvidos para não precisar validar matrícula
-    _membrosFinais = os.equipe ? os.equipe.split(',').map(function(n){return n.trim();}).filter(Boolean) : [];
-
-    // Preenche colaboradores — mostra como texto fixo (nomes, não matrícula)
+    _membrosFinais=os.equipe?os.equipe.split(',').map(function(n){return n.trim();}).filter(Boolean):[];
     if(os.equipe){
       var list=document.getElementById('colabList');
-      list.innerHTML='';
-      document.getElementById('btnAddColab').style.display='none';
-      var nomes=os.equipe.split(',').map(function(n){return n.trim();}).filter(Boolean);
-      nomes.forEach(function(nome){
-        var wrap=document.createElement('div');
-        wrap.className='colab-wrap';
-        wrap.style.marginBottom='4px';
-        wrap.innerHTML=
-          '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.9rem;color:var(--text);display:flex;align-items:center;gap:8px">'+
-            '<span style="color:var(--green);font-size:.85rem">✓</span>'+
-            '<span>'+nome+'</span>'+
-          '</div>';
+      list.innerHTML=''; document.getElementById('btnAddColab').style.display='none';
+      os.equipe.split(',').map(function(n){return n.trim();}).filter(Boolean).forEach(function(nome){
+        var wrap=document.createElement('div'); wrap.className='colab-wrap'; wrap.style.marginBottom='4px';
+        wrap.innerHTML='<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.9rem;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--green);font-size:.85rem">✓</span><span>'+nome+'</span></div>';
         list.appendChild(wrap);
       });
     }
-
-    // Preenche trajeto da ida e trava
-    // trajeto agora é campo separado; fallback para extração do servico (registros antigos)
-    var trajetoStr = os.trajeto || '';
-    if(!trajetoStr && os.servico && os.servico.includes('Trajeto:')){
-      trajetoStr = os.servico.split('Trajeto:')[1].trim();
-    }
-    // Mostra trajeto inicial como referência (só uma vez)
+    var trajetoStr=os.trajeto||'';
+    if(!trajetoStr&&os.servico&&os.servico.includes('Trajeto:')) trajetoStr=os.servico.split('Trajeto:')[1].trim();
     var refDiv=document.getElementById('trajetoInicalRef');
-    var tList=document.getElementById('trajetoList');
-    if(refDiv && !refDiv.dataset.filled){
-    refDiv.dataset.filled='1';
-    refDiv.style.display='block';
-    var div=document.createElement('div');
-    div.className='trajeto-locked';
-    div.id='trajetoInicial';
-    div.innerHTML=
-      '<div style="font-size:.7rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">'+
-        '📍 Trajeto da Ida (registrado no início)'+
-      '</div>'+
-      (trajetoStr
-        ? trajetoStr.split(' | ').filter(Boolean).map(function(t,i){
-            // Detecta o tipo do ponto para sequência
-            var tipoDetectado='';
-            ['Saída da base','Chegada na SE','Saída da SE','Chegada na base'].forEach(function(tp){
-              if(t.trim().startsWith(tp)) tipoDetectado=tp;
-            });
-            return '<div data-tipo="'+tipoDetectado+'" style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:8px">'+
-              '<span style="color:var(--orange);font-size:.72rem;font-weight:700;min-width:16px">'+(i+1)+'.</span>'+
-              '<span>'+t.trim()+'</span>'+
-            '</div>';
-          }).join('')
-        : '<div style="padding:8px 0;color:var(--muted);font-size:.82rem;font-style:italic">Nenhum trajeto registrado no início</div>'
-      );
-    refDiv.appendChild(div);
-    var sep=document.createElement('div');
-    sep.style.cssText='font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px';
-    sep.textContent='↩ Trajeto de Retorno — adicione abaixo';
-    refDiv.appendChild(sep);
-    } // end if !filled
-
-    // Trava todos os campos preenchidos
-    lockAll();
-
-    // Adiciona card de OS final apenas se ainda não estiver na lista
-    if(!_osFinaisCarregados[os.os]){
-      adicionarOSFinalCard(os);
-      _osFinaisCarregados[os.os]=os;
+    if(refDiv&&!refDiv.dataset.filled){
+      refDiv.dataset.filled='1'; refDiv.style.display='block';
+      var div=document.createElement('div'); div.className='trajeto-locked';
+      div.innerHTML='<div style="font-size:.7rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">📍 Trajeto da Ida</div>'+
+        (trajetoStr?trajetoStr.split(' | ').filter(Boolean).map(function(t,i){
+          return '<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--orange);font-size:.72rem;font-weight:700;min-width:16px">'+(i+1)+'.</span><span>'+t.trim()+'</span></div>';
+        }).join(''):'<div style="padding:8px 0;color:var(--muted);font-size:.82rem;font-style:italic">Nenhum trajeto registrado</div>');
+      refDiv.appendChild(div);
+      var sep=document.createElement('div');
+      sep.style.cssText='font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px';
+      sep.textContent='↩ Trajeto de Retorno — adicione abaixo';
+      refDiv.appendChild(sep);
     }
-
-    // Limpa busca
+    lockAll();
+    if(!_osFinaisCarregados[os.os]){ adicionarOSFinalCard(os); _osFinaisCarregados[os.os]=os; }
     document.getElementById('lookupInput').value='';
     document.getElementById('lookupInput').className='lookup-input';
     document.getElementById('lookupResult').style.display='none';
@@ -489,24 +510,16 @@
   function adicionarOSFinalCard(os){
     var list=document.getElementById('osListFinal');
     var planejado=(os.descricao_inicial||os.servico||'—').split(' | ')[0];
-    var card=document.createElement('div');
-    card.className='os-item';
-    card.id='osf-'+os.os.replace(/[^a-z0-9]/gi,'_');
+    var card=document.createElement('div'); card.className='os-item'; card.id='osf-'+os.os.replace(/[^a-z0-9]/gi,'_');
     card.innerHTML=
-      '<div class="os-item-header">'+
-        '<span class="os-item-num">🧰 OS '+os.os+' — '+(os.unidade||'')+'</span>'+
-        '<button class="btn-remove" onclick="removerOSFinal(\''+os.os.replace(/'/g,"\\'")+'\')" >✕</button>'+
-      '</div>'+
+      '<div class="os-item-header"><span class="os-item-num">🧰 OS '+os.os+' — '+(os.unidade||'')+'</span>'+
+        '<button class="btn-remove" onclick="removerOSFinal(\''+os.os.replace(/'/g,"\\'")+'\')">✕</button></div>'+
       '<input type="hidden" class="os-code" value="'+os.os+'"/>'+
       '<input type="hidden" class="os-db-id" value="'+os.id+'"/>'+
-      '<div class="field">'+
-        '<label style="color:var(--muted)">📋 O que foi planejado</label>'+
-        '<textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none">'+planejado+'</textarea>'+
-      '</div>'+
-      '<div class="field">'+
-        '<label style="color:var(--green)">✅ O que foi feito <span style="color:var(--red)">*</span></label>'+
-        '<textarea class="os-feito-input" placeholder="Descreva o que foi executado..." rows="3"></textarea>'+
-      '</div>'+
+      '<div class="field"><label style="color:var(--muted)">📋 O que foi planejado</label>'+
+        '<textarea class="os-planejado-input" readonly style="opacity:.55;cursor:not-allowed;resize:none">'+planejado+'</textarea></div>'+
+      '<div class="field"><label style="color:var(--green)">✅ O que foi feito <span style="color:var(--red)">*</span></label>'+
+        '<textarea class="os-feito-input" placeholder="Descreva o que foi executado..." rows="3"></textarea></div>'+
       '<div class="field" style="background:var(--orange-bg);border:1px solid var(--orange);border-radius:8px;padding:10px 12px">'+
         '<label style="color:var(--orange);font-size:.82rem;font-weight:700">⚠️ OBRIGATÓRIO — Selecione o status</label>'+
         '<select class="os-status-input status-select" onchange="updateStatusStyle(this)" style="margin-top:6px">'+
@@ -514,22 +527,16 @@
           '<option value="Concluído">Concluído</option>'+
           '<option value="Etapa Concluída">Etapa Concluída</option>'+
           '<option value="Cancelado">Cancelado</option>'+
-        '</select>'+
-      '</div>';
+        '</select></div>';
     list.appendChild(card);
     card.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
   function removerOSFinal(osCode){
     var card=document.getElementById('osf-'+osCode.replace(/[^a-z0-9]/gi,'_'));
-    if(card) card.remove();
-    delete _osFinaisCarregados[osCode];
+    if(card) card.remove(); delete _osFinaisCarregados[osCode];
   }
-
-  function addOutraOS(){
-    document.getElementById('lookupInput').focus();
-    document.getElementById('lookupCard').scrollIntoView({behavior:'smooth'});
-  }
+  function addOutraOS(){document.getElementById('lookupInput').focus();document.getElementById('lookupCard').scrollIntoView({behavior:'smooth'});}
 
   // ── Colaboradores ─────────────────────────────────────────────────────────
   function addColab(){
@@ -539,17 +546,15 @@
     var wrap=document.createElement('div'); wrap.className='colab-wrap';
     wrap.innerHTML=
       '<div class="colab-row">'+
-        '<input type="number" inputmode="numeric" placeholder="'+(idx===0?'Responsável':'Colaborador '+(idx+1))+
-          '" class="colab-mat" oninput="lookupColab(this)"/>'+
+        '<input type="number" inputmode="numeric" placeholder="'+(idx===0?'Responsável':'Colaborador '+(idx+1))+'" class="colab-mat" oninput="lookupColab(this)"/>'+
         (idx>0?'<button class="btn-remove" onclick="removeColab(this)">✕</button>':'')+
-      '</div>'+
-      '<div class="colab-hint"></div>';
+      '</div><div class="colab-hint"></div>';
     list.appendChild(wrap);
     if(list.children.length>=MAX_COLAB) document.getElementById('btnAddColab').style.display='none';
   }
   function removeColab(btn){btn.closest('.colab-wrap').remove();document.getElementById('btnAddColab').style.display='';}
   function lookupColab(inp){
-    var mat=inp.value.trim(), hint=inp.closest('.colab-wrap').querySelector('.colab-hint');
+    var mat=inp.value.trim(),hint=inp.closest('.colab-wrap').querySelector('.colab-hint');
     if(mat.length>=4){
       fetch('/api/colaborador/'+mat).then(function(r){return r.json();}).then(function(res){
         if(res.data){inp.className='colab-mat ok';hint.className='colab-hint ok';hint.textContent='✓ '+res.data.nome;}
@@ -557,25 +562,26 @@
       }).catch(function(){});
     } else {inp.className='colab-mat';hint.className='colab-hint';hint.textContent='';}
   }
-  function getColabs(){
-    return Array.from(document.querySelectorAll('.colab-mat')).map(function(i){return i.value.trim();}).filter(Boolean);
-  }
+  function getColabs(){return Array.from(document.querySelectorAll('.colab-mat')).map(function(i){return i.value.trim();}).filter(Boolean);}
 
   // ── OS Início ─────────────────────────────────────────────────────────────
   function addOS(){
     osCount++;
     var n=osCount, list=document.getElementById('osList');
-    var subOpts=SUBESTACOES.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
     var item=document.createElement('div'); item.className='os-item'; item.id='os-'+n;
+    // Cria o campo SE como combobox
+    var seCombo = createSECombo('os-sub-input', 'Digite ou selecione a SE...');
     item.innerHTML=
       '<div class="os-item-header">'+
         '<span class="os-item-num">🧰 Atividade '+n+'</span>'+
         (n>1?'<button class="btn-remove" onclick="removeOS('+n+')">✕ Remover</button>':'')+
       '</div>'+
       '<div class="field"><label>Nº da OS</label><input type="text" class="os-num-input" placeholder="Ex: 3257260658" inputmode="numeric"/></div>'+
-      '<div class="field"><label>Subestação</label><select class="os-sub-input">'+subOpts+'</select></div>'+
+      '<div class="field" id="seFieldWrap-'+n+'"><label>Subestação</label></div>'+
       '<div class="field"><label>📝 O que vai ser feito</label><textarea class="os-inicial-input" placeholder="Descreva o que será executado..."></textarea></div>';
     list.appendChild(item);
+    // Insere o combobox no campo SE
+    document.getElementById('seFieldWrap-'+n).appendChild(seCombo);
   }
   function removeOS(n){var el=document.getElementById('os-'+n);if(el)el.remove();}
   function updateStatusStyle(sel){sel.className='os-status-input status-select status-'+sel.value;}
@@ -584,15 +590,13 @@
     var seen={};
     return Array.from(document.querySelectorAll('#osList .os-item')).map(function(item){
       var os=(item.querySelector('.os-num-input')||{}).value||'';
-      var unidade=(item.querySelector('.os-sub-input')||{}).value||'';
+      var seInp=item.querySelector('.os-sub-input');
+      var unidade=seInp?seInp.value.trim().toUpperCase():'';
       var desc=((item.querySelector('.os-inicial-input')||{}).value||'').trim();
       return {os:os,unidade:unidade,servico:desc,descricao_inicial:desc,status:'Andamento'};
     }).filter(function(o){
       if(!o.servico&&!o.os) return false;
-      var key=o.os||o.servico;
-      if(seen[key]) return false;
-      seen[key]=true;
-      return true;
+      var key=o.os||o.servico; if(seen[key]) return false; seen[key]=true; return true;
     });
   }
   function getOSListFinal(){
@@ -609,111 +613,132 @@
   function addTrajeto(){
     trajetoCount++;
     var n=trajetoCount;
-    var subOpts=SUBESTACOES.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
     var tipoOpts=TIPOS_TRAJETO.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
     var now=new Date().toTimeString().slice(0,5);
     var item=document.createElement('div'); item.className='trajeto-item'; item.id='traj-'+n;
-    item.innerHTML=
-      '<select class="traj-tipo" onchange="toggleSeSel(this)">'+tipoOpts+'</select>'+
-      '<select class="sub-sel traj-se">'+subOpts+'</select>'+
+
+    // Cria o input de SE para trajeto (menor, sem hint)
+    var seInp=document.createElement('input');
+    seInp.type='text';
+    seInp.className='traj-se-input';
+    seInp.placeholder='SE...';
+    seInp.autocomplete='off';
+    seInp.spellcheck=false;
+    seInp.style.display='none';
+    seInp.addEventListener('input',function(){
+      seInp.value=seInp.value.toUpperCase();
+      renderTrajDrop(seInp);
+    });
+    seInp.addEventListener('focus',function(){renderTrajDrop(seInp);});
+    seInp.addEventListener('blur',function(){setTimeout(function(){closeTrajDrop(seInp);},150);});
+    seInp.addEventListener('keydown',function(e){
+      var drop=seInp._drop;
+      if(!drop) return;
+      var items=drop.querySelectorAll('.se-dropdown-item');
+      var active=drop.querySelector('.se-dropdown-item.active');
+      if(e.key==='ArrowDown'){e.preventDefault();var next=active?active.nextElementSibling:items[0];if(next){if(active)active.classList.remove('active');next.classList.add('active');}}
+      else if(e.key==='ArrowUp'){e.preventDefault();var prev=active?active.previousElementSibling:null;if(prev){active.classList.remove('active');prev.classList.add('active');}}
+      else if(e.key==='Enter'&&active){e.preventDefault();seInp.value=active.dataset.val;closeTrajDrop(seInp);}
+      else if(e.key==='Escape'){closeTrajDrop(seInp);}
+    });
+    // Dropdown para trajeto SE
+    var trajDrop=document.createElement('div');
+    trajDrop.className='se-dropdown';
+    trajDrop.style.width='140px';
+    seInp._drop=trajDrop;
+
+    item.innerHTML='<select class="traj-tipo" onchange="toggleSeSel(this)">'+tipoOpts+'</select>'+
       '<input type="time" class="traj-hora" value="'+now+'"/>'+
       '<button class="btn-remove" onclick="removeTrajeto('+n+')">✕</button>';
+    // Inserir input SE e dropdown em posição relativa
+    var seWrap=document.createElement('div');
+    seWrap.style.cssText='position:relative;flex:0 0 90px';
+    seWrap.appendChild(seInp);
+    seWrap.appendChild(trajDrop);
+    item.insertBefore(seWrap, item.querySelector('.traj-hora'));
+
     document.getElementById('trajetoList').appendChild(item);
     toggleSeSel(item.querySelector('.traj-tipo'));
     item.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
+
+  function renderTrajDrop(inp){
+    var drop=inp._drop; if(!drop) return;
+    var val=inp.value.trim().toUpperCase();
+    var matches=val?SUBESTACOES.filter(function(s){return s.startsWith(val)||s.includes(val);}):SUBESTACOES;
+    drop.innerHTML=matches.slice(0,30).map(function(s){return '<div class="se-dropdown-item" data-val="'+s+'">'+s+'</div>';}).join('')
+      ||(matches.length?'':'<div class="se-dropdown-empty">Nenhuma</div>');
+    drop.querySelectorAll('.se-dropdown-item').forEach(function(item){
+      item.addEventListener('mousedown',function(e){e.preventDefault();inp.value=item.dataset.val;closeTrajDrop(inp);});
+    });
+    drop.classList.add('open');
+  }
+  function closeTrajDrop(inp){if(inp._drop) inp._drop.classList.remove('open');}
+
   function toggleSeSel(sel){
-    var seEl=sel.closest('.trajeto-item').querySelector('.traj-se');
-    seEl.style.display=sel.value.includes('SE')?'':'none';
+    var item=sel.closest('.trajeto-item');
+    var seInp=item.querySelector('.traj-se-input');
+    var show=sel.value.includes('SE');
+    if(seInp) seInp.style.display=show?'':'none';
   }
   function removeTrajeto(n){var el=document.getElementById('traj-'+n);if(el)el.remove();}
   function getTrajetoStr(){
     return Array.from(document.querySelectorAll('.trajeto-item')).map(function(item){
       var t2=item.querySelector('.traj-tipo').value;
       var hora=item.querySelector('.traj-hora').value;
-      var seEl=item.querySelector('.traj-se');
-      var se=(seEl&&seEl.style.display!=='none')?seEl.value:'';
+      var seInp=item.querySelector('.traj-se-input');
+      var se=(seInp&&seInp.style.display!=='none')?seInp.value.trim():'';
       return t2+(se?' '+se:'')+(hora?' '+hora:'');
     }).filter(Boolean).join(' | ');
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
-  var _submitting=false;
-  var _lastSubmitTime=0;
+  var _submitting=false, _lastSubmitTime=0;
   async function submeter(){
-    // ── Aba Trajeto: fluxo próprio, sem validações normais ──
-    if(tipo==='trajeto'){ await submeterTrajeto(); return; }
-
+    if(tipo==='trajeto'){await submeterTrajeto();return;}
     var now=Date.now();
-    if(_submitting){ showMsg('⚠️ Aguarde, já existe um envio em andamento.','err'); return; }
-    if(now-_lastSubmitTime < 3000){ showMsg('⚠️ Aguarde 3 segundos antes de tentar novamente.','err'); return; }
-    _submitting=true;
-    _lastSubmitTime=now;
+    if(_submitting){showMsg('⚠️ Aguarde, já existe um envio em andamento.','err');return;}
+    if(now-_lastSubmitTime<3000){showMsg('⚠️ Aguarde 3 segundos antes de tentar novamente.','err');return;}
+    _submitting=true; _lastSubmitTime=now;
     var btn=document.getElementById('btnSubmit');
     var colabs=getColabs();
     var osList=tipo==='inicial'?getOSListInicial():getOSListFinal();
-
-    if(tipo==='inicial' && !colabs.length){showMsg('⚠️ Equipe: informe pelo menos uma matrícula.','err');return;}
-    if(tipo==='final' && _membrosFinais.length===0 && !colabs.length){showMsg('Carregue uma OS primeiro.','err');return;}
-    if(!osList.length){showMsg(tipo==='final'?'⚠️ Carregue pelo menos uma OS para finalizar.':'⚠️ Atividades: adicione pelo menos uma atividade.','err');return;}
-    if(tipo==='inicial'&&osList.some(function(o){return !o.descricao_inicial;})){
-      showMsg('⚠️ Atividades: preencha "O que vai ser feito" em todas as atividades.','err');return;
-    }
-    // Status is always Andamento for inicial — no need to validate
-    if(tipo==='final'&&osList.some(function(o){return !o.descricao_final;})){
-      showMsg('⚠️ Atividades: preencha "O que foi feito" em todas as atividades.','err');return;
-    }
-    if(tipo==='final'&&osList.some(function(o){return !o.status||o.status==='Andamento'||o.status==='';})){showMsg('⚠️ Selecione o Status de todas as atividades antes de finalizar.','err');return;}
-
+    if(tipo==='inicial'&&!colabs.length){showMsg('⚠️ Equipe: informe pelo menos uma matrícula.','err');_submitting=false;return;}
+    if(tipo==='final'&&_membrosFinais.length===0&&!colabs.length){showMsg('Carregue uma OS primeiro.','err');_submitting=false;return;}
+    if(!osList.length){showMsg(tipo==='final'?'⚠️ Carregue pelo menos uma OS para finalizar.':'⚠️ Adicione pelo menos uma atividade.','err');_submitting=false;return;}
+    if(tipo==='inicial'&&osList.some(function(o){return !o.descricao_inicial;})){showMsg('⚠️ Preencha "O que vai ser feito" em todas as atividades.','err');_submitting=false;return;}
+    if(tipo==='final'&&osList.some(function(o){return !o.descricao_final;})){showMsg('⚠️ Preencha "O que foi feito" em todas as atividades.','err');_submitting=false;return;}
+    if(tipo==='final'&&osList.some(function(o){return !o.status||o.status==='Andamento'||o.status==='';})){showMsg('⚠️ Selecione o Status de todas as atividades.','err');_submitting=false;return;}
     btn.disabled=true; btn.textContent='⏳ Registrando...';
-    console.log('[SUBMIT] tipo:', tipo, 'ordens:', osList.length, JSON.stringify(osList.map(function(o){return o.os;})));
-    // Dedup client-side
-    var seenOs={}; osList=osList.filter(function(o){ var k=o.os||o.servico; if(seenOs[k]) return false; seenOs[k]=true; return true; });
-    console.log('[SUBMIT] após dedup:', osList.length, 'ordens');
-
+    var seenOs={}; osList=osList.filter(function(o){var k=o.os||o.servico;if(seenOs[k])return false;seenOs[k]=true;return true;});
     var membros=[];
-    // No modo Final com OS carregada, usa os nomes já resolvidos
-    if(tipo==='final' && _membrosFinais.length>0){
-      membros = _membrosFinais.slice();
+    if(tipo==='final'&&_membrosFinais.length>0){
+      membros=_membrosFinais.slice();
     } else {
-      // Modo Inicial — valida matrículas normalmente
-      if(!colabs.length){showMsg('Informe pelo menos um colaborador.','err');btn.disabled=false;btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';return;}
+      if(!colabs.length){showMsg('Informe pelo menos um colaborador.','err');btn.disabled=false;btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';_submitting=false;return;}
       for(var i=0;i<colabs.length;i++){
         try{
           var r1=await fetch('/api/colaborador/'+colabs[i]).then(function(r){return r.json();});
-          if(!r1.data){showMsg('Matrícula '+colabs[i]+' não encontrada.','err');btn.disabled=false;btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';return;}
+          if(!r1.data){showMsg('Matrícula '+colabs[i]+' não encontrada.','err');btn.disabled=false;btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';_submitting=false;return;}
           membros.push(r1.data.nome);
-        }catch(e){showMsg('Erro ao validar matrícula.','err');btn.disabled=false;return;}
+        }catch(e){showMsg('Erro ao validar matrícula.','err');btn.disabled=false;_submitting=false;return;}
       }
     }
-
     var dp=document.getElementById('data').value.split('-');
     var payload={
-      tipo:tipo,
-      guarda:document.getElementById('guarda').value,
-      horario:document.getElementById('horario').value,
-      dia_semana:document.getElementById('diaSemana').value,
-      data:dp[2]+'/'+dp[1]+'/'+dp[0],
-      equipe:membros.join(', '),
-      telefone:document.getElementById('telefone').value.trim(),
-      veiculo:document.getElementById('veiculo').value.trim(),
-      trajeto:getTrajetoStr(),
-      ordens:osList,
+      tipo:tipo,guarda:document.getElementById('guarda').value,horario:document.getElementById('horario').value,
+      dia_semana:document.getElementById('diaSemana').value,data:dp[2]+'/'+dp[1]+'/'+dp[0],
+      equipe:membros.join(', '),telefone:document.getElementById('telefone').value.trim(),
+      veiculo:document.getElementById('veiculo').value.trim(),trajeto:getTrajetoStr(),ordens:osList,
     };
-
     try{
       var result=await fetch('/api/atividade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
       if(!result.ok) throw new Error(result.error||'Erro desconhecido');
       showMsg('✅ '+(tipo==='inicial'?'Início':'Conclusão')+' registrado!\nEquipe: '+membros.join(', '),'ok');
       mostrarCardsAPR(result.registradas||[]);
-    }catch(e){
-      console.error('[SUBMIT] Erro:', e);
-      showMsg('❌ Erro ao registrar: '+e.message,'err');
-    }
-
-    btn.disabled=false;
-    btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';
-
+    }catch(e){showMsg('❌ Erro ao registrar: '+e.message,'err');}
+    btn.disabled=false; btn.textContent=tipo==='inicial'?'▶ Registrar Início':'◀ Registrar Conclusão';
+    _submitting=false;
   }
 
   function showMsg(msg,type){
@@ -724,76 +749,58 @@
   }
 
   // ── Aba Trajeto ───────────────────────────────────────────────────────────
-  var _trajetoOsData = null;
-  var _trajetoTimer = null;
-  var _trajetoCount = 0;
-
-  function onTrajetoOsInput(val) {
+  var _trajetoOsData=null, _trajetoTimer=null, _trajetoCount=0;
+  function onTrajetoOsInput(val){
     clearTimeout(_trajetoTimer);
-    var inp = document.getElementById('trajetoOsInput');
-    var res = document.getElementById('trajetoOsResult');
-    var wrap = document.getElementById('trajetoAtualWrap');
-    wrap.style.display = 'none';
-    if (!val || val.trim().length < 3) { inp.className='os-lookup-input'; res.style.display='none'; return; }
-    _trajetoTimer = setTimeout(function(){
-      fetch('/api/os').then(function(r){ return r.json(); }).then(function(data){
-        var os = data.data.find(function(o){ return o.os === val.trim(); });
-        if (!os) {
-          inp.className='os-lookup-input err';
-          res.className='lookup-result err'; res.style.display='block';
-          res.textContent='❌ OS não encontrada.'; return;
-        }
-        if (os.status === 'Concluído') {
-          inp.className='os-lookup-input err';
-          res.className='lookup-result err'; res.style.display='block';
-          res.textContent='⚠️ OS já Concluída — não é possível atualizar trajeto.'; return;
-        }
-        inp.className='os-lookup-input ok';
-        _trajetoOsData = os;
-        res.className='lookup-result ok'; res.style.display='block';
-        res.innerHTML='<strong>OS '+os.os+'</strong> — '+(os.unidade||'')+'<br>'+
-          '📌 '+os.status+'<br>'+
+    var inp=document.getElementById('trajetoOsInput');
+    var res=document.getElementById('trajetoOsResult');
+    var wrap=document.getElementById('trajetoAtualWrap');
+    wrap.style.display='none';
+    if(!val||val.trim().length<3){inp.className='os-lookup-input';res.style.display='none';return;}
+    _trajetoTimer=setTimeout(function(){
+      fetch('/api/os').then(function(r){return r.json();}).then(function(data){
+        var os=data.data.find(function(o){return o.os===val.trim();});
+        if(!os){inp.className='os-lookup-input err';res.className='lookup-result err';res.style.display='block';res.textContent='❌ OS não encontrada.';return;}
+        if(os.status==='Concluído'){inp.className='os-lookup-input err';res.className='lookup-result err';res.style.display='block';res.textContent='⚠️ OS já Concluída.';return;}
+        inp.className='os-lookup-input ok';_trajetoOsData=os;
+        res.className='lookup-result ok';res.style.display='block';
+        res.innerHTML='<strong>OS '+os.os+'</strong> — '+(os.unidade||'')+'<br>📌 '+os.status+'<br>'+
           '<button class="btn-load" onclick="carregarTrajetoOS()" style="margin-top:8px">✅ Carregar OS</button>';
       }).catch(function(){});
-    }, 500);
+    },500);
   }
-
-  function carregarTrajetoOS() {
-    var os = _trajetoOsData; if (!os) return;
-    var wrap = document.getElementById('trajetoAtualWrap');
-    var list = document.getElementById('trajetoAtualList');
-    var novoWrap = document.getElementById('trajetoNovoWrap');
-    // Mostra trajeto atual
-    var pontos = (os.trajeto || '').split(' | ').filter(Boolean);
-    if (pontos.length) {
-      list.innerHTML = pontos.map(function(p, i){
-        return '<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text);display:flex;gap:8px">'+
-          '<span style="color:var(--muted);min-width:16px">'+(i+1)+'.</span><span>'+p+'</span></div>';
-      }).join('');
-    } else {
-      list.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:6px 0">Nenhum ponto registrado ainda.</div>';
-    }
-    novoWrap.innerHTML = '';
-    _trajetoCount = 0;
-    wrap.style.display = '';
-    document.getElementById('trajetoOsResult').style.display = 'none';
+  function carregarTrajetoOS(){
+    var os=_trajetoOsData; if(!os) return;
+    var list=document.getElementById('trajetoAtualList');
+    var novoWrap=document.getElementById('trajetoNovoWrap');
+    var pontos=(os.trajeto||'').split(' | ').filter(Boolean);
+    list.innerHTML=pontos.length
+      ?pontos.map(function(p,i){return '<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text);display:flex;gap:8px"><span style="color:var(--muted);min-width:16px">'+(i+1)+'.</span><span>'+p+'</span></div>';}).join('')
+      :'<div style="color:var(--muted);font-size:.82rem;padding:6px 0">Nenhum ponto registrado.</div>';
+    novoWrap.innerHTML=''; _trajetoCount=0;
+    document.getElementById('trajetoAtualWrap').style.display='';
+    document.getElementById('trajetoOsResult').style.display='none';
   }
-
-  function removeTrajNovo(n){ var el=document.getElementById('tnovo-'+n); if(el) el.remove(); }
-
-  function addTrajetoNovo() {
+  function removeTrajNovo(n){var el=document.getElementById('tnovo-'+n);if(el)el.remove();}
+  function addTrajetoNovo(){
     _trajetoCount++;
-    var n = _trajetoCount;
-    var subOpts = SUBESTACOES.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
-    var tipoOpts = TIPOS_TRAJETO.map(function(t){ return '<option>'+t+'</option>'; }).join('');
-    var now = new Date().toTimeString().slice(0,5);
-    var item = document.createElement('div');
-    item.className = 'trajeto-item'; item.id = 'tnovo-'+n;
-    item.innerHTML =
-      '<select class="traj-tipo" onchange="toggleSeSel(this)">'+tipoOpts+'</select>'+
-      '<select class="sub-sel traj-se">'+subOpts+'</select>'+
+    var n=_trajetoCount;
+    var tipoOpts=TIPOS_TRAJETO.map(function(t){return '<option>'+t+'</option>';}).join('');
+    var now=new Date().toTimeString().slice(0,5);
+    var item=document.createElement('div'); item.className='trajeto-item'; item.id='tnovo-'+n;
+    var seInp=document.createElement('input');
+    seInp.type='text'; seInp.className='traj-se-input'; seInp.placeholder='SE...';
+    seInp.autocomplete='off'; seInp.spellcheck=false; seInp.style.display='none';
+    seInp.addEventListener('input',function(){seInp.value=seInp.value.toUpperCase();renderTrajDrop(seInp);});
+    seInp.addEventListener('focus',function(){renderTrajDrop(seInp);});
+    seInp.addEventListener('blur',function(){setTimeout(function(){closeTrajDrop(seInp);},150);});
+    var trajDrop=document.createElement('div'); trajDrop.className='se-dropdown'; trajDrop.style.width='140px'; seInp._drop=trajDrop;
+    item.innerHTML='<select class="traj-tipo" onchange="toggleSeSel(this)">'+tipoOpts+'</select>'+
       '<input type="time" class="traj-hora" value="'+now+'"/>'+
       '<button class="btn-remove" onclick="removeTrajNovo('+n+')">✕</button>';
+    var seWrap=document.createElement('div'); seWrap.style.cssText='position:relative;flex:0 0 90px';
+    seWrap.appendChild(seInp); seWrap.appendChild(trajDrop);
+    item.insertBefore(seWrap,item.querySelector('.traj-hora'));
     document.getElementById('trajetoNovoWrap').appendChild(item);
     toggleSeSel(item.querySelector('.traj-tipo'));
     item.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -807,8 +814,7 @@
       var label=osCode.match(/^\d{6,}$/)?'OS '+osCode:'Atividade '+(i+1);
       var card=document.createElement('div'); card.className='apr-card'; card.id='aprCard_'+i;
       card.innerHTML=
-        '<div class="apr-card-title">📎 APR — '+label+
-          '<span class="apr-status pendente" id="aprStatus_'+i+'">pendente</span></div>'+
+        '<div class="apr-card-title">📎 APR — '+label+'<span class="apr-status pendente" id="aprStatus_'+i+'">pendente</span></div>'+
         '<p style="font-size:.75rem;color:var(--muted)">'+(r.unidade||'')+' — '+(r.servico||'').substring(0,60)+'</p>'+
         '<div class="apr-sides">'+
           '<div><div class="apr-side-title">Frente <span style="color:var(--red)">*</span></div>'+
@@ -828,22 +834,16 @@
       area.appendChild(card);
     });
   }
-
   function previewAprCard(idx,side,input){
     var file=input.files[0]; if(!file) return;
     _aprFiles[idx+'_'+side]=file;
     var img=document.getElementById(side==='frente'?'aprPrevF_'+idx:'aprPrevV_'+idx);
     if(img){img.src=URL.createObjectURL(file);img.style.display='block';}
     input.closest('label').classList.add('done');
-    if(_aprFiles[idx+'_frente']&&_aprFiles[idx+'_verso']){
-      var btn=document.getElementById('btnApr_'+idx);
-      btn.style.display='block'; btn.disabled=false;
-    }
+    if(_aprFiles[idx+'_frente']&&_aprFiles[idx+'_verso']){var btn=document.getElementById('btnApr_'+idx);btn.style.display='block';btn.disabled=false;}
   }
-
   async function enviarAprCard(idx,osCode){
-    var btn=document.getElementById('btnApr_'+idx);
-    btn.disabled=true; btn.textContent='⏳ Enviando...';
+    var btn=document.getElementById('btnApr_'+idx); btn.disabled=true; btn.textContent='⏳ Enviando...';
     try{
       var res=await fetch('/api/os').then(function(r){return r.json();});
       var os=res.data.find(function(o){return o.os===osCode;});
@@ -859,40 +859,28 @@
     }catch(e){alert('Erro: '+e.message);btn.disabled=false;btn.textContent='📤 Enviar APR';}
   }
 
-  // ── Submit Trajeto ───────────────────────────────────────────────────────
-  async function submeterTrajeto() {
-    if (!_trajetoOsData) { showMsg('⚠️ Carregue uma OS primeiro.','err'); return; }
-    var novosItens = document.querySelectorAll('#trajetoNovoWrap .trajeto-item');
-    if (!novosItens.length) { showMsg('⚠️ Adicione pelo menos um ponto de trajeto.','err'); return; }
-
-    var novosTrechos = Array.from(novosItens).map(function(item){
-      var t2   = item.querySelector('.traj-tipo').value;
-      var hora = item.querySelector('.traj-hora').value;
-      var seEl = item.querySelector('.traj-se');
-      var se   = (seEl && seEl.style.display !== 'none') ? seEl.value : '';
-      return t2 + (se ? ' '+se : '') + (hora ? ' '+hora : '');
+  // ── Submit Trajeto ─────────────────────────────────────────────────────────
+  async function submeterTrajeto(){
+    if(!_trajetoOsData){showMsg('⚠️ Carregue uma OS primeiro.','err');return;}
+    var novosItens=document.querySelectorAll('#trajetoNovoWrap .trajeto-item');
+    if(!novosItens.length){showMsg('⚠️ Adicione pelo menos um ponto de trajeto.','err');return;}
+    var novosTrechos=Array.from(novosItens).map(function(item){
+      var t2=item.querySelector('.traj-tipo').value;
+      var hora=item.querySelector('.traj-hora').value;
+      var seInp=item.querySelector('.traj-se-input');
+      var se=(seInp&&seInp.style.display!=='none')?seInp.value.trim():'';
+      return t2+(se?' '+se:'')+(hora?' '+hora:'');
     }).filter(Boolean).join(' | ');
-
-    var btn = document.getElementById('btnSubmit');
-    btn.disabled = true; btn.textContent = '⏳ Salvando...';
-
-    try {
-      var res = await fetch('/api/trajeto/'+_trajetoOsData.id, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ pontos: novosTrechos })
-      }).then(function(r){ return r.json(); });
-
-      if (!res.ok) throw new Error(res.error || 'Erro desconhecido');
-      showMsg('✅ Trajeto atualizado! ' + novosTrechos, 'ok');
-      _trajetoOsData = res.data;
-      carregarTrajetoOS();
-    } catch(e) {
-      showMsg('❌ Erro: '+e.message, 'err');
-    }
-    btn.disabled = false; btn.textContent = '📍 Salvar Trajeto';
+    var btn=document.getElementById('btnSubmit');
+    btn.disabled=true; btn.textContent='⏳ Salvando...';
+    try{
+      var res=await fetch('/api/trajeto/'+_trajetoOsData.id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pontos:novosTrechos})}).then(function(r){return r.json();});
+      if(!res.ok) throw new Error(res.error||'Erro desconhecido');
+      showMsg('✅ Trajeto atualizado! '+novosTrechos,'ok');
+      _trajetoOsData=res.data; carregarTrajetoOS();
+    }catch(e){showMsg('❌ Erro: '+e.message,'err');}
+    btn.disabled=false; btn.textContent='📍 Salvar Trajeto';
   }
-
 </script>
 </body>
 </html>
