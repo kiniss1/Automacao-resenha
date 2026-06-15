@@ -741,6 +741,85 @@ function startServer() {
 
   // ═══════════════════════════════════════════════════════════════════════════
 
+  // ── Relatório de Inspeções WhatsApp (grupo separado) ─────────────────────
+  app.post('/api/relatorio/inspecoes/enviar', async (req, res) => {
+    try {
+      const botState = require('./state');
+      if (!botState.isReady() || !global._waClient) {
+        return res.status(503).json({ ok: false, error: 'Bot WhatsApp não conectado' });
+      }
+
+      const GRUPO_INSP = process.env.GRUPO_INSP_NOME || process.env.GRUPO_NOME || 'Resenha';
+
+      // Resolve grupo de inspeção (cache separado do grupo principal)
+      if (!global._grupoInspId) {
+        const chats = await global._waClient.getChats();
+        const grupo  = chats.find(c => c.isGroup && c.name === GRUPO_INSP);
+        if (!grupo) return res.status(404).json({ ok: false, error: `Grupo "${GRUPO_INSP}" não encontrado. Verifique GRUPO_INSP_NOME no .env` });
+        global._grupoInspId = grupo.id._serialized;
+      }
+
+      // Data Brasília (UTC-3)
+      const agoraBR = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const y  = agoraBR.getUTCFullYear();
+      const m  = String(agoraBR.getUTCMonth()+1).padStart(2,'0');
+      const d  = String(agoraBR.getUTCDate()).padStart(2,'0');
+      const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
+      const mi = String(agoraBR.getUTCMinutes()).padStart(2,'0');
+      const dataISO = `${y}-${m}-${d}`;
+      const dataFmt = `${d}/${m}/${y}`;
+      const horaFmt = `${hh}:${mi}`;
+
+      // Inspeções do dia
+      const inspStats = insp.statsDashboard(dataISO, dataISO);
+      const preenchimentos = insp.listarPreenchimentos({ dataDe: dataISO, dataAte: dataISO });
+
+      // Monta mensagem
+      const linhas = [];
+      linhas.push('🔍 *Sistema de Monitoramento — Inspeções*');
+      linhas.push(`📊 Relatório de Inspeções — ${dataFmt} às ${horaFmt}`);
+      linhas.push('');
+      linhas.push(`📋 *Total hoje: ${inspStats.total || 0}* (${inspStats.concluidas || 0} concluída(s) / ${(inspStats.total - inspStats.concluidas) || 0} rascunho(s))`);
+      linhas.push('');
+
+      if (preenchimentos.length > 0) {
+        preenchimentos.forEach(p => {
+          const icon  = p.status === 'Concluído' ? '✅' : '⏳';
+          const se    = p.nome_se ? `${p.codigo_se} — ${p.nome_se}` : p.codigo_se;
+          const tec   = p.nome_tecnico || p.matricula || '—';
+          const hora  = p.hora_insp || p.data_insp || '—';
+          linhas.push(`${icon} SE ${se} | ${tec} | ${hora}`);
+        });
+        linhas.push('');
+      } else {
+        linhas.push('📭 Nenhuma inspeção registrada hoje.');
+        linhas.push('');
+      }
+
+      // SEs inspecionadas
+      if (inspStats.porSE && inspStats.porSE.length > 0) {
+        linhas.push(`📍 *SEs inspecionadas: ${inspStats.porSE.map(s => s.codigo_se).join(', ')}*`);
+        linhas.push('');
+      }
+
+      linhas.push('_Gerado automaticamente pelo sistema OOMC_');
+
+      const msg = linhas.join('\n').trim();
+
+      const chat = await global._waClient.getChatById(global._grupoInspId);
+      await chat.sendMessage(msg);
+
+      res.json({ ok: true, msg: `Relatório enviado para "${GRUPO_INSP}"!`, preview: msg });
+    } catch(e) {
+      console.error('[RELATORIO-INSP]', e.message);
+      // Se erro de grupo não encontrado, limpa cache para tentar de novo
+      if (e.message?.includes('not found') || e.message?.includes('404')) {
+        global._grupoInspId = null;
+      }
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // ── Relatório diário WhatsApp ─────────────────────────────────────────────
   app.post('/api/relatorio/enviar', async (req, res) => {
     try {
