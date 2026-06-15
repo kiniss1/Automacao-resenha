@@ -749,71 +749,78 @@ function startServer() {
         return res.status(503).json({ ok: false, error: 'Bot WhatsApp não conectado' });
       }
 
-      const hoje = new Date();
-      const y = hoje.getFullYear();
-      const m = String(hoje.getMonth()+1).padStart(2,'0');
-      const d = String(hoje.getDate()).padStart(2,'0');
-      const dataHoje   = `${y}-${m}-${d}`;
-      const dataFmt    = `${d}/${m}/${y}`;
-      const horaFmt    = hoje.toTimeString().slice(0,5);
+      // Hora de Brasília (UTC-3)
+      const agoraBR  = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const y  = agoraBR.getUTCFullYear();
+      const m  = String(agoraBR.getUTCMonth()+1).padStart(2,'0');
+      const d  = String(agoraBR.getUTCDate()).padStart(2,'0');
+      const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
+      const mm = String(agoraBR.getUTCMinutes()).padStart(2,'0');
+      const dataHoje = `${y}-${m}-${d}`;
+      const dataFmt  = `${d}/${m}/${y}`;
+      const horaFmt  = `${hh}:${mm}`;
 
       // Stats do dia
       const stats = db.estatisticas({ dataDe: dataHoje, dataAte: dataHoje });
 
-      // OS em andamento hoje — pegar subestações
+      // OS em andamento — SE + equipe
       const osAndamento = db.all(
-        `SELECT subestacoes, unidade FROM ordens_servico WHERE status='Andamento' ORDER BY criado_em DESC LIMIT 50`
+        `SELECT subestacoes, unidade, equipe FROM ordens_servico
+         WHERE status='Andamento'
+         ORDER BY criado_em DESC LIMIT 30`
       );
-      const sesAndamento = [...new Set(
-        osAndamento.map(o => (o.subestacoes || o.unidade || '').trim()).filter(Boolean)
-      )];
 
       // Checkins ativos agora
       const checkin = require('./checkin');
       const ativos  = checkin.listarAtivos();
-      const porSE   = {};
-      ativos.forEach(c => {
-        const se = c.subestacao || '?';
-        if (!porSE[se]) porSE[se] = [];
-        porSE[se].push(c.nome || c.matricula);
-      });
 
       // Inspeções do dia
       const inspStats = insp.statsDashboard(dataHoje, dataHoje);
 
       // ── Monta mensagem ──
-      const linhas = [
-        `🤖 *Sistema de Monitoramento Automático*`,
-        `📊 Relatório diário gerado — ${dataFmt} às ${horaFmt}`,
-        ``,
-        `📋 *Atividades registradas hoje:* ${stats.total || 0}`,
-        `⚡ *Em andamento:* ${stats.andamento || 0}${sesAndamento.length ? ' | ' + sesAndamento.map(s => 'SE ' + s).join('; ') : ''}`,
-        `✅ *Concluídas hoje:* ${stats.concluido || 0}`,
-        stats.etapa > 0 ? `🔄 *Etapa concluída:* ${stats.etapa}` : null,
-        stats.cancelado > 0 ? `❌ *Canceladas:* ${stats.cancelado}` : null,
-        ``,
-      ].filter(l => l !== null);
+      const linhas = [];
+      linhas.push('🤖 *Sistema de Monitoramento Automático*');
+      linhas.push(`📊 Relatório diário gerado — ${dataFmt} às ${horaFmt}`);
+      linhas.push('');
 
-      if (ativos.length) {
-        linhas.push(`👷 *Em campo agora: ${ativos.length} colaborador(es)*`);
-        Object.entries(porSE).forEach(([se, nomes]) => {
-          linhas.push(`📍 SE ${se}: ${nomes.join(', ')}`);
+      // Em andamento com SE + equipe
+      const totalAndamento = osAndamento.length;
+      linhas.push(`⚡ *Em andamento: ${totalAndamento}*`);
+      if (totalAndamento > 0) {
+        osAndamento.forEach(os => {
+          const se    = (os.subestacoes || os.unidade || '—').trim();
+          const equipe = (os.equipe || '—').trim();
+          // Formata nomes: pega apenas primeiros nomes para não ficar muito longo
+          const nomes = equipe.split(',').map(n => {
+            const partes = n.trim().split(' ');
+            return partes[0] + (partes[1] ? ' ' + partes[1] : '');
+          }).join(' / ');
+          linhas.push(`📍 SE ${se} | ${nomes}`);
         });
-        linhas.push('');
+      }
+      linhas.push('');
+
+      // Concluídas hoje
+      linhas.push(`✅ *Concluídas hoje: ${stats.concluido || 0}*`);
+      if ((stats.etapa || 0) > 0)    linhas.push(`🔄 *Etapa concluída: ${stats.etapa}*`);
+      if ((stats.cancelado || 0) > 0) linhas.push(`❌ *Canceladas: ${stats.cancelado}*`);
+      linhas.push('');
+
+      // Colaboradores em campo
+      if (ativos.length > 0) {
+        linhas.push(`👷 *${ativos.length} colaborador(es) em campo no momento*`);
       } else {
-        linhas.push(`👷 *Nenhum colaborador em campo no momento*`);
-        linhas.push('');
+        linhas.push('👷 *Nenhum colaborador em campo no momento*');
       }
 
+      // Inspeções
       if (inspStats.total > 0) {
-        linhas.push(`🔍 *Inspeções hoje:* ${inspStats.total} (${inspStats.concluidas} concluída(s))`);
-        if (inspStats.porSE?.length) {
-          linhas.push(`📌 SEs inspecionadas: ${inspStats.porSE.map(s => s.codigo_se).join(', ')}`);
-        }
         linhas.push('');
+        linhas.push(`🔍 *Inspeções hoje: ${inspStats.total}* (${inspStats.concluidas} concluída(s))`);
       }
 
-      linhas.push(`_Gerado automaticamente pelo sistema OOMC_`);
+      linhas.push('');
+      linhas.push('_Gerado automaticamente pelo sistema OOMC_');
 
       const msg = linhas.join('\n').trim();
 
