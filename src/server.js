@@ -749,35 +749,36 @@ function startServer() {
         return res.status(503).json({ ok: false, error: 'Bot WhatsApp não conectado' });
       }
 
-      // Hora de Brasília (UTC-3)
-      const agoraBR  = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      // Data/hora de Brasília (UTC-3)
+      const agoraBR = new Date(Date.now() - 3 * 60 * 60 * 1000);
       const y  = agoraBR.getUTCFullYear();
       const m  = String(agoraBR.getUTCMonth()+1).padStart(2,'0');
       const d  = String(agoraBR.getUTCDate()).padStart(2,'0');
       const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
-      const mm = String(agoraBR.getUTCMinutes()).padStart(2,'0');
-      const dataHoje = `${y}-${m}-${d}`;
+      const mi = String(agoraBR.getUTCMinutes()).padStart(2,'0');
+      // Campo `data` no banco é DD/MM/YYYY
       const dataFmt  = `${d}/${m}/${y}`;
-      const horaFmt  = `${hh}:${mm}`;
+      const horaFmt  = `${hh}:${mi}`;
 
-      // Stats do dia
-      const stats = db.estatisticas({ dataDe: dataHoje, dataAte: dataHoje });
-
-      // OS em andamento HOJE — SE + equipe
-      const osAndamento = db.all(
-        `SELECT subestacoes, unidade, equipe FROM ordens_servico
-         WHERE status='Andamento'
-           AND date(criado_em) = date(?)
-         ORDER BY criado_em DESC LIMIT 30`,
-        [dataHoje]
+      // OS do dia filtradas pelo campo `data` (DD/MM/YYYY) — mais confiável que criado_em
+      const osHoje = db.all(
+        `SELECT status, subestacoes, unidade, equipe FROM ordens_servico
+         WHERE data = ? ORDER BY criado_em DESC`,
+        [dataFmt]
       );
+
+      const osAndamento  = osHoje.filter(o => o.status === 'Andamento');
+      const osConcluidas = osHoje.filter(o => o.status === 'Concluído');
+      const osEtapa      = osHoje.filter(o => o.status === 'Etapa Concluída');
+      const osCanceladas = osHoje.filter(o => o.status === 'Cancelado');
 
       // Checkins ativos agora
       const checkin = require('./checkin');
       const ativos  = checkin.listarAtivos();
 
       // Inspeções do dia
-      const inspStats = insp.statsDashboard(dataHoje, dataHoje);
+      const dataISO   = `${y}-${m}-${d}`;
+      const inspStats = insp.statsDashboard(dataISO, dataISO);
 
       // ── Monta mensagem ──
       const linhas = [];
@@ -785,27 +786,22 @@ function startServer() {
       linhas.push(`📊 Relatório diário gerado — ${dataFmt} às ${horaFmt}`);
       linhas.push('');
 
-      // Em andamento com SE + equipe
-      const totalAndamento = osAndamento.length;
-      linhas.push(`⚡ *Em andamento: ${totalAndamento}*`);
-      if (totalAndamento > 0) {
-        osAndamento.forEach(os => {
-          const se    = (os.subestacoes || os.unidade || '—').trim();
-          const equipe = (os.equipe || '—').trim();
-          // Formata nomes: pega apenas primeiros nomes para não ficar muito longo
-          const nomes = equipe.split(',').map(n => {
-            const partes = n.trim().split(' ');
-            return partes[0] + (partes[1] ? ' ' + partes[1] : '');
-          }).join(' / ');
-          linhas.push(`📍 SE ${se} | ${nomes}`);
-        });
-      }
+      // Em andamento
+      linhas.push(`⚡ *Em andamento: ${osAndamento.length}*`);
+      osAndamento.forEach(os => {
+        const se    = (os.subestacoes || os.unidade || '—').trim();
+        const nomes = (os.equipe || '—').split(',').map(n => {
+          const p = n.trim().split(' ');
+          return p[0] + (p[1] ? ' ' + p[1] : '');
+        }).join(' / ');
+        linhas.push(`📍 SE ${se} | ${nomes}`);
+      });
       linhas.push('');
 
-      // Concluídas hoje
-      linhas.push(`✅ *Concluídas hoje: ${stats.concluido || 0}*`);
-      if ((stats.etapa || 0) > 0)    linhas.push(`🔄 *Etapa concluída: ${stats.etapa}*`);
-      if ((stats.cancelado || 0) > 0) linhas.push(`❌ *Canceladas: ${stats.cancelado}*`);
+      // Concluídas
+      linhas.push(`✅ *Concluídas hoje: ${osConcluidas.length}*`);
+      if (osEtapa.length > 0)      linhas.push(`🔄 *Etapa concluída: ${osEtapa.length}*`);
+      if (osCanceladas.length > 0) linhas.push(`❌ *Canceladas: ${osCanceladas.length}*`);
       linhas.push('');
 
       // Colaboradores em campo
