@@ -815,8 +815,7 @@ function startServer() {
 
       linhas.push(`_Gerado automaticamente pelo sistema OOMC_`);
 
-      const msg = linhas.join('
-').trim();
+      const msg = linhas.join('\n').trim();
 
       // Envia ao grupo
       if (global._grupoId) {
