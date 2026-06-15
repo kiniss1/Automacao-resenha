@@ -849,7 +849,7 @@
       const [statsR, checkR, osR] = await Promise.all([
         fetch(`/api/stats?dataDe=${dataHoje}&dataAte=${dataHoje}`).then(r=>r.json()),
         fetch('/api/checkin/ativos').then(r=>r.json()),
-        fetch('/api/os?status=Andamento').then(r=>r.json()),
+        fetch(`/api/os?status=Andamento&dataDe=${dataHoje}&dataAte=${dataHoje}`).then(r=>r.json()),
       ]);
 
       const s      = statsR.data || {};
