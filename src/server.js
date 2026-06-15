@@ -763,11 +763,13 @@ function startServer() {
       // Stats do dia
       const stats = db.estatisticas({ dataDe: dataHoje, dataAte: dataHoje });
 
-      // OS em andamento — SE + equipe
+      // OS em andamento HOJE — SE + equipe
       const osAndamento = db.all(
         `SELECT subestacoes, unidade, equipe FROM ordens_servico
          WHERE status='Andamento'
-         ORDER BY criado_em DESC LIMIT 30`
+           AND date(criado_em) = date(?)
+         ORDER BY criado_em DESC LIMIT 30`,
+        [dataHoje]
       );
 
       // Checkins ativos agora
