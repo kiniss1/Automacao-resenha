@@ -837,51 +837,51 @@
     document.getElementById('btnRelSend').textContent = '📲 Enviar ao grupo';
     document.getElementById('relModal').classList.remove('hidden');
 
-    // Gera prévia local com dados já carregados
     try {
-      const hoje = new Date();
-      const d = String(hoje.getDate()).padStart(2,'0');
-      const m = String(hoje.getMonth()+1).padStart(2,'0');
-      const y = hoje.getFullYear();
-      const h = hoje.toTimeString().slice(0,5);
+      const agoraBR = new Date(Date.now() - 3*60*60*1000);
+      const d  = String(agoraBR.getUTCDate()).padStart(2,'0');
+      const m  = String(agoraBR.getUTCMonth()+1).padStart(2,'0');
+      const y  = agoraBR.getUTCFullYear();
+      const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
+      const mm = String(agoraBR.getUTCMinutes()).padStart(2,'0');
       const dataHoje = `${y}-${m}-${d}`;
 
-      const [statsR, checkR] = await Promise.all([
+      const [statsR, checkR, osR] = await Promise.all([
         fetch(`/api/stats?dataDe=${dataHoje}&dataAte=${dataHoje}`).then(r=>r.json()),
         fetch('/api/checkin/ativos').then(r=>r.json()),
+        fetch('/api/os?status=Andamento').then(r=>r.json()),
       ]);
 
-      const s = statsR.data || {};
+      const s      = statsR.data || {};
       const ativos = checkR.data || [];
-      const porSE = {};
-      ativos.forEach(c => {
-        const se = c.subestacao || '?';
-        if (!porSE[se]) porSE[se] = [];
-        porSE[se].push(c.nome || c.matricula);
+      const osAnd  = osR.data || [];
+
+      const L = [];
+      L.push('🤖 *Sistema de Monitoramento Automático*');
+      L.push(`📊 Relatório diário gerado — ${d}/${m}/${y} às ${hh}:${mm}`);
+      L.push('');
+      L.push(`⚡ *Em andamento: ${osAnd.length}*`);
+      osAnd.forEach(os => {
+        const se    = (os.subestacoes||os.unidade||'—').trim();
+        const nomes = (os.equipe||'—').split(',').map(n=>{
+          const p=n.trim().split(' '); return p[0]+(p[1]?' '+p[1]:'');
+        }).join(' / ');
+        L.push(`📍 SE ${se} | ${nomes}`);
       });
+      L.push('');
+      L.push(`✅ *Concluídas hoje: ${s.concluido||0}*`);
+      if ((s.etapa||0)>0)     L.push(`🔄 *Etapa concluída: ${s.etapa}*`);
+      if ((s.cancelado||0)>0) L.push(`❌ *Canceladas: ${s.cancelado}*`);
+      L.push('');
+      L.push(ativos.length>0 ? `👷 *${ativos.length} colaborador(es) em campo no momento*` : '👷 *Nenhum colaborador em campo no momento*');
+      L.push('');
+      L.push('_Gerado automaticamente pelo sistema OOMC_');
 
-      const linhas = [
-        `🤖 Sistema de Monitoramento Automático`,
-        `📊 Relatório diário — ${d}/${m}/${y} às ${h}`,
-        ``,
-        `📋 Atividades registradas hoje: ${s.total||0}`,
-        `⚡ Em andamento: ${s.andamento||0}`,
-        `✅ Concluídas hoje: ${s.concluido||0}`,
-        s.etapa   > 0 ? `🔄 Etapa concluída: ${s.etapa}` : null,
-        s.cancelado>0 ? `❌ Canceladas: ${s.cancelado}` : null,
-        ``,
-        ativos.length
-          ? `👷 Em campo agora: ${ativos.length} colaborador(es)`
-          : `👷 Nenhum colaborador em campo no momento`,
-        ...Object.entries(porSE).map(([se, ns]) => `📍 SE ${se}: ${ns.join(', ')}`),
-        ativos.length ? '' : null,
-        `_Gerado pelo sistema OOMC_`,
-      ].filter(l => l !== null).join('\n');
-
-      document.getElementById('relPreview').textContent = linhas;
+      document.getElementById('relPreview').textContent = L.join('\n');
     } catch(e) {
       document.getElementById('relPreview').textContent = 'Erro ao gerar prévia: ' + e.message;
     }
+  
   }
 
   function fecharRelModal() {
