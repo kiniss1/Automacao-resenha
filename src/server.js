@@ -741,6 +741,105 @@ function startServer() {
 
   // ═══════════════════════════════════════════════════════════════════════════
 
+  // ── Relatório diário WhatsApp ─────────────────────────────────────────────
+  app.post('/api/relatorio/enviar', async (req, res) => {
+    try {
+      const botState = require('./state');
+      if (!botState.isReady() || !global._waClient) {
+        return res.status(503).json({ ok: false, error: 'Bot WhatsApp não conectado' });
+      }
+
+      const hoje = new Date();
+      const y = hoje.getFullYear();
+      const m = String(hoje.getMonth()+1).padStart(2,'0');
+      const d = String(hoje.getDate()).padStart(2,'0');
+      const dataHoje   = `${y}-${m}-${d}`;
+      const dataFmt    = `${d}/${m}/${y}`;
+      const horaFmt    = hoje.toTimeString().slice(0,5);
+
+      // Stats do dia
+      const stats = db.estatisticas({ dataDe: dataHoje, dataAte: dataHoje });
+
+      // OS em andamento hoje — pegar subestações
+      const osAndamento = db.all(
+        `SELECT subestacoes, unidade FROM ordens_servico WHERE status='Andamento' ORDER BY criado_em DESC LIMIT 50`
+      );
+      const sesAndamento = [...new Set(
+        osAndamento.map(o => (o.subestacoes || o.unidade || '').trim()).filter(Boolean)
+      )];
+
+      // Checkins ativos agora
+      const checkin = require('./checkin');
+      const ativos  = checkin.listarAtivos();
+      const porSE   = {};
+      ativos.forEach(c => {
+        const se = c.subestacao || '?';
+        if (!porSE[se]) porSE[se] = [];
+        porSE[se].push(c.nome || c.matricula);
+      });
+
+      // Inspeções do dia
+      const inspStats = insp.statsDashboard(dataHoje, dataHoje);
+
+      // ── Monta mensagem ──
+      const linhas = [
+        `🤖 *Sistema de Monitoramento Automático*`,
+        `📊 Relatório diário gerado — ${dataFmt} às ${horaFmt}`,
+        ``,
+        `📋 *Atividades registradas hoje:* ${stats.total || 0}`,
+        `⚡ *Em andamento:* ${stats.andamento || 0}${sesAndamento.length ? ' | ' + sesAndamento.map(s => 'SE ' + s).join('; ') : ''}`,
+        `✅ *Concluídas hoje:* ${stats.concluido || 0}`,
+        stats.etapa > 0 ? `🔄 *Etapa concluída:* ${stats.etapa}` : null,
+        stats.cancelado > 0 ? `❌ *Canceladas:* ${stats.cancelado}` : null,
+        ``,
+      ].filter(l => l !== null);
+
+      if (ativos.length) {
+        linhas.push(`👷 *Em campo agora: ${ativos.length} colaborador(es)*`);
+        Object.entries(porSE).forEach(([se, nomes]) => {
+          linhas.push(`📍 SE ${se}: ${nomes.join(', ')}`);
+        });
+        linhas.push('');
+      } else {
+        linhas.push(`👷 *Nenhum colaborador em campo no momento*`);
+        linhas.push('');
+      }
+
+      if (inspStats.total > 0) {
+        linhas.push(`🔍 *Inspeções hoje:* ${inspStats.total} (${inspStats.concluidas} concluída(s))`);
+        if (inspStats.porSE?.length) {
+          linhas.push(`📌 SEs inspecionadas: ${inspStats.porSE.map(s => s.codigo_se).join(', ')}`);
+        }
+        linhas.push('');
+      }
+
+      linhas.push(`_Gerado automaticamente pelo sistema OOMC_`);
+
+      const msg = linhas.join('
+').trim();
+
+      // Envia ao grupo
+      if (global._grupoId) {
+        const chat = await global._waClient.getChatById(global._grupoId);
+        await chat.sendMessage(msg);
+      } else {
+        const GRUPO = process.env.GRUPO_NOME || 'Resenha';
+        const chats = await global._waClient.getChats();
+        const grupo  = chats.find(c => c.isGroup && c.name === GRUPO);
+        if (!grupo) return res.status(404).json({ ok: false, error: 'Grupo não encontrado' });
+        global._grupoId = grupo.id._serialized;
+        await grupo.sendMessage(msg);
+      }
+
+      res.json({ ok: true, msg: 'Relatório enviado!', preview: msg });
+    } catch(e) {
+      console.error('[RELATORIO]', e.message);
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+
   app.listen(PORT, () => {
     console.log(`[SERVER] Painel rodando em http://localhost:${PORT}`);
   });
