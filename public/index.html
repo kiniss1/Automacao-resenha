@@ -846,15 +846,14 @@
       const mm = String(agoraBR.getUTCMinutes()).padStart(2,'0');
       const dataHoje = `${y}-${m}-${d}`;
 
-      // Buscar OS do dia filtrando pelo campo `data` = DD/MM/YYYY
-      const dataFmtHoje = `${d}/${m}/${y}`;
+      // Buscar OS do dia pelo mesmo filtro do stats (dataDe/dataAte = hoje ISO)
       const [checkR, osR] = await Promise.all([
         fetch('/api/checkin/ativos').then(r=>r.json()),
-        fetch(`/api/os?search=${encodeURIComponent(dataFmtHoje)}`).then(r=>r.json()),
+        fetch(`/api/os?dataDe=${dataHoje}&dataAte=${dataHoje}`).then(r=>r.json()),
       ]);
 
       const ativos  = checkR.data || [];
-      const osHoje  = (osR.data || []).filter(o => o.data === dataFmtHoje);
+      const osHoje  = osR.data || [];
       const osAnd   = osHoje.filter(o => o.status === 'Andamento');
       const osConc  = osHoje.filter(o => o.status === 'Concluído');
       const osEtapa = osHoje.filter(o => o.status === 'Etapa Concluída');
