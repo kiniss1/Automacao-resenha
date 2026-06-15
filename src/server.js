@@ -760,11 +760,11 @@ function startServer() {
       const dataFmt  = `${d}/${m}/${y}`;
       const horaFmt  = `${hh}:${mi}`;
 
-      // OS do dia filtradas pelo campo `data` (DD/MM/YYYY) — mais confiável que criado_em
+      // OS do dia — usa date(criado_em) = date('now','localtime') para consistência com o banco
       const osHoje = db.all(
         `SELECT status, subestacoes, unidade, equipe FROM ordens_servico
-         WHERE data = ? ORDER BY criado_em DESC`,
-        [dataFmt]
+         WHERE date(criado_em) = date('now','localtime')
+         ORDER BY criado_em DESC`
       );
 
       const osAndamento  = osHoje.filter(o => o.status === 'Andamento');
