@@ -178,6 +178,17 @@
     .toggle-track.on{background:var(--primary)}
     .toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
     .toggle-track.on .toggle-thumb{transform:translateX(20px)}
+    /* ── Modal relatório ── */
+    #relModal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px)}
+    #relModal.hidden{display:none}
+    .rel-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:400px;max-width:92vw;display:flex;flex-direction:column;gap:14px}
+    .rel-box h3{font-size:.95rem;font-weight:700}
+    .rel-preview{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:.78rem;line-height:1.7;color:var(--text);white-space:pre-wrap;max-height:260px;overflow-y:auto;font-family:monospace}
+    .rel-footer{display:flex;gap:8px}
+    .btn-rel-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:9px;font-size:.85rem;cursor:pointer}
+    .btn-rel-send{flex:1;background:#25d366;color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .btn-rel-send:hover{opacity:.85}
+    .btn-rel-send:disabled{opacity:.4;cursor:default}
     #toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:13px;transform:translateY(80px);opacity:0;transition:all .2s;z-index:300;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
     #toast.show{transform:translateY(0);opacity:1}
     #toast.ok{border-color:var(--green-border);color:var(--green)}
@@ -213,6 +224,7 @@
   <div class="header-right">
     <a href="/atividade.html" class="hbtn primary">+ Nova Atividade</a>
     <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
+    <button class="hbtn" onclick="abrirRelatorio()" style="border-color:#25d366;color:#25d366">📤 Relatório</button>
     <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Tema: Escuro</button>
     <div class="bot-badge">
       <div class="dot" id="botDot"></div>
@@ -271,6 +283,19 @@
       <button class="btn-cancel-os" onclick="fecharDelOsModal()">Cancelar</button>
       <button class="btn-del-os" id="btnConfirmarDelOs" onclick="confirmarDelOS()">Excluir</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal Relatório -->
+<div id="relModal" class="hidden">
+  <div class="rel-box">
+    <h3>📤 Enviar Relatório ao WhatsApp</h3>
+    <div class="rel-preview" id="relPreview">⏳ Gerando prévia...</div>
+    <div class="rel-footer">
+      <button class="btn-rel-cancel" onclick="fecharRelModal()">Cancelar</button>
+      <button class="btn-rel-send" id="btnRelSend" onclick="enviarRelatorio()">📲 Enviar ao grupo</button>
+    </div>
+    <div id="relFeedback" style="font-size:.75rem;text-align:center;min-height:14px"></div>
   </div>
 </div>
 
@@ -803,6 +828,87 @@
     }catch(e){msg.style.color='var(--red)';msg.textContent='❌ '+e.message;}
     btn.disabled=false; btn.textContent='💾 Salvar';
   }
+
+  // ── Relatório WhatsApp ────────────────────────────────────────────────────
+  async function abrirRelatorio() {
+    document.getElementById('relPreview').textContent = '⏳ Gerando prévia...';
+    document.getElementById('relFeedback').textContent = '';
+    document.getElementById('btnRelSend').disabled = false;
+    document.getElementById('btnRelSend').textContent = '📲 Enviar ao grupo';
+    document.getElementById('relModal').classList.remove('hidden');
+
+    // Gera prévia local com dados já carregados
+    try {
+      const hoje = new Date();
+      const d = String(hoje.getDate()).padStart(2,'0');
+      const m = String(hoje.getMonth()+1).padStart(2,'0');
+      const y = hoje.getFullYear();
+      const h = hoje.toTimeString().slice(0,5);
+      const dataHoje = `${y}-${m}-${d}`;
+
+      const [statsR, checkR] = await Promise.all([
+        fetch(`/api/stats?dataDe=${dataHoje}&dataAte=${dataHoje}`).then(r=>r.json()),
+        fetch('/api/checkin/ativos').then(r=>r.json()),
+      ]);
+
+      const s = statsR.data || {};
+      const ativos = checkR.data || [];
+      const porSE = {};
+      ativos.forEach(c => {
+        const se = c.subestacao || '?';
+        if (!porSE[se]) porSE[se] = [];
+        porSE[se].push(c.nome || c.matricula);
+      });
+
+      const linhas = [
+        `🤖 Sistema de Monitoramento Automático`,
+        `📊 Relatório diário — ${d}/${m}/${y} às ${h}`,
+        ``,
+        `📋 Atividades registradas hoje: ${s.total||0}`,
+        `⚡ Em andamento: ${s.andamento||0}`,
+        `✅ Concluídas hoje: ${s.concluido||0}`,
+        s.etapa   > 0 ? `🔄 Etapa concluída: ${s.etapa}` : null,
+        s.cancelado>0 ? `❌ Canceladas: ${s.cancelado}` : null,
+        ``,
+        ativos.length
+          ? `👷 Em campo agora: ${ativos.length} colaborador(es)`
+          : `👷 Nenhum colaborador em campo no momento`,
+        ...Object.entries(porSE).map(([se, ns]) => `📍 SE ${se}: ${ns.join(', ')}`),
+        ativos.length ? '' : null,
+        `_Gerado pelo sistema OOMC_`,
+      ].filter(l => l !== null).join('\n');
+
+      document.getElementById('relPreview').textContent = linhas;
+    } catch(e) {
+      document.getElementById('relPreview').textContent = 'Erro ao gerar prévia: ' + e.message;
+    }
+  }
+
+  function fecharRelModal() {
+    document.getElementById('relModal').classList.add('hidden');
+  }
+
+  async function enviarRelatorio() {
+    const btn = document.getElementById('btnRelSend');
+    const fb  = document.getElementById('relFeedback');
+    btn.disabled = true; btn.textContent = '⏳ Enviando...';
+    fb.textContent = '';
+    try {
+      const res = await fetch('/api/relatorio/enviar', { method: 'POST' }).then(r=>r.json());
+      if (!res.ok) throw new Error(res.error);
+      fb.style.color = 'var(--green)'; fb.textContent = '✅ Relatório enviado ao grupo!';
+      btn.textContent = '✅ Enviado!';
+      setTimeout(() => fecharRelModal(), 2000);
+      toast('📊 Relatório enviado ao WhatsApp!');
+    } catch(e) {
+      fb.style.color = 'var(--red)'; fb.textContent = '❌ ' + e.message;
+      btn.disabled = false; btn.textContent = '📲 Tentar novamente';
+    }
+  }
+
+  document.getElementById('relModal').addEventListener('click', function(e) {
+    if (e.target === this) fecharRelModal();
+  });
 
   function toggleTema(){
     const isLight=document.body.classList.toggle('light');
