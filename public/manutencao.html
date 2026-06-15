@@ -37,6 +37,18 @@
     .nav-link{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
     .nav-link:hover,.nav-link.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 
+    /* ── Modal relatório inspeções ── */
+    #relInspModal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px)}
+    #relInspModal.hidden{display:none}
+    .rel-insp-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:420px;max-width:92vw;display:flex;flex-direction:column;gap:14px}
+    .rel-insp-box h3{font-size:.95rem;font-weight:700}
+    .rel-insp-preview{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:.78rem;line-height:1.7;color:var(--text);white-space:pre-wrap;max-height:280px;overflow-y:auto;font-family:monospace}
+    .rel-insp-footer{display:flex;gap:8px}
+    .rel-insp-footer .btn-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:9px;font-size:.85rem;cursor:pointer}
+    .rel-insp-footer .btn-send{flex:1;background:#25d366;color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .rel-insp-footer .btn-send:hover{opacity:.85}
+    .rel-insp-footer .btn-send:disabled{opacity:.4;cursor:default}
+
     /* ── Modal excluir checkin ── */
     #delCiModal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px)}
     #delCiModal.hidden{display:none}
@@ -118,6 +130,7 @@
       <a href="/manutencao.html" class="nav-link active">⚙️ Operação</a>
       <a href="/inspecao.html" class="nav-link">🔍 Inspeção</a>
     </div>
+    <button onclick="abrirRelInsp()" style="background:transparent;border:1px solid #25d366;color:#25d366;border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;white-space:nowrap">📤 Relatório Inspeções</button>
   </div>
 </header>
 
@@ -176,6 +189,20 @@
       <button class="modal-print" onclick="printQr()">🖨️ Imprimir</button>
       <button class="modal-close" onclick="document.getElementById('modalBg').classList.add('hidden')">Fechar</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal Relatório Inspeções -->
+<div id="relInspModal" class="hidden">
+  <div class="rel-insp-box">
+    <h3>📤 Relatório de Inspeções</h3>
+    <div style="font-size:.75rem;color:var(--muted)" id="relInspGrupo">Carregando...</div>
+    <div class="rel-insp-preview" id="relInspPreview">⏳ Gerando prévia...</div>
+    <div class="rel-insp-footer">
+      <button class="btn-cancel" onclick="fecharRelInsp()">Cancelar</button>
+      <button class="btn-send" id="btnRelInspSend" onclick="enviarRelInsp()">📲 Enviar ao grupo</button>
+    </div>
+    <div id="relInspFeedback" style="font-size:.75rem;text-align:center;min-height:14px"></div>
   </div>
 </div>
 
@@ -392,6 +419,77 @@
     if (d) return `${d[3]}/${d[2]}/${d[1]}`;
     return s;
   }
+
+  // ── Relatório de Inspeções ────────────────────────────────────────────────
+  async function abrirRelInsp() {
+    document.getElementById('relInspPreview').textContent = '⏳ Gerando prévia...';
+    document.getElementById('relInspFeedback').textContent = '';
+    document.getElementById('btnRelInspSend').disabled = false;
+    document.getElementById('btnRelInspSend').textContent = '📲 Enviar ao grupo';
+    document.getElementById('relInspModal').classList.remove('hidden');
+    try {
+      const agoraBR = new Date(Date.now() - 3*60*60*1000);
+      const d  = String(agoraBR.getUTCDate()).padStart(2,'0');
+      const m  = String(agoraBR.getUTCMonth()+1).padStart(2,'0');
+      const y  = agoraBR.getUTCFullYear();
+      const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
+      const mi = String(agoraBR.getUTCMinutes()).padStart(2,'0');
+      const dataISO = `${y}-${m}-${d}`;
+      const r = await fetch(`/api/inspecao/preenchimentos?dataDe=${dataISO}&dataAte=${dataISO}`).then(r=>r.json());
+      const lista = r.data || [];
+      const concluidas = lista.filter(p => p.status === 'Concluído').length;
+      const L = [];
+      L.push('🔍 *Sistema de Monitoramento — Inspeções*');
+      L.push(`📊 Relatório de Inspeções — ${d}/${m}/${y} às ${hh}:${mi}`);
+      L.push('');
+      L.push(`📋 *Total hoje: ${lista.length}* (${concluidas} concluída(s) / ${lista.length - concluidas} rascunho(s))`);
+      L.push('');
+      if (lista.length > 0) {
+        lista.forEach(p => {
+          const icon = p.status === 'Concluído' ? '✅' : '⏳';
+          const se   = p.nome_se ? `${p.codigo_se} — ${p.nome_se}` : p.codigo_se;
+          const tec  = p.nome_tecnico || p.matricula || '—';
+          const hora = p.hora_insp || p.data_insp || '—';
+          L.push(`${icon} SE ${se} | ${tec} | ${hora}`);
+        });
+        L.push('');
+        const ses = [...new Set(lista.map(p => p.codigo_se))];
+        L.push(`📍 *SEs inspecionadas: ${ses.join(', ')}*`);
+      } else {
+        L.push('📭 Nenhuma inspeção registrada hoje.');
+      }
+      L.push('');
+      L.push('_Gerado automaticamente pelo sistema OOMC_');
+      document.getElementById('relInspPreview').textContent = L.join('\n');
+    } catch(e) {
+      document.getElementById('relInspPreview').textContent = 'Erro ao gerar prévia: ' + e.message;
+    }
+  }
+
+  function fecharRelInsp() {
+    document.getElementById('relInspModal').classList.add('hidden');
+  }
+
+  async function enviarRelInsp() {
+    const btn = document.getElementById('btnRelInspSend');
+    const fb  = document.getElementById('relInspFeedback');
+    btn.disabled = true; btn.textContent = '⏳ Enviando...';
+    fb.textContent = '';
+    try {
+      const res = await fetch('/api/relatorio/inspecoes/enviar', { method: 'POST' }).then(r=>r.json());
+      if (!res.ok) throw new Error(res.error);
+      fb.style.color = 'var(--green)'; fb.textContent = '✅ ' + res.msg;
+      btn.textContent = '✅ Enviado!';
+      setTimeout(() => fecharRelInsp(), 2000);
+    } catch(e) {
+      fb.style.color = 'var(--red)'; fb.textContent = '❌ ' + e.message;
+      btn.disabled = false; btn.textContent = '📲 Tentar novamente';
+    }
+  }
+
+  document.getElementById('relInspModal').addEventListener('click', function(e) {
+    if (e.target === this) fecharRelInsp();
+  });
 
   init();
   setInterval(loadStats, 30_000);
