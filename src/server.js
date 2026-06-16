@@ -802,6 +802,17 @@ function startServer() {
         linhas.push('');
       }
 
+      // Colaboradores em campo agora — usa db.all direto para garantir dados frescos
+      const ativosInsp = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`);
+      if (ativosInsp.length > 0) {
+        linhas.push(`👷 *${ativosInsp.length} colaborador(es) em campo no momento*`);
+        ativosInsp.forEach(c => linhas.push(`📍 SE ${c.subestacao} | ${c.nome || c.matricula}`));
+        linhas.push('');
+      } else {
+        linhas.push('👷 *Nenhum colaborador em campo no momento*');
+        linhas.push('');
+      }
+
       linhas.push('_Gerado automaticamente pelo sistema OOMC_');
 
       const msg = linhas.join('\n').trim();
@@ -851,9 +862,8 @@ function startServer() {
       const osEtapa      = osHoje.filter(o => o.status === 'Etapa Concluída');
       const osCanceladas = osHoje.filter(o => o.status === 'Cancelado');
 
-      // Checkins ativos agora
-      const checkin = require('./checkin');
-      const ativos  = checkin.listarAtivos();
+      // Colaboradores em campo agora — db.all direto para garantir dados frescos
+      const ativos = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`);
 
       // Inspeções do dia
       const dataISO   = `${y}-${m}-${d}`;
