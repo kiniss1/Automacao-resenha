@@ -435,8 +435,12 @@
       const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
       const mi = String(agoraBR.getUTCMinutes()).padStart(2,'0');
       const dataISO = `${y}-${m}-${d}`;
-      const r = await fetch(`/api/inspecao/preenchimentos?dataDe=${dataISO}&dataAte=${dataISO}`).then(r=>r.json());
-      const lista = r.data || [];
+      const [inspR, ativosR] = await Promise.all([
+        fetch(`/api/inspecao/preenchimentos?dataDe=${dataISO}&dataAte=${dataISO}`).then(r=>r.json()),
+        fetch('/api/checkin/ativos').then(r=>r.json()),
+      ]);
+      const lista   = inspR.data || [];
+      const ativos  = ativosR.data || [];
       const concluidas = lista.filter(p => p.status === 'Concluído').length;
       const L = [];
       L.push('🔍 *Sistema de Monitoramento — Inspeções*');
@@ -457,6 +461,13 @@
         L.push(`📍 *SEs inspecionadas: ${ses.join(', ')}*`);
       } else {
         L.push('📭 Nenhuma inspeção registrada hoje.');
+      }
+      L.push('');
+      if (ativos.length > 0) {
+        L.push(`👷 *${ativos.length} colaborador(es) em campo no momento*`);
+        ativos.forEach(c => L.push(`📍 SE ${c.subestacao} | ${c.nome || c.matricula}`));
+      } else {
+        L.push('👷 *Nenhum colaborador em campo no momento*');
       }
       L.push('');
       L.push('_Gerado automaticamente pelo sistema OOMC_');
