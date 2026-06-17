@@ -203,12 +203,61 @@ function startServer() {
     }
   });
 
-  app.post('/api/checkout', (req, res) => {
+  app.post('/api/checkout', async (req, res) => {
     try {
       const { matricula } = req.body;
       if (!matricula) return res.status(400).json({ ok: false, erro: true, msg: 'Matrícula obrigatória.' });
       const result = checkin.fazerCheckout(matricula);
       res.json({ ok: !result.erro, ...result });
+
+      // Notifica o grupo do WhatsApp (não bloqueia a resposta)
+      if (!result.erro && result.checkin) {
+        try {
+          const botState = require('./state');
+          if (botState.isReady() && global._waClient) {
+            const c = result.checkin;
+            const hora = new Date(Date.now() - 3*60*60*1000).toISOString().slice(11,16);
+
+            // Calcula tempo em campo (entrada → saída)
+            let duracao = '';
+            try {
+              const ent = new Date(c.entrada.replace(' ', 'T'));
+              const sai = new Date(c.saida.replace(' ', 'T'));
+              const mins = Math.round((sai - ent) / 60000);
+              const h = Math.floor(mins / 60), m = mins % 60;
+              duracao = h > 0 ? `${h}h${m > 0 ? m + 'min' : ''}` : `${m}min`;
+            } catch(e) {}
+
+            const msgWA =
+              `🔴 *Check-out registrado*\n` +
+              `📍 SE ${c.subestacao}\n` +
+              `👷 ${c.nome || matricula}` + (c.cargo ? ` — ${c.cargo}` : '') + `\n` +
+              (duracao ? `⏱️ Tempo em campo: ${duracao}\n` : '') +
+              `⏰ ${hora}`;
+
+            const grupoNome = process.env.GRUPO_CHECKIN_NOME || process.env.GRUPO_NOME || 'Resenha';
+
+            if (global._grupoCheckinId) {
+              const chat = await global._waClient.getChatById(global._grupoCheckinId);
+              await chat.sendMessage(msgWA);
+            } else {
+              const chats = await global._waClient.getChats();
+              const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+              if (grupo) {
+                global._grupoCheckinId = grupo.id._serialized;
+                await grupo.sendMessage(msgWA);
+              } else {
+                console.warn('[CHECKOUT] Grupo "' + grupoNome + '" não encontrado. Verifique GRUPO_CHECKIN_NOME no .env');
+              }
+            }
+          }
+        } catch(e) {
+          console.error('[CHECKOUT] Erro ao notificar grupo:', e.message);
+          if (e.message?.includes('not found') || e.message?.includes('404')) {
+            global._grupoCheckinId = null;
+          }
+        }
+      }
     } catch(err) { res.status(500).json({ ok: false, erro: true, msg: err.message }); }
   });
 
