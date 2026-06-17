@@ -50,7 +50,7 @@
     .campo-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
     .campo-wrap.obrig .campo-label::after{content:' *';color:var(--red)}
     .campo-label{font-size:.82rem;font-weight:600;margin-bottom:10px;display:block}
-    .campo-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+    .campo-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none;resize:vertical}
     .campo-input:focus{border-color:var(--primary)}
     .campo-input.err-field{border-color:var(--red)}
 
@@ -59,8 +59,9 @@
     .opcao-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s}
     .opcao-item:hover{border-color:var(--border2)}
     .opcao-item.selected{border-color:var(--primary);background:var(--primary-bg)}
-    .opcao-item input[type=radio]{width:16px;height:16px;accent-color:var(--primary);flex-shrink:0}
-    .opcao-item label{font-size:.85rem;cursor:pointer;flex:1}
+    .opcao-item input[type=radio]{width:16px;height:16px;accent-color:var(--primary);flex-shrink:0;pointer-events:none}
+    .opcao-item label{font-size:.85rem;cursor:pointer;flex:1;pointer-events:none}
+    .opcao-hint{font-size:.68rem;color:var(--muted);margin-top:6px}
 
     /* Sim/Não */
     .sn-row{display:flex;gap:10px}
@@ -68,16 +69,20 @@
     .sn-btn:hover{border-color:var(--border2)}
     .sn-btn.sel-sim{background:var(--red-bg);border-color:var(--red);color:var(--red)}
     .sn-btn.sel-nao{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+    .sn-obs-wrap{margin-top:10px}
+    .sn-obs-wrap label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:5px}
 
-    /* Upload foto */
-    .foto-area{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s;position:relative}
-    .foto-area:hover{border-color:var(--primary)}
-    .foto-area.has-foto{border-style:solid;border-color:var(--primary);background:var(--primary-bg)}
-    .foto-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-    .foto-area .fa-icon{font-size:1.8rem;margin-bottom:6px}
-    .foto-area .fa-lbl{font-size:.78rem;color:var(--muted)}
-    .foto-area .fa-name{font-size:.78rem;color:var(--primary);font-weight:600;margin-top:4px}
-    .foto-preview{width:100%;max-height:220px;object-fit:contain;border-radius:8px;margin-top:10px;border:1px solid var(--border);display:none}
+    /* Upload de fotos (múltiplas) */
+    .foto-multi-wrap{margin-top:4px}
+    .foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin-bottom:8px}
+    .foto-thumb{position:relative;width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--bg)}
+    .foto-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .foto-thumb-remove{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:21px;height:21px;font-size:.7rem;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+    .foto-thumb-sent{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.62rem;color:var(--green);background:var(--green-bg);text-align:center;padding:4px;gap:2px;border:1px dashed var(--green-border)}
+    .foto-add-btn{display:block;border:2px dashed var(--border);border-radius:10px;padding:13px;text-align:center;font-size:.78rem;color:var(--muted);cursor:pointer;transition:border-color .15s;position:relative}
+    .foto-add-btn:hover{border-color:var(--primary)}
+    .foto-add-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .foto-extra-lbl{font-size:.68rem;color:var(--muted);margin:10px 0 6px;display:block}
 
     /* Botões */
     .btn-primary{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px 24px;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .15s;width:100%;margin-top:6px}
@@ -137,8 +142,8 @@ if (localStorage.getItem('insp_form_tema') === 'light') document.body.classList.
 let _ficha     = null;
 let _campos    = [];
 let _preId     = null;
-let _respostas = {};     // campo_id → { texto, opcao, fotoFile, fotoPath }
-let _uploadQueue = {};   // campo_id → Promise
+// _respostas[campoId] = { texto, opcao, fotosNovas:[File,...], fotosEnviadasCount:number }
+let _respostas = {};
 
 // ── Init ──────────────────────────────────────────────────────────────────
 async function init() {
@@ -222,9 +227,23 @@ function renderForm() {
   `;
 }
 
+// ── Renderização de campo por tipo ───────────────────────────────────────
+function renderFotoUploadHtml(campoId, lbl) {
+  return `
+    <div class="foto-multi-wrap" id="fw_${campoId}">
+      <div class="foto-grid" id="fg_${campoId}"></div>
+      <label class="foto-add-btn">
+        <input type="file" accept="image/*" capture="environment" multiple onchange="onFotoChange(${campoId},this)"/>
+        📷 ${lbl}
+      </label>
+    </div>
+  `;
+}
+
 function renderCampo(c) {
   const obrigCls = c.obrigatorio ? 'obrig' : '';
   let inputHtml = '';
+  let extraFotoHtml = '';
 
   if (c.tipo === 'multipla_escolha') {
     let opcoes = [];
@@ -236,71 +255,132 @@ function renderCampo(c) {
           <label for="c${c.id}op${i}">${op}</label>
         </div>
       `).join('')}
-    </div>`;
+    </div>
+    <div class="opcao-hint">Toque novamente na opção selecionada para desmarcar</div>`;
   } else if (c.tipo === 'sim_nao') {
     inputHtml = `<div class="sn-row">
       <button class="sn-btn" id="c${c.id}_sim" onclick="toggleSN(${c.id},'Sim',this)">✓ Sim</button>
       <button class="sn-btn" id="c${c.id}_nao" onclick="toggleSN(${c.id},'Não',this)">✗ Não</button>
+    </div>
+    <div class="sn-obs-wrap" id="snobs_${c.id}" style="display:none">
+      <label>Motivo / observação</label>
+      <textarea class="campo-input" placeholder="Descreva o motivo..." oninput="onMotivoSN(${c.id},this.value)" rows="2"></textarea>
     </div>`;
   } else if (c.tipo === 'upload_foto') {
-    inputHtml = `
-      <div class="foto-area" id="fa_${c.id}" onclick="">
-        <input type="file" accept="image/*" capture="environment" onchange="onFotoChange(${c.id},this)" id="fi_${c.id}"/>
-        <div class="fa-icon">📷</div>
-        <div class="fa-lbl">Toque para tirar foto ou selecionar arquivo</div>
-        <div class="fa-name" id="fn_${c.id}"></div>
-      </div>
-      <img class="foto-preview" id="fp_${c.id}" src="" alt="preview"/>
-    `;
+    inputHtml = renderFotoUploadHtml(c.id, 'Adicionar foto(s)');
+  } else if (c.tipo === 'observacao') {
+    inputHtml = `<textarea class="campo-input" id="campo_${c.id}" placeholder="Digite sua observação..." oninput="onTexto(${c.id},this.value)" rows="3"></textarea>`
+      + `<span class="foto-extra-lbl">📎 Anexe quantas fotos quiser (opcional)</span>`
+      + renderFotoUploadHtml(c.id, 'Adicionar foto(s)');
   } else if (c.tipo === 'numero') {
     inputHtml = `<input type="number" class="campo-input" id="campo_${c.id}" placeholder="0" oninput="onTexto(${c.id},this.value)" step="any"/>`;
   } else {
     inputHtml = `<input type="text" class="campo-input" id="campo_${c.id}" placeholder="Informe a resposta..." oninput="onTexto(${c.id},this.value)"/>`;
   }
 
+  // Permite anexar foto(s) extra em qualquer tipo que ainda não tenha upload embutido
+  if (c.permite_foto && c.tipo !== 'upload_foto' && c.tipo !== 'observacao') {
+    extraFotoHtml = `<span class="foto-extra-lbl">📎 Anexar foto(s) (opcional)</span>` + renderFotoUploadHtml(c.id, 'Adicionar foto(s)');
+  }
+
   return `
     <div class="campo-wrap ${obrigCls}" id="cw_${c.id}">
       <span class="campo-label">${c.label}</span>
       ${inputHtml}
+      ${extraFotoHtml}
     </div>
   `;
 }
 
 // ── Interações ────────────────────────────────────────────────────────────
 function selecionarOpcao(campoId, idx, el) {
-  el.closest('.opcoes-list').querySelectorAll('.opcao-item').forEach(i => i.classList.remove('selected'));
-  el.classList.add('selected');
-  el.querySelector('input[type=radio]').checked = true;
-  _respostas[campoId] = { opcao: el.querySelector('label').textContent };
+  const jaSelecionado = el.classList.contains('selected');
+  el.closest('.opcoes-list').querySelectorAll('.opcao-item').forEach(i => {
+    i.classList.remove('selected');
+    i.querySelector('input[type=radio]').checked = false;
+  });
+  if (jaSelecionado) {
+    // Desmarca — toque na mesma opção já selecionada
+    if (_respostas[campoId]) delete _respostas[campoId].opcao;
+  } else {
+    el.classList.add('selected');
+    el.querySelector('input[type=radio]').checked = true;
+    if (!_respostas[campoId]) _respostas[campoId] = {};
+    _respostas[campoId].opcao = el.querySelector('label').textContent;
+  }
   atualizarProgress();
 }
 
 function toggleSN(campoId, val, btn) {
-  const cwEl = btn.closest('.campo-wrap');
-  cwEl.querySelector('.sn-btn.sel-sim')?.classList.remove('sel-sim');
-  cwEl.querySelector('.sn-btn.sel-nao')?.classList.remove('sel-nao');
-  btn.classList.add(val === 'Sim' ? 'sel-sim' : 'sel-nao');
-  _respostas[campoId] = { opcao: val };
+  const cwEl   = btn.closest('.campo-wrap');
+  const simBtn = cwEl.querySelector('#c'+campoId+'_sim');
+  const naoBtn = cwEl.querySelector('#c'+campoId+'_nao');
+  const obsWrap = document.getElementById('snobs_' + campoId);
+  const jaSelecionado = btn.classList.contains(val === 'Sim' ? 'sel-sim' : 'sel-nao');
+
+  simBtn.classList.remove('sel-sim');
+  naoBtn.classList.remove('sel-nao');
+
+  if (jaSelecionado) {
+    // Desmarca — toque no mesmo botão já selecionado
+    if (_respostas[campoId]) delete _respostas[campoId].opcao;
+    if (obsWrap) obsWrap.style.display = 'none';
+  } else {
+    btn.classList.add(val === 'Sim' ? 'sel-sim' : 'sel-nao');
+    if (!_respostas[campoId]) _respostas[campoId] = {};
+    _respostas[campoId].opcao = val;
+    if (obsWrap) obsWrap.style.display = '';
+  }
   atualizarProgress();
+}
+
+function onMotivoSN(campoId, val) {
+  if (!_respostas[campoId]) _respostas[campoId] = {};
+  _respostas[campoId].texto = val;
 }
 
 function onTexto(campoId, val) {
-  _respostas[campoId] = { texto: val };
+  if (!_respostas[campoId]) _respostas[campoId] = {};
+  _respostas[campoId].texto = val;
   atualizarProgress();
 }
 
+// ── Fotos (múltiplas por campo) ──────────────────────────────────────────
+function renderFotoGrid(campoId) {
+  const grid = document.getElementById('fg_' + campoId);
+  if (!grid) return;
+  const resp = _respostas[campoId] || {};
+  const novas = resp.fotosNovas || [];
+  const enviadas = resp.fotosEnviadasCount || 0;
+
+  let html = novas.map((file, idx) => `
+    <div class="foto-thumb">
+      <img src="${URL.createObjectURL(file)}" alt=""/>
+      <button class="foto-thumb-remove" onclick="removerFotoNova(${campoId},${idx})">✕</button>
+    </div>
+  `).join('');
+
+  if (enviadas > 0) {
+    html += `<div class="foto-thumb foto-thumb-sent">✅<br>${enviadas} já enviada(s)</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
 function onFotoChange(campoId, input) {
-  const file = input.files[0];
-  if (!file) return;
-  const fa   = document.getElementById('fa_' + campoId);
-  const fn   = document.getElementById('fn_' + campoId);
-  const fp   = document.getElementById('fp_' + campoId);
-  fa.classList.add('has-foto');
-  fn.textContent = file.name;
-  const url  = URL.createObjectURL(file);
-  fp.src     = url;
-  fp.style.display = 'block';
-  _respostas[campoId] = { fotoFile: file };
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  if (!_respostas[campoId]) _respostas[campoId] = {};
+  if (!_respostas[campoId].fotosNovas) _respostas[campoId].fotosNovas = [];
+  _respostas[campoId].fotosNovas.push(...files);
+  input.value = '';
+  renderFotoGrid(campoId);
+  atualizarProgress();
+}
+
+function removerFotoNova(campoId, idx) {
+  _respostas[campoId].fotosNovas.splice(idx, 1);
+  renderFotoGrid(campoId);
   atualizarProgress();
 }
 
@@ -315,12 +395,23 @@ async function onMatricula(val) {
   }
 }
 
+// ── Preenchimento / progresso ────────────────────────────────────────────
+function campoTemFoto(resp) {
+  return !!((resp?.fotosNovas && resp.fotosNovas.length) || (resp?.fotosEnviadasCount > 0));
+}
+
+function campoPreenchido(c) {
+  const r = _respostas[c.id];
+  if (!r) return false;
+  const temFoto = campoTemFoto(r);
+  if (c.tipo === 'upload_foto') return temFoto;
+  if (c.tipo === 'observacao')  return !!(r.texto?.trim()) || temFoto;
+  return !!(r.texto?.trim()) || !!r.opcao || temFoto;
+}
+
 function atualizarProgress() {
   const total = _campos.length;
-  const preenchidos = Object.keys(_respostas).filter(id => {
-    const r = _respostas[id];
-    return r.texto?.trim() || r.opcao || r.fotoFile || r.fotoPath;
-  }).length;
+  const preenchidos = _campos.filter(campoPreenchido).length;
   const pct = total > 0 ? Math.round(preenchidos / total * 100) : 0;
   document.getElementById('progBar').style.width = pct + '%';
   document.getElementById('progLbl').textContent = preenchidos;
@@ -340,7 +431,6 @@ async function criarOuUsarPreenchimento(status) {
   const dataFmt = `${d}/${m}/${y}`;
 
   if (_preId) {
-    // já existe, só atualiza obs geral se necessário
     return _preId;
   }
 
@@ -364,22 +454,28 @@ async function criarOuUsarPreenchimento(status) {
 }
 
 async function salvarTodasRespostas(preId) {
-  const campos = _campos;
-  for (const c of campos) {
+  for (const c of _campos) {
     const resp = _respostas[c.id];
     if (!resp) continue;
 
-    if (c.tipo === 'upload_foto' && resp.fotoFile) {
-      // Upload de foto
-      const fd = new FormData();
-      fd.append('foto', resp.fotoFile);
-      try {
-        const r = await fetch(`/api/inspecao/preenchimentos/${preId}/campo/${c.id}/foto`, {
-          method: 'POST', body: fd
-        }).then(r => r.json());
-        if (r.ok) resp.fotoPath = r.foto_path;
-      } catch(e) { console.error('[FOTO]', e); }
-    } else {
+    // Envia fotos pendentes (qualquer campo que tenha fotosNovas) — não duplica em saves futuros
+    if (resp.fotosNovas && resp.fotosNovas.length) {
+      for (const file of resp.fotosNovas) {
+        const fd = new FormData();
+        fd.append('foto', file);
+        try {
+          const r = await fetch(`/api/inspecao/preenchimentos/${preId}/campo/${c.id}/foto`, {
+            method: 'POST', body: fd
+          }).then(r => r.json());
+          if (r.ok) resp.fotosEnviadasCount = (resp.fotosEnviadasCount || 0) + 1;
+        } catch(e) { console.error('[FOTO]', e); }
+      }
+      resp.fotosNovas = [];
+      renderFotoGrid(c.id);
+    }
+
+    // Envia texto/opção (qualquer tipo que tenha algo digitado/selecionado)
+    if (resp.texto !== undefined || resp.opcao !== undefined) {
       await fetch(`/api/inspecao/preenchimentos/${preId}/respostas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -397,8 +493,7 @@ async function validarObrigatorios() {
   let erros = [];
   for (const c of _campos) {
     if (!c.obrigatorio) continue;
-    const resp = _respostas[c.id];
-    const preenchido = resp && (resp.texto?.trim() || resp.opcao || resp.fotoFile || resp.fotoPath);
+    const preenchido = campoPreenchido(c);
     const cwEl = document.getElementById('cw_' + c.id);
     if (!preenchido) {
       erros.push(c.label);
