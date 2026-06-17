@@ -435,12 +435,23 @@
       const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
       const mi = String(agoraBR.getUTCMinutes()).padStart(2,'0');
       const dataISO = `${y}-${m}-${d}`;
-      const [inspR, ativosR] = await Promise.all([
+      const [inspR, ativosR, osR] = await Promise.all([
         fetch(`/api/inspecao/preenchimentos?dataDe=${dataISO}&dataAte=${dataISO}`).then(r=>r.json()),
         fetch('/api/checkin/ativos').then(r=>r.json()),
+        fetch(`/api/os?dataDe=${dataISO}&dataAte=${dataISO}`).then(r=>r.json()),
       ]);
       const lista   = inspR.data || [];
-      const ativos  = ativosR.data || [];
+      const ativosCheckin = ativosR.data || [];
+      const osAndHoje = (osR.data || []).filter(o => o.status === 'Andamento');
+
+      // Combina check-ins ativos + equipe das OS em andamento (dedup por nome, mantém SE)
+      const colabMap = new Map();
+      ativosCheckin.forEach(c => { const n=(c.nome||c.matricula||'').trim(); if(n) colabMap.set(n, c.subestacao||'—'); });
+      osAndHoje.forEach(os => {
+        const se = (os.subestacoes||os.unidade||'—').trim();
+        (os.equipe||'').split(',').forEach(n=>{ const t=n.trim(); if(t && !colabMap.has(t)) colabMap.set(t, se); });
+      });
+
       const concluidas = lista.filter(p => p.status === 'Concluído').length;
       const L = [];
       L.push('🔍 *Sistema de Monitoramento — Inspeções*');
@@ -463,9 +474,9 @@
         L.push('📭 Nenhuma inspeção registrada hoje.');
       }
       L.push('');
-      if (ativos.length > 0) {
-        L.push(`👷 *${ativos.length} colaborador(es) em campo no momento*`);
-        ativos.forEach(c => L.push(`📍 SE ${c.subestacao} | ${c.nome || c.matricula}`));
+      if (colabMap.size > 0) {
+        L.push(`👷 *${colabMap.size} colaborador(es) em campo no momento*`);
+        colabMap.forEach((se, nome) => L.push(`📍 SE ${se} | ${nome}`));
       } else {
         L.push('👷 *Nenhum colaborador em campo no momento*');
       }
