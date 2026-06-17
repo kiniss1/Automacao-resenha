@@ -377,7 +377,10 @@
 
       document.getElementById('inspecaoPromptMsg').innerHTML =
         `Existe uma ficha de inspeção para <strong>${r.data.nome_se}</strong> com ${campos} campo(s).<br>Deseja realizá-la agora?`;
-      document.getElementById('inspecaoPrompt').classList.add('show');
+      const promptEl = document.getElementById('inspecaoPrompt');
+      promptEl.classList.add('show');
+      // Rola a tela até o prompt — sem isso ele fica acima da área visível no celular
+      setTimeout(() => promptEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
     } catch(e) {
       console.error('[ofereceInspecao] Erro ao verificar ficha:', e.message);
     }
@@ -514,6 +517,7 @@ ${res.checkin.nome || mat} saiu de ${res.checkin.subestacao}`, 'ok');
     el.textContent = msg; el.className = 'result show ' + type;
     clearTimeout(el._t);
     el._t = setTimeout(() => el.classList.remove('show'), 9000);
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   function formatDT(s) {
