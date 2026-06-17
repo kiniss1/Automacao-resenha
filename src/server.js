@@ -139,51 +139,68 @@ function startServer() {
     } catch(err) { res.status(500).json({ ok: false, error: err.message }); }
   });
 
-  app.post('/api/checkin', async (req, res) => {
+  app.post('/api/checkin', (req, res) => {
     try {
       const { matricula, subestacao, atividade } = req.body;
       if (!matricula || !subestacao) return res.status(400).json({ ok: false, erro: true, msg: 'Matrícula e subestação obrigatórios.' });
       const result = checkin.fazerCheckin({ matricula, subestacao, atividade });
       res.json({ ok: !result.erro, ...result });
+    } catch(err) { res.status(500).json({ ok: false, erro: true, msg: err.message }); }
+  });
 
-      // Notifica o grupo do WhatsApp (não bloqueia a resposta)
-      if (!result.erro) {
-        try {
-          const botState = require('./state');
-          if (botState.isReady() && global._waClient) {
-            const hora = new Date(Date.now() - 3*60*60*1000).toISOString().slice(11,16);
-            const msgWA =
-              `🟢 *Check-in registrado*\n` +
-              `📍 SE ${subestacao.toUpperCase()}\n` +
-              `👷 ${result.nome || matricula}` + (result.cargo ? ` — ${result.cargo}` : '') + `\n` +
-              (atividade ? `📝 ${atividade}\n` : '') +
-              `⏰ ${hora}`;
+  // Notifica o grupo do WhatsApp com TODOS os colaboradores do mesmo lote de check-in
+  // numa única mensagem (em vez de uma mensagem por colaborador)
+  app.post('/api/checkin/notificar-grupo', express.json(), async (req, res) => {
+    try {
+      const { subestacao, atividade, colaboradores } = req.body;
+      if (!subestacao || !Array.isArray(colaboradores) || !colaboradores.length) {
+        return res.status(400).json({ ok: false, error: 'subestacao e colaboradores[] são obrigatórios' });
+      }
 
-            const grupoNome = process.env.GRUPO_CHECKIN_NOME || process.env.GRUPO_NOME || 'Resenha';
+      const botState = require('./state');
+      if (!botState.isReady() || !global._waClient) {
+        return res.json({ ok: false, error: 'Bot WhatsApp não conectado (notificação ignorada)' });
+      }
 
-            if (global._grupoCheckinId) {
-              const chat = await global._waClient.getChatById(global._grupoCheckinId);
-              await chat.sendMessage(msgWA);
-            } else {
-              const chats = await global._waClient.getChats();
-              const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
-              if (grupo) {
-                global._grupoCheckinId = grupo.id._serialized;
-                await grupo.sendMessage(msgWA);
-              } else {
-                console.warn('[CHECKIN] Grupo "' + grupoNome + '" não encontrado. Verifique GRUPO_CHECKIN_NOME no .env');
-              }
-            }
-          }
-        } catch(e) {
-          console.error('[CHECKIN] Erro ao notificar grupo:', e.message);
-          // Se erro de grupo não encontrado, limpa cache para tentar de novo na próxima
-          if (e.message?.includes('not found') || e.message?.includes('404')) {
-            global._grupoCheckinId = null;
+      const hora = new Date(Date.now() - 3*60*60*1000).toISOString().slice(11,16);
+      const listaColab = colaboradores
+        .map(c => `👷 ${c.nome}` + (c.cargo ? ` — ${c.cargo}` : ''))
+        .join('\n');
+
+      const msgWA =
+        `🟢 *Check-in registrado*\n` +
+        `📍 SE ${subestacao.toUpperCase()}\n` +
+        `${listaColab}\n` +
+        (atividade ? `📝 ${atividade}\n` : '') +
+        `⏰ ${hora}`;
+
+      const grupoNome = process.env.GRUPO_CHECKIN_NOME || process.env.GRUPO_NOME || 'Resenha';
+
+      try {
+        if (global._grupoCheckinId) {
+          const chat = await global._waClient.getChatById(global._grupoCheckinId);
+          await chat.sendMessage(msgWA);
+        } else {
+          const chats = await global._waClient.getChats();
+          const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+          if (grupo) {
+            global._grupoCheckinId = grupo.id._serialized;
+            await grupo.sendMessage(msgWA);
+          } else {
+            console.warn('[CHECKIN] Grupo "' + grupoNome + '" não encontrado. Verifique GRUPO_CHECKIN_NOME no .env');
+            return res.json({ ok: false, error: `Grupo "${grupoNome}" não encontrado` });
           }
         }
+      } catch(e) {
+        if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoCheckinId = null;
+        throw e;
       }
-    } catch(err) { res.status(500).json({ ok: false, erro: true, msg: err.message }); }
+
+      res.json({ ok: true });
+    } catch(e) {
+      console.error('[CHECKIN] Erro ao notificar grupo:', e.message);
+      res.status(500).json({ ok: false, error: e.message });
+    }
   });
 
   app.post('/api/checkout', (req, res) => {
@@ -682,9 +699,9 @@ function startServer() {
   app.post('/api/inspecao/fichas/:fichaId/campos', authSup, express.json(), (req, res) => {
     try {
       const ficha_id = parseInt(req.params.fichaId);
-      const { label, tipo, opcoes, obrigatorio, grupo, ordem } = req.body;
+      const { label, tipo, opcoes, obrigatorio, grupo, ordem, permite_foto } = req.body;
       if (!label) return res.status(400).json({ ok: false, error: 'label obrigatório' });
-      const c = insp.criarCampo({ ficha_id, label, tipo, opcoes, obrigatorio, grupo, ordem });
+      const c = insp.criarCampo({ ficha_id, label, tipo, opcoes, obrigatorio, grupo, ordem, permite_foto });
       res.json({ ok: true, data: c });
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
@@ -764,7 +781,8 @@ function startServer() {
         const preenchimento_id = parseInt(req.params.preId);
         const campo_id         = parseInt(req.params.campoId);
         const foto_path        = req.file.filename;
-        const r = insp.salvarResposta({ preenchimento_id, campo_id, foto_path });
+        // Acumula no array de fotos do campo — suporta múltiplas fotos por campo
+        const r = insp.adicionarFoto({ preenchimento_id, campo_id, foto_path });
         res.json({ ok: true, data: r, foto_path });
       } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
     }
