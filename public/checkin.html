@@ -104,9 +104,18 @@
     .btn-insp-sim:hover{opacity:.88}
     .btn-insp-nao{flex:1;background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:9px;padding:10px;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .15s}
     .btn-insp-nao:hover{border-color:var(--muted);color:var(--text)}
+
+    /* ── Banner de diagnóstico visível na tela (sem precisar do console) ── */
+    #debugBanner{position:fixed;top:0;left:0;right:0;z-index:9999;padding:10px 16px;font-size:.78rem;font-weight:600;text-align:center;color:#fff;transform:translateY(-100%);transition:transform .25s;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+    #debugBanner.show{transform:translateY(0)}
+    #debugBanner.info{background:#0d6efd}
+    #debugBanner.warn{background:#d97706}
+    #debugBanner.err{background:#dc2626}
+    #debugBanner.ok{background:#16a34a}
   </style>
 </head>
 <body>
+<div id="debugBanner"></div>
 <div class="card">
   <div class="card-header">
     <div class="sub-badge" id="subBadge">⚡ Subestação</div>
@@ -349,9 +358,21 @@
       loadCheckoutAtivos(subestacao);
       // Verifica se existe ficha de inspeção para essa SE
       ofereceInspecao(subestacao);
+    } else {
+      debugBanner('⚠️ Check-in não teve sucesso — verificação de inspeção não foi feita.', 'err');
     }
 
     btn.disabled = false; btn.textContent = '✅ Registrar Entrada';
+  }
+
+  // ── Banner de diagnóstico visível na tela ────────────────────────────────
+  function debugBanner(msg, type) {
+    const el = document.getElementById('debugBanner');
+    el.textContent = msg;
+    el.className = type;
+    requestAnimationFrame(() => el.classList.add('show'));
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 6000);
   }
 
   // ── Oferta de inspeção após check-in ─────────────────────────────────────
@@ -359,30 +380,36 @@
     _inspecaoFichaId   = null;
     _inspecaoFichaNome = null;
     const codigo = (codigoSE || '').trim();
-    if (!codigo) { console.warn('[ofereceInspecao] código de SE vazio.'); return; }
+    if (!codigo) {
+      debugBanner('⚠️ Código de SE vazio — não foi possível verificar inspeção.', 'warn');
+      return;
+    }
+    debugBanner('🔄 Verificando ficha de inspeção para SE ' + codigo + '...', 'info');
     try {
       const resp = await fetch('/api/inspecao/fichas/' + encodeURIComponent(codigo));
       const r = await resp.json();
       if (!resp.ok || !r.ok || !r.data) {
-        console.warn('[ofereceInspecao] Sem ficha para SE "' + codigo + '":', r.error || resp.status);
+        debugBanner('📭 Nenhuma ficha de inspeção encontrada para SE ' + codigo + '.', 'warn');
         return;
       }
       if (!r.data.ativa) {
-        console.warn('[ofereceInspecao] Ficha da SE "' + codigo + '" está inativa.');
+        debugBanner('⏸️ Ficha de inspeção da SE ' + codigo + ' está inativa.', 'warn');
         return;
       }
       _inspecaoFichaId   = r.data.id;
       _inspecaoFichaNome = r.data.nome_se;
       const campos = r.data.campos?.length || 0;
 
+      debugBanner('✅ Ficha encontrada! Exibindo prompt de inspeção...', 'ok');
+
       document.getElementById('inspecaoPromptMsg').innerHTML =
         `Existe uma ficha de inspeção para <strong>${r.data.nome_se}</strong> com ${campos} campo(s).<br>Deseja realizá-la agora?`;
       const promptEl = document.getElementById('inspecaoPrompt');
       promptEl.classList.add('show');
       // Rola a tela até o prompt — sem isso ele fica acima da área visível no celular
-      setTimeout(() => promptEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+      setTimeout(() => promptEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 400);
     } catch(e) {
-      console.error('[ofereceInspecao] Erro ao verificar ficha:', e.message);
+      debugBanner('❌ Erro ao verificar ficha: ' + e.message, 'err');
     }
   }
 
