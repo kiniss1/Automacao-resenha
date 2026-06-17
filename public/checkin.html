@@ -222,18 +222,26 @@
   async function init() {
     const { data } = await fetch('/api/subestacoes').then(r => r.json());
 
+    const subParamNorm = subParam.trim().toUpperCase();
     const sel = document.getElementById('subIn');
     data.forEach(s => {
       const o = document.createElement('option');
       o.value = s; o.textContent = s;
-      if (s === subParam) o.selected = true;
+      if (s === subParamNorm) o.selected = true;
       sel.appendChild(o);
     });
 
-    const sub = subParam || data[0] || '';
+    // Garante que o select reflita exatamente o que veio do QR, mesmo que
+    // o atributo 'selected' não tenha pegado (ex: ordem de render do browser)
+    const matchOnList = data.find(s => s === subParamNorm);
+    const sub = matchOnList || data[0] || '';
     if (sub) {
+      sel.value = sub;
       document.getElementById('subBadge').textContent = '⚡ ' + sub;
       loadAtivos(sub);
+    }
+    if (subParam && !matchOnList) {
+      console.warn('[checkin] SE do QR ("' + subParam + '") não encontrada na lista de subestações. Usando "' + sub + '" como fallback.');
     }
 
     addColabRow();
@@ -350,9 +358,19 @@
   async function ofereceInspecao(codigoSE) {
     _inspecaoFichaId   = null;
     _inspecaoFichaNome = null;
+    const codigo = (codigoSE || '').trim();
+    if (!codigo) { console.warn('[ofereceInspecao] código de SE vazio.'); return; }
     try {
-      const r = await fetch('/api/inspecao/fichas/' + encodeURIComponent(codigoSE)).then(r => r.json());
-      if (!r.ok || !r.data || !r.data.ativa) return; // sem ficha ou inativa
+      const resp = await fetch('/api/inspecao/fichas/' + encodeURIComponent(codigo));
+      const r = await resp.json();
+      if (!resp.ok || !r.ok || !r.data) {
+        console.warn('[ofereceInspecao] Sem ficha para SE "' + codigo + '":', r.error || resp.status);
+        return;
+      }
+      if (!r.data.ativa) {
+        console.warn('[ofereceInspecao] Ficha da SE "' + codigo + '" está inativa.');
+        return;
+      }
       _inspecaoFichaId   = r.data.id;
       _inspecaoFichaNome = r.data.nome_se;
       const campos = r.data.campos?.length || 0;
@@ -360,8 +378,11 @@
       document.getElementById('inspecaoPromptMsg').innerHTML =
         `Existe uma ficha de inspeção para <strong>${r.data.nome_se}</strong> com ${campos} campo(s).<br>Deseja realizá-la agora?`;
       document.getElementById('inspecaoPrompt').classList.add('show');
-    } catch(e) { /* sem ficha, sem problema */ }
+    } catch(e) {
+      console.error('[ofereceInspecao] Erro ao verificar ficha:', e.message);
+    }
   }
+
 
   function irParaInspecao() {
     if (!_inspecaoFichaId) return;
