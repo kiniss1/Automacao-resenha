@@ -27,12 +27,15 @@ function setDb(database) {
       ordem       INTEGER NOT NULL DEFAULT 0,
       label       TEXT NOT NULL,
       tipo        TEXT NOT NULL DEFAULT 'texto',
-      -- tipos: texto | multipla_escolha | upload_foto | sim_nao | numero
+      -- tipos: texto | multipla_escolha | upload_foto | sim_nao | numero | observacao
       opcoes      TEXT,   -- JSON array para multipla_escolha, ex: ["Bom","Ruim","Outra"]
       obrigatorio INTEGER NOT NULL DEFAULT 1,
-      grupo       TEXT    -- agrupamento visual, ex: "Disjuntores 138kV"
+      grupo       TEXT,   -- agrupamento visual, ex: "Disjuntores 138kV"
+      permite_foto INTEGER NOT NULL DEFAULT 0  -- permite anexar foto(s) extra neste campo
     )
   `);
+  // Migração leve: adiciona a coluna se o banco já existir sem ela
+  try { db.run(`ALTER TABLE inspecao_campos ADD COLUMN permite_foto INTEGER NOT NULL DEFAULT 0`); } catch(e) {}
 
   // ── Preenchimentos (instâncias de uma ficha respondida) ───────────────────
   db.run(`
@@ -58,9 +61,12 @@ function setDb(database) {
       campo_id         INTEGER NOT NULL REFERENCES inspecao_campos(id),
       resposta_texto   TEXT,
       resposta_opcao   TEXT,
-      foto_path        TEXT   -- caminho do arquivo salvo
+      foto_path        TEXT,  -- (legado) caminho de uma única foto
+      fotos            TEXT   -- JSON array de caminhos — suporta múltiplas fotos
     )
   `);
+  // Migração leve: adiciona a coluna se o banco já existir sem ela
+  try { db.run(`ALTER TABLE inspecao_respostas ADD COLUMN fotos TEXT`); } catch(e) {}
 
   // Índices
   db.run(`CREATE INDEX IF NOT EXISTS idx_insp_pre_ficha ON inspecao_preenchimentos(ficha_id)`);
@@ -73,6 +79,16 @@ function setDb(database) {
 function run(sql, params = []) {
   db.run(sql, params);
   persist();
+}
+
+// Para INSERTs: captura o ID gerado ANTES de persistir, porque db.export()
+// (chamado dentro de persist()) reseta last_insert_rowid() no sql.js
+function runInsert(sql, params = []) {
+  db.run(sql, params);
+  const idRow = db.exec('SELECT last_insert_rowid() AS id');
+  const newId = idRow?.[0]?.values?.[0]?.[0];
+  persist();
+  return newId;
 }
 
 function get(sql, params = []) {
@@ -130,22 +146,23 @@ function deletarFicha(id) {
 }
 
 // ── Campos ────────────────────────────────────────────────────────────────────
-function criarCampo({ ficha_id, label, tipo, opcoes, obrigatorio, grupo, ordem }) {
-  run(`INSERT INTO inspecao_campos (ficha_id, label, tipo, opcoes, obrigatorio, grupo, ordem)
-       VALUES (?,?,?,?,?,?,?)`,
+function criarCampo({ ficha_id, label, tipo, opcoes, obrigatorio, grupo, ordem, permite_foto }) {
+  const newId = runInsert(`INSERT INTO inspecao_campos (ficha_id, label, tipo, opcoes, obrigatorio, grupo, ordem, permite_foto)
+       VALUES (?,?,?,?,?,?,?,?)`,
     [ficha_id, label, tipo || 'texto',
      opcoes ? JSON.stringify(opcoes) : null,
      obrigatorio !== false ? 1 : 0,
      grupo || null,
-     ordem ?? 0]);
-  return get(`SELECT * FROM inspecao_campos WHERE rowid=last_insert_rowid()`);
+     ordem ?? 0,
+     permite_foto ? 1 : 0]);
+  return get(`SELECT * FROM inspecao_campos WHERE id=?`, [newId]);
 }
 
 function listarCampos(ficha_id) {
   return all(`SELECT * FROM inspecao_campos WHERE ficha_id=? ORDER BY ordem ASC`, [ficha_id]);
 }
 
-function atualizarCampo(id, { label, tipo, opcoes, obrigatorio, grupo, ordem }) {
+function atualizarCampo(id, { label, tipo, opcoes, obrigatorio, grupo, ordem, permite_foto }) {
   const fields = [], vals = [];
   if (label      !== undefined) { fields.push('label=?');      vals.push(label); }
   if (tipo       !== undefined) { fields.push('tipo=?');       vals.push(tipo); }
@@ -153,6 +170,7 @@ function atualizarCampo(id, { label, tipo, opcoes, obrigatorio, grupo, ordem }) 
   if (obrigatorio!== undefined) { fields.push('obrigatorio=?');vals.push(obrigatorio ? 1 : 0); }
   if (grupo      !== undefined) { fields.push('grupo=?');      vals.push(grupo || null); }
   if (ordem      !== undefined) { fields.push('ordem=?');      vals.push(ordem); }
+  if (permite_foto !== undefined) { fields.push('permite_foto=?'); vals.push(permite_foto ? 1 : 0); }
   if (!fields.length) return get(`SELECT * FROM inspecao_campos WHERE id=?`, [id]);
   vals.push(id);
   run(`UPDATE inspecao_campos SET ${fields.join(',')} WHERE id=?`, vals);
@@ -172,11 +190,11 @@ function reordenarCampos(fichaId, ordemArray) {
 
 // ── Preenchimentos ────────────────────────────────────────────────────────────
 function criarPreenchimento({ ficha_id, codigo_se, matricula, nome_tecnico, data_insp, hora_insp, obs_geral }) {
-  run(`INSERT INTO inspecao_preenchimentos (ficha_id, codigo_se, matricula, nome_tecnico, data_insp, hora_insp, obs_geral)
+  const newId = runInsert(`INSERT INTO inspecao_preenchimentos (ficha_id, codigo_se, matricula, nome_tecnico, data_insp, hora_insp, obs_geral)
        VALUES (?,?,?,?,?,?,?)`,
     [ficha_id, codigo_se.toUpperCase(), matricula || null, nome_tecnico || null,
      data_insp, hora_insp || null, obs_geral || null]);
-  return get(`SELECT * FROM inspecao_preenchimentos WHERE rowid=last_insert_rowid()`);
+  return get(`SELECT * FROM inspecao_preenchimentos WHERE id=?`, [newId]);
 }
 
 function concluirPreenchimento(id) {
@@ -207,18 +225,38 @@ function deletarPreenchimento(id) {
 
 // ── Respostas ─────────────────────────────────────────────────────────────────
 function salvarResposta({ preenchimento_id, campo_id, resposta_texto, resposta_opcao, foto_path }) {
-  // Upsert por preenchimento+campo
+  // Upsert por preenchimento+campo — preserva fotos já anexadas (não sobrescreve a coluna 'fotos')
   const existing = get(`SELECT id FROM inspecao_respostas WHERE preenchimento_id=? AND campo_id=?`,
     [preenchimento_id, campo_id]);
   if (existing) {
-    run(`UPDATE inspecao_respostas SET resposta_texto=?, resposta_opcao=?, foto_path=? WHERE id=?`,
-      [resposta_texto || null, resposta_opcao || null, foto_path || null, existing.id]);
+    run(`UPDATE inspecao_respostas SET resposta_texto=?, resposta_opcao=? WHERE id=?`,
+      [resposta_texto || null, resposta_opcao || null, existing.id]);
     return get(`SELECT * FROM inspecao_respostas WHERE id=?`, [existing.id]);
   } else {
-    run(`INSERT INTO inspecao_respostas (preenchimento_id, campo_id, resposta_texto, resposta_opcao, foto_path)
+    const newId = runInsert(`INSERT INTO inspecao_respostas (preenchimento_id, campo_id, resposta_texto, resposta_opcao, foto_path)
          VALUES (?,?,?,?,?)`,
       [preenchimento_id, campo_id, resposta_texto || null, resposta_opcao || null, foto_path || null]);
-    return get(`SELECT * FROM inspecao_respostas WHERE rowid=last_insert_rowid()`);
+    return get(`SELECT * FROM inspecao_respostas WHERE id=?`, [newId]);
+  }
+}
+
+// Anexa uma foto à resposta de um campo, ACUMULANDO no array 'fotos' (suporta múltiplas fotos por campo)
+function adicionarFoto({ preenchimento_id, campo_id, foto_path }) {
+  const existing = get(`SELECT * FROM inspecao_respostas WHERE preenchimento_id=? AND campo_id=?`,
+    [preenchimento_id, campo_id]);
+  if (existing) {
+    let fotos = [];
+    try { fotos = existing.fotos ? JSON.parse(existing.fotos) : []; } catch(e) { fotos = []; }
+    fotos.push(foto_path);
+    run(`UPDATE inspecao_respostas SET fotos=?, foto_path=? WHERE id=?`,
+      [JSON.stringify(fotos), foto_path, existing.id]);
+    return get(`SELECT * FROM inspecao_respostas WHERE id=?`, [existing.id]);
+  } else {
+    const fotos = [foto_path];
+    const newId = runInsert(`INSERT INTO inspecao_respostas (preenchimento_id, campo_id, foto_path, fotos)
+         VALUES (?,?,?,?)`,
+      [preenchimento_id, campo_id, foto_path, JSON.stringify(fotos)]);
+    return get(`SELECT * FROM inspecao_respostas WHERE id=?`, [newId]);
   }
 }
 
@@ -260,6 +298,6 @@ module.exports = {
   criarFicha, atualizarFicha, listarFichas, buscarFicha, buscarFichaPorCodigo, deletarFicha,
   criarCampo, listarCampos, atualizarCampo, deletarCampo, reordenarCampos,
   criarPreenchimento, concluirPreenchimento, buscarPreenchimento, listarPreenchimentos, deletarPreenchimento,
-  salvarResposta, listarRespostas,
+  salvarResposta, adicionarFoto, listarRespostas,
   statsDashboard,
 };
