@@ -139,12 +139,50 @@ function startServer() {
     } catch(err) { res.status(500).json({ ok: false, error: err.message }); }
   });
 
-  app.post('/api/checkin', (req, res) => {
+  app.post('/api/checkin', async (req, res) => {
     try {
       const { matricula, subestacao, atividade } = req.body;
       if (!matricula || !subestacao) return res.status(400).json({ ok: false, erro: true, msg: 'Matrícula e subestação obrigatórios.' });
       const result = checkin.fazerCheckin({ matricula, subestacao, atividade });
       res.json({ ok: !result.erro, ...result });
+
+      // Notifica o grupo do WhatsApp (não bloqueia a resposta)
+      if (!result.erro) {
+        try {
+          const botState = require('./state');
+          if (botState.isReady() && global._waClient) {
+            const hora = new Date(Date.now() - 3*60*60*1000).toISOString().slice(11,16);
+            const msgWA =
+              `🟢 *Check-in registrado*\n` +
+              `📍 SE ${subestacao.toUpperCase()}\n` +
+              `👷 ${result.nome || matricula}` + (result.cargo ? ` — ${result.cargo}` : '') + `\n` +
+              (atividade ? `📝 ${atividade}\n` : '') +
+              `⏰ ${hora}`;
+
+            const grupoNome = process.env.GRUPO_CHECKIN_NOME || process.env.GRUPO_NOME || 'Resenha';
+
+            if (global._grupoCheckinId) {
+              const chat = await global._waClient.getChatById(global._grupoCheckinId);
+              await chat.sendMessage(msgWA);
+            } else {
+              const chats = await global._waClient.getChats();
+              const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+              if (grupo) {
+                global._grupoCheckinId = grupo.id._serialized;
+                await grupo.sendMessage(msgWA);
+              } else {
+                console.warn('[CHECKIN] Grupo "' + grupoNome + '" não encontrado. Verifique GRUPO_CHECKIN_NOME no .env');
+              }
+            }
+          }
+        } catch(e) {
+          console.error('[CHECKIN] Erro ao notificar grupo:', e.message);
+          // Se erro de grupo não encontrado, limpa cache para tentar de novo na próxima
+          if (e.message?.includes('not found') || e.message?.includes('404')) {
+            global._grupoCheckinId = null;
+          }
+        }
+      }
     } catch(err) { res.status(500).json({ ok: false, erro: true, msg: err.message }); }
   });
 
