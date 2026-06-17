@@ -802,11 +802,27 @@ function startServer() {
         linhas.push('');
       }
 
-      // Colaboradores em campo agora — usa db.all direto para garantir dados frescos
-      const ativosInsp = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`);
-      if (ativosInsp.length > 0) {
-        linhas.push(`👷 *${ativosInsp.length} colaborador(es) em campo no momento*`);
-        ativosInsp.forEach(c => linhas.push(`📍 SE ${c.subestacao} | ${c.nome || c.matricula}`));
+      // Colaboradores em campo agora — combina check-ins ativos + equipe das OS em andamento hoje
+      const checkinsAtivosInsp = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`);
+      const osAndamentoHoje = db.all(
+        `SELECT equipe, subestacoes, unidade FROM ordens_servico
+         WHERE status='Andamento' AND date(criado_em) = date('now','localtime')`
+      );
+      const colabInspMap = new Map(); // nome -> SE
+      checkinsAtivosInsp.forEach(c => {
+        const n = (c.nome || c.matricula || '').trim();
+        if (n) colabInspMap.set(n, c.subestacao || '—');
+      });
+      osAndamentoHoje.forEach(os => {
+        const se = (os.subestacoes || os.unidade || '—').trim();
+        (os.equipe || '').split(',').forEach(n => {
+          const t = n.trim();
+          if (t && !colabInspMap.has(t)) colabInspMap.set(t, se);
+        });
+      });
+      if (colabInspMap.size > 0) {
+        linhas.push(`👷 *${colabInspMap.size} colaborador(es) em campo no momento*`);
+        colabInspMap.forEach((se, nome) => linhas.push(`📍 SE ${se} | ${nome}`));
         linhas.push('');
       } else {
         linhas.push('👷 *Nenhum colaborador em campo no momento*');
@@ -862,8 +878,15 @@ function startServer() {
       const osEtapa      = osHoje.filter(o => o.status === 'Etapa Concluída');
       const osCanceladas = osHoje.filter(o => o.status === 'Cancelado');
 
-      // Colaboradores em campo agora — db.all direto para garantir dados frescos
-      const ativos = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`);
+      // Colaboradores em campo agora — combina check-ins ativos + equipe das OS em andamento
+      // (alguns colaboradores só registram atividade, sem usar o check-in separado)
+      const checkinsAtivos = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`);
+      const colabSet = new Set();
+      checkinsAtivos.forEach(c => { const n = (c.nome || c.matricula || '').trim(); if (n) colabSet.add(n); });
+      osAndamento.forEach(os => {
+        (os.equipe || '').split(',').forEach(n => { const t = n.trim(); if (t) colabSet.add(t); });
+      });
+      const ativos = Array.from(colabSet);
 
       // Inspeções do dia
       const dataISO   = `${y}-${m}-${d}`;
@@ -899,6 +922,7 @@ function startServer() {
       } else {
         linhas.push('👷 *Nenhum colaborador em campo no momento*');
       }
+      linhas.push('');
 
       // Inspeções
       if (inspStats.total > 0) {
