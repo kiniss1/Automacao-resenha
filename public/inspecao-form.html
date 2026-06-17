@@ -265,6 +265,8 @@ function renderCampo(c) {
     <div class="sn-obs-wrap" id="snobs_${c.id}" style="display:none">
       <label>Motivo / observação</label>
       <textarea class="campo-input" placeholder="Descreva o motivo..." oninput="onMotivoSN(${c.id},this.value)" rows="2"></textarea>
+      <span class="foto-extra-lbl">📎 Anexar foto(s) (opcional)</span>
+      ${renderFotoUploadHtml(c.id, 'Adicionar foto(s)')}
     </div>`;
   } else if (c.tipo === 'upload_foto') {
     inputHtml = renderFotoUploadHtml(c.id, 'Adicionar foto(s)');
@@ -279,7 +281,7 @@ function renderCampo(c) {
   }
 
   // Permite anexar foto(s) extra em qualquer tipo que ainda não tenha upload embutido
-  if (c.permite_foto && c.tipo !== 'upload_foto' && c.tipo !== 'observacao') {
+  if (c.permite_foto && c.tipo !== 'upload_foto' && c.tipo !== 'observacao' && c.tipo !== 'sim_nao') {
     extraFotoHtml = `<span class="foto-extra-lbl">📎 Anexar foto(s) (opcional)</span>` + renderFotoUploadHtml(c.id, 'Adicionar foto(s)');
   }
 
