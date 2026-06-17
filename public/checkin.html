@@ -328,7 +328,7 @@
 
     fecharPromptInspecao();
 
-    const resultados = [], erros = [];
+    const resultados = [], erros = [], colabsOk = [];
     for (const matricula of matriculas) {
       try {
         const res = await fetch('/api/checkin', {
@@ -337,7 +337,10 @@
           body: JSON.stringify({ matricula, subestacao, atividade })
         }).then(r => r.json());
         if (res.erro) erros.push(`✗ ${res.msg}`);
-        else resultados.push(`✓ ${res.nome || matricula}`);
+        else {
+          resultados.push(`✓ ${res.nome || matricula}`);
+          colabsOk.push({ nome: res.nome || matricula, cargo: res.cargo || null });
+        }
       } catch(e) { erros.push(`✗ Erro ao registrar ${matricula}`); }
     }
 
@@ -355,6 +358,14 @@
       });
       document.querySelectorAll('.colab-name').forEach(n => n.textContent = '');
       loadAtivos(subestacao);
+
+      // Notifica o grupo do WhatsApp com TODOS os colaboradores deste lote em UMA mensagem só
+      fetch('/api/checkin/notificar-grupo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subestacao, atividade, colaboradores: colabsOk })
+      }).catch(() => {});
+
       // Verifica se existe ficha de inspeção para essa SE
       ofereceInspecao(subestacao);
     } else {
