@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Inspeções — OOMC</title>
+  <title>Inspeção SE — OOMC</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -13,7 +13,6 @@
       --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
       --orange:#F5AA41;--orange-bg:#2d1f00;--orange-border:#EB8C0A;
       --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
-      --violet:#c084fc;--violet-bg:#1e0a3c;--violet-border:#7e22ce;
     }
     body.light{
       --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
@@ -22,1215 +21,557 @@
       --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
       --orange:#F5AA41;--orange-bg:#fff4e0;--orange-border:#EB8C0A;
       --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
-      --violet:#7e22ce;--violet-bg:#f3e8ff;--violet-border:#c084fc;
     }
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
 
-    /* ── Header ─────────────────────────── */
-    header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
-    .hdr-left{display:flex;align-items:center;gap:10px}
-    .hdr-logo{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-    .hdr-left h1{font-size:15px;font-weight:700}
-    .hdr-left span{font-size:11px;color:var(--muted)}
-    .hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .hbtn{background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;text-decoration:none;transition:all .15s}
-    .hbtn:hover{border-color:var(--primary);color:var(--primary)}
-    .hbtn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-    .hbtn.primary:hover{opacity:.88}
-    #userBadge{font-size:12px;color:var(--primary);font-weight:600;padding:5px 10px;background:var(--primary-bg);border-radius:6px;display:none}
+    .page-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+    .ph-left{display:flex;align-items:center;gap:10px}
+    .ph-logo{width:30px;height:30px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .ph-left h1{font-size:14px;font-weight:700;line-height:1.2}
+    .ph-left span{font-size:11px;color:var(--muted)}
+    .btn-tema{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:5px 10px;font-size:.75rem;cursor:pointer}
 
-    /* ── Login overlay ───────────────────── */
-    #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
-    .login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;width:340px;max-width:92vw}
-    .login-box h2{font-size:1.1rem;font-weight:700;margin-bottom:6px}
-    .login-box p{font-size:.8rem;color:var(--muted);margin-bottom:24px}
-    .login-box label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px}
-    .login-box input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:.9rem;outline:none;margin-bottom:14px;font-family:inherit}
-    .login-box input:focus{border-color:var(--primary)}
-    .btn-login{width:100%;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:11px;font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .15s}
-    .btn-login:hover{opacity:.88}
-    #loginErr{color:var(--red);font-size:.78rem;margin-top:6px;display:none}
+    .form-wrap{max-width:680px;margin:0 auto;padding:20px 16px 60px}
 
-    /* ── Tabs ────────────────────────────── */
-    .tabs{display:flex;gap:4px;padding:16px 24px 0;flex-wrap:wrap}
-    .tab{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px 8px 0 0;padding:9px 18px;font-size:.83rem;cursor:pointer;border-bottom:none;transition:all .15s;font-family:inherit}
-    .tab.active{background:var(--surface);color:var(--text);border-color:var(--border);border-bottom-color:var(--surface);font-weight:600}
-    .tab-content{display:none;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:0 8px 8px 8px;margin:0 24px 24px}
-    .tab-content.active{display:block}
+    /* Identif */
+    .identif-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px}
+    .identif-card h2{font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+    .identif-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:480px){.identif-grid{grid-template-columns:1fr}}
+    .field label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+    .field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
 
-    /* ── Dashboard ───────────────────────── */
-    .dash-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
-    .dash-filters input,.dash-filters select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.83rem;outline:none;font-family:inherit}
-    .dash-filters input:focus,.dash-filters select:focus{border-color:var(--primary)}
-    .btn-sm{background:var(--primary);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .15s}
-    .btn-sm:hover{opacity:.88}
-    .btn-sm.outline{background:transparent;border:1px solid var(--border2);color:var(--muted)}
-    .btn-sm.outline:hover{border-color:var(--primary);color:var(--primary)}
+    /* Grupos de campos */
+    .grupo{margin-bottom:22px}
+    .grupo-title{font-size:.72rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;padding:8px 14px;background:var(--primary-bg);border:1px solid var(--primary-dark);border-radius:8px;margin-bottom:10px}
 
-    .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
-    .kpi{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
-    .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kpi-color,var(--primary))}
-    .kpi .num{font-size:2rem;font-weight:800;color:var(--kpi-color,var(--text));line-height:1}
-    .kpi .lbl{font-size:.72rem;color:var(--muted);margin-top:5px;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
-    .kpi.green{--kpi-color:var(--green)}
-    .kpi.orange{--kpi-color:var(--orange)}
-    .kpi.red{--kpi-color:var(--red)}
-    .kpi.violet{--kpi-color:var(--violet)}
+    /* Campo individual */
+    .campo-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
+    .campo-wrap.obrig .campo-label::after{content:' *';color:var(--red)}
+    .campo-label{font-size:.82rem;font-weight:600;margin-bottom:10px;display:block}
+    .campo-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none;resize:vertical}
+    .campo-input:focus{border-color:var(--primary)}
+    .campo-input.err-field{border-color:var(--red)}
 
-    .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
-    @media(max-width:760px){.dash-grid{grid-template-columns:1fr}}
-    .dash-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px}
-    .dash-card-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+    /* Múltipla escolha */
+    .opcoes-list{display:flex;flex-direction:column;gap:7px}
+    .opcao-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s}
+    .opcao-item:hover{border-color:var(--border2)}
+    .opcao-item.selected{border-color:var(--primary);background:var(--primary-bg)}
+    .opcao-item input[type=radio]{width:16px;height:16px;accent-color:var(--primary);flex-shrink:0;pointer-events:none}
+    .opcao-item label{font-size:.85rem;cursor:pointer;flex:1;pointer-events:none}
+    .opcao-hint{font-size:.68rem;color:var(--muted);margin-top:6px}
 
-    /* Barras SE */
-    .se-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    .se-bar-label{font-size:.78rem;font-weight:600;width:60px;flex-shrink:0;text-align:right;color:var(--muted)}
-    .se-bar-track{flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden}
-    .se-bar-fill{height:100%;background:var(--primary);border-radius:5px;transition:width .5s}
-    .se-bar-count{font-size:.72rem;color:var(--muted);width:30px;text-align:left}
+    /* Sim/Não */
+    .sn-row{display:flex;gap:10px}
+    .sn-btn{flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+    .sn-btn:hover{border-color:var(--border2)}
+    .sn-btn.sel-sim{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+    .sn-btn.sel-nao{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+    .sn-obs-wrap{margin-top:10px}
+    .sn-obs-wrap label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:5px}
 
-    /* Card inspeção hoje */
-    .hoje-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;transition:border-color .15s}
-    .hoje-card:hover{border-color:var(--primary)}
-    .hoje-card .hc-se{font-size:.7rem;font-weight:700;color:var(--primary);letter-spacing:.08em}
-    .hoje-card .hc-tecnico{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .hoje-card .hc-hora{font-size:.72rem;color:var(--muted)}
-    .hoje-card .hc-status{margin-top:2px}
+    /* Upload de fotos (múltiplas) */
+    .foto-multi-wrap{margin-top:4px}
+    .foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin-bottom:8px}
+    .foto-thumb{position:relative;width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--bg)}
+    .foto-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .foto-thumb-remove{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:21px;height:21px;font-size:.7rem;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+    .foto-thumb-sent{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.62rem;color:var(--green);background:var(--green-bg);text-align:center;padding:4px;gap:2px;border:1px dashed var(--green-border)}
+    .foto-add-btn{display:block;border:2px dashed var(--border);border-radius:10px;padding:13px;text-align:center;font-size:.78rem;color:var(--muted);cursor:pointer;transition:border-color .15s;position:relative}
+    .foto-add-btn:hover{border-color:var(--primary)}
+    .foto-add-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .foto-extra-lbl{font-size:.68rem;color:var(--muted);margin:10px 0 6px;display:block}
 
-    /* Tabela recentes */
-    .insp-table{width:100%;border-collapse:collapse;font-size:.8rem}
-    .insp-table th{background:var(--bg);color:var(--muted);font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
-    .insp-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
-    .insp-table tr:last-child td{border-bottom:none}
-    .insp-table tr:hover td{background:var(--surface2)}
-    .badge{display:inline-flex;align-items:center;gap:4px;border-radius:5px;padding:2px 8px;font-size:.7rem;font-weight:600}
-    .badge.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
-    .badge.pend{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border)}
-    .btn-icon{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 9px;font-size:.75rem;cursor:pointer;transition:all .15s}
-    .btn-icon:hover{border-color:var(--primary);color:var(--primary)}
+    /* Botões */
+    .btn-primary{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px 24px;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .15s;width:100%;margin-top:6px}
+    .btn-primary:hover{opacity:.88}
+    .btn-primary:disabled{opacity:.4;cursor:default}
 
-    /* ── Fichas ──────────────────────────── */
-    .ficha-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px}
-    .ficha-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border-color .15s;cursor:default}
-    .ficha-card:hover{border-color:var(--primary)}
-    .ficha-card .fc-code{font-size:.7rem;font-weight:700;color:var(--primary);letter-spacing:.1em;margin-bottom:4px}
-    .ficha-card .fc-name{font-size:.95rem;font-weight:700;margin-bottom:4px}
-    .ficha-card .fc-desc{font-size:.75rem;color:var(--muted);margin-bottom:12px;min-height:18px}
-    .ficha-card .fc-footer{display:flex;align-items:center;justify-content:space-between;gap:6px}
-    .fc-campos{font-size:.72rem;color:var(--muted)}
-    .fc-btns{display:flex;gap:5px}
-    .fc-inactive{opacity:.45}
+    /* Progress */
+    .progress-bar-wrap{background:var(--border);border-radius:6px;height:6px;margin-bottom:20px;overflow:hidden}
+    .progress-bar-fill{height:100%;background:var(--primary);border-radius:6px;transition:width .3s}
+    .progress-lbl{font-size:.72rem;color:var(--muted);margin-bottom:6px;text-align:right}
 
-    /* ── Modal ───────────────────────────── */
-    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;z-index:500;padding:24px 16px;overflow-y:auto;backdrop-filter:blur(3px)}
-    .modal-bg.hidden{display:none}
-    .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:660px;padding:28px;margin:auto}
-    .modal h3{font-size:1rem;font-weight:700;margin-bottom:18px}
-    .modal label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px;margin-top:12px}
-    .modal input,.modal select,.modal textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;font-family:inherit;resize:vertical}
-    .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--primary)}
-    .modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
-
-    /* ── Campos editor ───────────────────── */
-    .campo-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:50vh;overflow-y:auto}
-    .campo-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:8px;cursor:grab}
-    .campo-item:active{cursor:grabbing}
-    .campo-drag{color:var(--muted2);font-size:14px;flex-shrink:0}
-    .campo-info{flex:1;min-width:0}
-    .campo-info .cl{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .campo-info .ct{font-size:.7rem;color:var(--muted)}
-    .campo-btns{display:flex;gap:4px;flex-shrink:0}
-    .tipo-badge{font-size:.65rem;padding:2px 7px;border-radius:4px;background:var(--primary-bg);color:var(--primary);border:1px solid var(--primary-dark);white-space:nowrap}
-
-    /* ── Visualizar preenchimento ────────── */
-    .resp-group{margin-bottom:18px}
-    .resp-group-title{font-size:.7rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px}
-    .resp-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.82rem}
-    .resp-row:last-child{border-bottom:none}
-    .resp-label{font-weight:600;flex:0 0 55%;color:var(--muted)}
-    .resp-val{flex:1;word-break:break-word}
-    .resp-foto{max-width:200px;max-height:180px;border-radius:8px;border:1px solid var(--border);cursor:zoom-in;margin-top:4px}
-    .resp-sim{color:var(--red);font-weight:700}
-    .resp-nao{color:var(--green);font-weight:700}
-
-    /* ── Spinner / empty ─────────────────── */
-    .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin:30px auto}
+    /* Loading / success */
+    .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .empty-msg{text-align:center;color:var(--muted);font-size:.85rem;padding:30px}
+    .success-screen{text-align:center;padding:60px 20px}
+    .success-screen .ico{font-size:4rem;margin-bottom:16px}
+    .success-screen h2{font-size:1.3rem;font-weight:700;margin-bottom:8px}
+    .success-screen p{font-size:.88rem;color:var(--muted)}
 
-    /* ── Toast ───────────────────────────── */
-    #toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:.83rem;transform:translateY(80px);opacity:0;transition:all .2s;z-index:1000;max-width:320px}
-    #toast.show{transform:translateY(0);opacity:1}
+    #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:.83rem;opacity:0;transition:all .2s;z-index:200;white-space:nowrap}
+    #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
     #toast.ok{border-color:var(--green-border);color:var(--green)}
     #toast.err{border-color:var(--red-border);color:var(--red)}
 
-    /* ── Zoom foto ───────────────────────── */
-    #fotoZoom{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:999;cursor:zoom-out}
-    #fotoZoom.hidden{display:none}
-    #fotoZoom img{max-width:90vw;max-height:90vh;border-radius:10px;border:2px solid var(--border)}
-
-    /* ── Modal confirmar exclusão ────────── */
-    #deleteModal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:600;backdrop-filter:blur(3px)}
-    #deleteModal.hidden{display:none}
-    .del-box{background:var(--surface);border:1px solid var(--red-border);border-radius:14px;padding:28px;width:340px;max-width:92vw}
-    .del-box h3{font-size:.95rem;font-weight:700;margin-bottom:6px;color:var(--red)}
-    .del-box .del-msg{font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
-    .del-box label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:5px}
-    .del-box input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.9rem;outline:none;font-family:inherit;margin-bottom:4px}
-    .del-box input:focus{border-color:var(--red)}
-    .del-box .del-err{color:var(--red);font-size:.73rem;height:16px;margin-bottom:10px}
-    .del-box .del-btns{display:flex;gap:8px;margin-top:4px}
-    .del-box .btn-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:9px;font-size:.85rem;cursor:pointer}
-    .del-box .btn-del{flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s}
-    .del-box .btn-del:hover{opacity:.85}
-    .del-box .btn-del:disabled{opacity:.4;cursor:default}
+    .not-found{text-align:center;padding:80px 20px;color:var(--muted)}
+    .not-found h2{font-size:1.1rem;margin-bottom:8px;color:var(--text)}
   </style>
 </head>
 <body>
 
-<!-- Login -->
-<div id="loginOverlay">
-  <div class="login-box">
-    <h2>🔐 Acesso Supervisor</h2>
-    <p>Sistema de Inspeção de Subestações — OOMC</p>
-    <label>Usuário</label>
-    <input type="text" id="loginUser" placeholder="supervisor" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()"/>
-    <label>Senha</label>
-    <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
-    <button class="btn-login" onclick="doLogin()">Entrar</button>
-    <div id="loginErr">Usuário ou senha incorretos.</div>
-  </div>
-</div>
-
-<header>
-  <div class="hdr-left">
-    <div class="hdr-logo">🔍</div>
+<div class="page-header">
+  <div class="ph-left">
+    <div class="ph-logo">🔍</div>
     <div>
-      <h1>Inspeção de Subestações</h1>
+      <h1 id="pageTitle">Inspeção de Subestação</h1>
       <span>OOMC — Manutenção Alta Tensão</span>
     </div>
   </div>
-  <div class="hdr-right">
-    <span id="userBadge">👤 Supervisor</span>
-    <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
-    <a href="/" class="hbtn">🔧 Painel OS</a>
-    <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Tema</button>
-    <button class="hbtn" onclick="doLogout()">Sair</button>
-  </div>
-</header>
-
-<div class="tabs">
-  <button class="tab active" onclick="setTab('dashboard')">📊 Dashboard</button>
-  <button class="tab" onclick="setTab('fichas')">📋 Fichas por SE</button>
-  <button class="tab" onclick="setTab('historico')">📁 Histórico</button>
+  <button class="btn-tema" onclick="toggleTema()">🌙 Tema</button>
 </div>
 
-<!-- ═══ DASHBOARD ════════════════════════════════════════════════════════ -->
-<div class="tab-content active" id="tab-dashboard">
-  <div class="dash-filters">
-    <input type="date" id="dDe"  onchange="loadDash()"/>
-    <input type="date" id="dAte" onchange="loadDash()"/>
-    <button class="btn-sm outline" onclick="filtroHoje()">Hoje</button>
-    <button class="btn-sm outline" onclick="filtroSemana()">Esta semana</button>
-    <button class="btn-sm outline" onclick="filtroMes()">Este mês</button>
-    <button class="btn-sm" onclick="loadDash()">↻ Atualizar</button>
-  </div>
-  <div class="kpi-row" id="kpiRow">
-    <div class="kpi"><div class="num" id="kTotal">–</div><div class="lbl">Total de Inspeções</div></div>
-    <div class="kpi green"><div class="num" id="kConcluidas">–</div><div class="lbl">Concluídas</div></div>
-    <div class="kpi orange"><div class="num" id="kPendentes">–</div><div class="lbl">Rascunhos</div></div>
-    <div class="kpi violet"><div class="num" id="kSEs">–</div><div class="lbl">SEs Inspecionadas</div></div>
-  </div>
-  <div class="dash-grid">
-    <div class="dash-card">
-      <div class="dash-card-title">Inspeções por Subestação</div>
-      <div id="seBarras"><div class="spinner"></div></div>
-    </div>
-    <div class="dash-card">
-      <div class="dash-card-title">Inspeções por Colaborador</div>
-      <div id="colabBarras"><div class="spinner"></div></div>
-    </div>
-  </div>
-
-  <div class="dash-card" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div class="dash-card-title" style="margin-bottom:0">Inspeções de Hoje</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span id="hojeTotalBadge" style="font-size:1.2rem;font-weight:800;color:var(--primary)">–</span>
-        <span style="font-size:.72rem;color:var(--muted)">inspeção(ões)</span>
-      </div>
-    </div>
-    <div id="hojeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px"></div>
-  </div>
-
-  <div class="dash-card" style="margin-bottom:0">
-    <div class="dash-card-title">Últimas Inspeções</div>
-    <div style="overflow-x:auto">
-      <table class="insp-table">
-        <thead><tr>
-          <th>Subestação</th><th>Técnico</th><th>Data</th><th>Hora</th><th>Status</th><th></th>
-        </tr></thead>
-        <tbody id="dashRecentes"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ FICHAS POR SE ═════════════════════════════════════════════════════ -->
-<div class="tab-content" id="tab-fichas">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-    <div style="font-size:.85rem;color:var(--muted)">Configure as fichas de inspeção de cada subestação</div>
-    <button class="btn-sm" onclick="abrirNovaFicha()">+ Nova Ficha</button>
-  </div>
-  <div class="ficha-grid" id="fichaGrid"><div class="spinner"></div></div>
-</div>
-
-<!-- ═══ HISTÓRICO ═════════════════════════════════════════════════════════ -->
-<div class="tab-content" id="tab-historico">
-  <div class="dash-filters" style="margin-bottom:16px">
-    <input type="date" id="hDe"/>
-    <input type="date" id="hAte"/>
-    <select id="hSE"><option value="">Todas as SEs</option></select>
-    <select id="hStatus">
-      <option value="">Todos os status</option>
-      <option value="Concluído">Concluído</option>
-      <option value="Rascunho">Rascunho</option>
-    </select>
-    <button class="btn-sm" onclick="loadHistorico()">🔍 Filtrar</button>
-    <button class="btn-sm outline" onclick="limparFiltrosHist()">✕ Limpar</button>
-  </div>
-  <div style="overflow-x:auto">
-    <table class="insp-table">
-      <thead><tr>
-        <th>SE</th><th>Técnico</th><th>Matrícula</th><th>Data</th><th>Hora</th><th>Status</th><th>Campos</th><th></th>
-      </tr></thead>
-      <tbody id="histTbody"><tr><td colspan="8" class="empty-msg">Aplique um filtro para carregar</td></tr></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ═══ MODAL NOVA/EDITAR FICHA ══════════════════════════════════════════ -->
-<div class="modal-bg hidden" id="fichaModal" onclick="closeIfBg(event,'fichaModal')">
-  <div class="modal">
-    <h3 id="fichaModalTitle">Nova Ficha de Inspeção</h3>
-    <input type="hidden" id="fichaModalId"/>
-    <label>Código da SE <span style="color:var(--muted);font-weight:400">(ex: FCN)</span></label>
-    <input id="fmCodigo" placeholder="FCN"/>
-    <label>Nome completo da Subestação</label>
-    <input id="fmNome" placeholder="SE Frei Caneca"/>
-    <label>Descrição <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
-    <textarea id="fmDesc" rows="2" placeholder="Breve descrição da subestação..."></textarea>
-
-    <!-- Copiar campos — só aparece em nova ficha -->
-    <div id="fmCopiarWrap" style="margin-top:16px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">
-        📋 Copiar perguntas de outra SE?
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:600;color:var(--text)">
-          <input type="radio" name="fmCopiar" value="nao" id="fmCopiarNao" checked onchange="toggleCopiarSE()" style="width:auto;margin:0;accent-color:var(--primary)"/>
-          Não, criar em branco
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:600;color:var(--text)">
-          <input type="radio" name="fmCopiar" value="sim" id="fmCopiarSim" onchange="toggleCopiarSE()" style="width:auto;margin:0;accent-color:var(--primary)"/>
-          Sim, copiar de:
-        </label>
-        <select id="fmCopiarSE" onchange="onCopiarSEChange()" style="display:none;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:.83rem;outline:none;flex:1;min-width:160px;font-family:inherit">
-          <option value="">Selecione a SE...</option>
-        </select>
-      </div>
-      <div id="fmCopiarPreview" style="display:none;margin-top:10px;padding:8px 12px;background:var(--primary-bg);border:1px solid var(--primary-dark);border-radius:7px;font-size:.75rem;color:var(--muted)"></div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-sm outline" onclick="fecharModal('fichaModal')">Cancelar</button>
-      <button class="btn-sm" id="btnSalvarFicha" onclick="salvarFicha()">Salvar Ficha</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL EDITAR CAMPOS ══════════════════════════════════════════════ -->
-<div class="modal-bg hidden" id="camposModal" onclick="closeIfBg(event,'camposModal')">
-  <div class="modal" style="max-width:700px">
-    <h3 id="camposModalTitle">Campos da Ficha</h3>
-    <input type="hidden" id="camposModalFichaId"/>
-    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span style="font-size:.78rem;color:var(--muted)" id="camposModalSubtitle"></span>
-      <button class="btn-sm" onclick="abrirNovoCampo()">+ Adicionar Campo</button>
-    </div>
-    <div class="campo-list" id="campoList"></div>
-    <div style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
-      <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px;font-weight:600">Novo Campo</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label>Rótulo do campo *</label>
-          <input id="ncLabel" placeholder="ex: Manômetro Disjuntor 1433"/>
-        </div>
-        <div>
-          <label>Tipo de resposta</label>
-          <select id="ncTipo" onchange="toggleOpcoes()">
-            <option value="texto">Texto livre</option>
-            <option value="multipla_escolha">Múltipla escolha</option>
-            <option value="upload_foto">Upload de foto</option>
-            <option value="sim_nao">Sim / Não</option>
-            <option value="numero">Número</option>
-          </select>
-        </div>
-        <div>
-          <label>Grupo visual <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
-          <input id="ncGrupo" placeholder="ex: Disjuntores 138kV"/>
-        </div>
-        <div id="ncOpcoesWrap" style="display:none">
-          <label>Opções <span style="color:var(--muted);font-weight:400">(separadas por | )</span></label>
-          <input id="ncOpcoes" placeholder="Bom|Ruim|Outra"/>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding-top:18px">
-          <input type="checkbox" id="ncObrig" checked style="width:auto;margin:0"/>
-          <label style="margin:0;font-size:.78rem">Obrigatório</label>
-        </div>
-      </div>
-      <div style="margin-top:12px">
-        <button class="btn-sm" onclick="adicionarCampo()">✓ Adicionar</button>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-sm outline" onclick="fecharModal('camposModal')">Fechar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL EDITAR CAMPO EXISTENTE ════════════════════════════════════ -->
-<div class="modal-bg hidden" id="editCampoModal" onclick="closeIfBg(event,'editCampoModal')">
-  <div class="modal" style="max-width:480px">
-    <h3>Editar Campo</h3>
-    <input type="hidden" id="ecId"/>
-    <label>Rótulo *</label>
-    <input id="ecLabel"/>
-    <label>Tipo</label>
-    <select id="ecTipo" onchange="toggleOpcoesEdit()">
-      <option value="texto">Texto livre</option>
-      <option value="multipla_escolha">Múltipla escolha</option>
-      <option value="upload_foto">Upload de foto</option>
-      <option value="sim_nao">Sim / Não</option>
-      <option value="numero">Número</option>
-    </select>
-    <label>Grupo</label>
-    <input id="ecGrupo"/>
-    <div id="ecOpcoesWrap">
-      <label>Opções (separadas por | )</label>
-      <input id="ecOpcoes"/>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
-      <input type="checkbox" id="ecObrig" style="width:auto;margin:0"/>
-      <label style="margin:0;font-size:.78rem">Obrigatório</label>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-sm outline" onclick="fecharModal('editCampoModal')">Cancelar</button>
-      <button class="btn-sm" onclick="salvarEdicaoCampo()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL VISUALIZAR PREENCHIMENTO ══════════════════════════════════ -->
-<div class="modal-bg hidden" id="verModal" onclick="closeIfBg(event,'verModal')">
-  <div class="modal" style="max-width:700px">
-    <h3 id="verModalTitle">Inspeção</h3>
-    <div id="verModalBody" style="max-height:65vh;overflow-y:auto"></div>
-    <div class="modal-footer">
-      <button class="btn-sm outline" onclick="fecharModal('verModal')">Fechar</button>
-      <button class="btn-sm" onclick="window.print()">🖨️ Imprimir</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal confirmar exclusão com senha -->
-<div id="deleteModal" class="hidden">
-  <div class="del-box">
-    <h3>🗑 Confirmar Exclusão</h3>
-    <div class="del-msg" id="delMsg">Esta ação não pode ser desfeita.</div>
-    <label>Senha do supervisor</label>
-    <input type="password" id="delSenha" placeholder="••••••••" autocomplete="off"
-           onkeydown="if(event.key==='Enter')confirmarDelecao()"/>
-    <div class="del-err" id="delErr"></div>
-    <div class="del-btns">
-      <button class="btn-cancel" onclick="fecharDeleteModal()">Cancelar</button>
-      <button class="btn-del" id="btnConfirmarDel" onclick="confirmarDelecao()">Excluir</button>
-    </div>
-  </div>
-</div>
-
-<!-- Zoom foto -->
-<div id="fotoZoom" class="hidden" onclick="this.classList.add('hidden')">
-  <img id="fotoZoomImg" src="" alt="foto"/>
+<div class="form-wrap" id="formWrap">
+  <div class="spinner"></div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-// ── Estado global ─────────────────────────────────────────────────────────
-let TOKEN = localStorage.getItem('insp_token') || '';
-let _fichas = [];
-
 // ── Tema ──────────────────────────────────────────────────────────────────
 function toggleTema() {
   document.body.classList.toggle('light');
-  localStorage.setItem('insp_tema', document.body.classList.contains('light') ? 'light' : 'dark');
+  localStorage.setItem('insp_form_tema', document.body.classList.contains('light') ? 'light' : 'dark');
 }
-if (localStorage.getItem('insp_tema') === 'light') document.body.classList.add('light');
+if (localStorage.getItem('insp_form_tema') === 'light') document.body.classList.add('light');
 
-// ── Login / Auth ──────────────────────────────────────────────────────────
-async function doLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  document.getElementById('loginErr').style.display = 'none';
-  try {
-    const r = await fetch('/api/inspecao/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario: u, senha: p })
-    }).then(r => r.json());
-    if (!r.ok) { document.getElementById('loginErr').style.display = 'block'; return; }
-    TOKEN = r.token;
-    localStorage.setItem('insp_token', TOKEN);
-    document.getElementById('loginOverlay').style.display = 'none';
-    document.getElementById('userBadge').style.display = 'inline-flex';
-    // Executa ação que estava esperando o login
-    if (_pendingAuthCallback) {
-      const cb = _pendingAuthCallback;
-      _pendingAuthCallback = null;
-      cb();
-    }
-  } catch(e) { document.getElementById('loginErr').style.display = 'block'; }
-}
+// ── Estado ────────────────────────────────────────────────────────────────
+let _ficha     = null;
+let _campos    = [];
+let _preId     = null;
+// _respostas[campoId] = { texto, opcao, fotosNovas:[File,...], fotosEnviadasCount:number }
+let _respostas = {};
 
-function doLogout() {
-  localStorage.removeItem('insp_token');
-  TOKEN = '';
-  location.reload();
-}
-
-function authH() { return { 'x-insp-token': TOKEN, 'Content-Type': 'application/json' }; }
-
-// ── Inicialização ─────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────
 async function init() {
-  // Login overlay fechado por padrão — só abre ao tentar ação protegida
-  document.getElementById('loginOverlay').style.display = 'none';
-
-  // Se já tem token salvo, valida silenciosamente
-  if (TOKEN) {
-    try {
-      const r = await fetch('/api/inspecao/fichas', { headers: { 'x-insp-token': TOKEN } });
-      if (r.status === 403) { TOKEN = ''; localStorage.removeItem('insp_token'); }
-      else document.getElementById('userBadge').style.display = 'inline-flex';
-    } catch(e) {}
-  }
-
-  filtroHoje();
-  loadFichas();
-  loadHistoricoSESelect();
+  const params = new URLSearchParams(location.search);
+  const fichaId = params.get('ficha');
+  if (!fichaId) return renderNotFound('Nenhuma ficha especificada na URL.');
+  try {
+    const r = await fetch(`/api/inspecao/fichas/${fichaId}`).then(r=>r.json());
+    if (!r.ok || !r.data) return renderNotFound('Ficha não encontrada.');
+    _ficha  = r.data;
+    _campos = r.data.campos || [];
+    document.getElementById('pageTitle').textContent = `Inspeção — ${_ficha.codigo_se}`;
+    renderForm();
+  } catch(e) { renderNotFound('Erro ao carregar ficha.'); }
 }
 
-// Exige login antes de executar ação protegida
-function requireAuth(callback) {
-  if (TOKEN) { callback(); return; }
-  // Abre o overlay e guarda o callback para executar após login
-  _pendingAuthCallback = callback;
-  document.getElementById('loginOverlay').style.display = 'flex';
-  setTimeout(() => document.getElementById('loginUser').focus(), 100);
-}
-let _pendingAuthCallback = null;
+// ── Render form ───────────────────────────────────────────────────────────
+function renderForm() {
+  const wrap = document.getElementById('formWrap');
+  const total = _campos.length;
 
-// ── Tabs ──────────────────────────────────────────────────────────────────
-function setTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['dashboard','fichas','historico'];
-    t.classList.toggle('active', names[i] === name);
+  // Agrupar por grupo
+  const grupos = {};
+  _campos.forEach(c => {
+    const g = c.grupo || '__sem_grupo__';
+    if (!grupos[g]) grupos[g] = [];
+    grupos[g].push(c);
   });
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'dashboard') loadDash();
-  if (name === 'fichas')    loadFichas();
-  if (name === 'historico') loadHistorico();
-}
 
-// ── Dashboard ─────────────────────────────────────────────────────────────
-function filtroHoje() {
-  const h = new Date().toISOString().slice(0,10);
-  document.getElementById('dDe').value  = h;
-  document.getElementById('dAte').value = h;
-  loadDash();
-}
-function filtroSemana() {
-  const hoje = new Date();
-  const dom  = new Date(hoje); dom.setDate(hoje.getDate() - hoje.getDay());
-  document.getElementById('dDe').value  = dom.toISOString().slice(0,10);
-  document.getElementById('dAte').value = hoje.toISOString().slice(0,10);
-  loadDash();
-}
-function filtroMes() {
-  const hoje = new Date();
-  document.getElementById('dDe').value  = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
-  document.getElementById('dAte').value = hoje.toISOString().slice(0,10);
-  loadDash();
-}
+  wrap.innerHTML = `
+    <!-- Cabeçalho SE -->
+    <div style="background:var(--primary);border-radius:12px;padding:18px 20px;margin-bottom:20px;color:#fff">
+      <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;opacity:.8;margin-bottom:2px">FICHA DE INSPEÇÃO</div>
+      <div style="font-size:1.2rem;font-weight:800">${_ficha.nome_se}</div>
+      ${_ficha.descricao?`<div style="font-size:.78rem;opacity:.8;margin-top:4px">${_ficha.descricao}</div>`:''}
+    </div>
 
-async function loadDash() {
-  const de  = document.getElementById('dDe').value;
-  const ate = document.getElementById('dAte').value;
-  const params = new URLSearchParams();
-  if (de)  params.set('dataDe',  de);
-  if (ate) params.set('dataAte', ate);
+    <!-- Progress -->
+    <div class="progress-lbl"><span id="progLbl">0</span> / ${total} campos preenchidos</div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div>
 
-  const hoje = new Date().toISOString().slice(0,10);
-  const hojeParams = new URLSearchParams({ dataDe: hoje, dataAte: hoje });
-
-  try {
-    const [dashR, preR, hojeR] = await Promise.all([
-      fetch('/api/inspecao/dashboard?' + params).then(r => r.json()),
-      fetch('/api/inspecao/preenchimentos?' + params).then(r => r.json()),
-      fetch('/api/inspecao/preenchimentos?' + hojeParams).then(r => r.json()),
-    ]);
-
-    if (!dashR.ok) return;
-    const d = dashR.data;
-
-    document.getElementById('kTotal').textContent       = d.total;
-    document.getElementById('kConcluidas').textContent  = d.concluidas;
-    document.getElementById('kPendentes').textContent   = d.total - d.concluidas;
-    document.getElementById('kSEs').textContent         = d.porSE?.length || 0;
-
-    // Barras SE
-    const maxSE = Math.max(...(d.porSE?.map(s => s.total) || [1]), 1);
-    document.getElementById('seBarras').innerHTML = (d.porSE?.length ? d.porSE : []).map(se => `
-      <div class="se-bar-row" title="${se.nome_se||se.codigo_se}: ${se.total} inspeção(ões)">
-        <div class="se-bar-label" style="width:52px;font-size:.72rem">${se.codigo_se}</div>
-        <div class="se-bar-track"><div class="se-bar-fill" style="width:${Math.round(se.total/maxSE*100)}%"></div></div>
-        <div class="se-bar-count">${se.total}</div>
-      </div>
-    `).join('') || '<div class="empty-msg">Nenhum dado no período</div>';
-
-    // Barras por colaborador
-    const porColab = d.porColab || [];
-    const maxColab = Math.max(...porColab.map(c => c.total), 1);
-    document.getElementById('colabBarras').innerHTML = porColab.length
-      ? porColab.map(c => `
-          <div class="se-bar-row" title="${c.nome_tecnico||c.matricula||'—'}: ${c.total} inspeção(ões)">
-            <div class="se-bar-label" style="width:90px;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right" title="${c.nome_tecnico||''}">
-              ${c.nome_tecnico ? c.nome_tecnico.split(' ')[0] : (c.matricula||'—')}
-            </div>
-            <div class="se-bar-track"><div class="se-bar-fill" style="width:${Math.round(c.total/maxColab*100)}%;background:var(--orange)"></div></div>
-            <div class="se-bar-count">${c.total}</div>
-          </div>
-        `).join('')
-      : '<div class="empty-msg">Nenhum dado no período</div>';
-
-    // Inspeções de hoje
-    const hojeList = hojeR?.data || [];
-    document.getElementById('hojeTotalBadge').textContent = hojeList.length;
-    document.getElementById('hojeGrid').innerHTML = hojeList.length
-      ? hojeList.map(p => `
-          <div class="hoje-card" onclick="verPreenchimento(${p.id})" style="cursor:pointer">
-            <div class="hc-se">${p.codigo_se} — ${p.nome_se||''}</div>
-            <div class="hc-tecnico">${p.nome_tecnico||'—'}</div>
-            <div class="hc-hora">⏰ ${p.hora_insp ? p.hora_insp + (p.data_insp ? ' ' + p.data_insp : '') : p.data_insp||'—'}</div>
-            <div class="hc-status"><span class="badge ${p.status==='Concluído'?'ok':'pend'}" style="font-size:.65rem">${p.status}</span></div>
-          </div>
-        `).join('')
-      : '<div class="empty-msg" style="grid-column:1/-1;padding:18px">Nenhuma inspeção realizada hoje</div>';
-
-    // Recentes (últimos 10 do período filtrado)
-    const prec = preR?.data || [];
-    document.getElementById('dashRecentes').innerHTML = prec.slice(0,10).map(p => `
-      <tr>
-        <td><strong>${p.codigo_se}</strong><br><span style="font-size:.7rem;color:var(--muted)">${p.nome_se||''}</span></td>
-        <td>${p.nome_tecnico||'—'}</td>
-        <td>${p.data_insp||'—'}</td>
-        <td>${p.hora_insp||'—'}</td>
-        <td><span class="badge ${p.status==='Concluído'?'ok':'pend'}">${p.status}</span></td>
-        <td><button class="btn-icon" onclick="verPreenchimento(${p.id})">Ver</button></td>
-      </tr>
-    `).join('') || '<tr><td colspan="6" class="empty-msg">Nenhuma inspeção no período</td></tr>';
-
-  } catch(e) { console.error('[DASH]', e); }
-}
-
-// ── Fichas ────────────────────────────────────────────────────────────────
-async function loadFichas() {
-  document.getElementById('fichaGrid').innerHTML = '<div class="spinner"></div>';
-  try {
-    const r = await fetch('/api/inspecao/fichas').then(r => r.json());
-    _fichas = r.data || [];
-    renderFichas();
-  } catch(e) { document.getElementById('fichaGrid').innerHTML = '<div class="empty-msg">Erro ao carregar</div>'; }
-}
-
-async function renderFichas() {
-  if (!_fichas.length) {
-    document.getElementById('fichaGrid').innerHTML = '<div class="empty-msg">Nenhuma ficha criada ainda. Clique em "+ Nova Ficha".</div>';
-    return;
-  }
-  // Busca contagem de campos para cada ficha
-  const fichasComCampos = await Promise.all(_fichas.map(async f => {
-    try {
-      const r = await fetch(`/api/inspecao/fichas/${f.id}/campos`, { headers: authH() }).then(r => r.json());
-      return { ...f, numCampos: r.data?.length || 0 };
-    } catch(e) { return { ...f, numCampos: 0 }; }
-  }));
-
-  document.getElementById('fichaGrid').innerHTML = fichasComCampos.map(f => `
-    <div class="ficha-card ${f.ativa?'':'fc-inactive'}">
-      <div class="fc-code">${f.codigo_se}</div>
-      <div class="fc-name">${f.nome_se}</div>
-      <div class="fc-desc">${f.descricao||'<em style="color:var(--muted2)">Sem descrição</em>'}</div>
-      <div class="fc-footer">
-        <span class="fc-campos">${f.numCampos} campo${f.numCampos!==1?'s':''}</span>
-        <div class="fc-btns">
-          <button class="btn-icon" onclick="abrirFormLink(${f.id})" title="Link do formulário">🔗</button>
-          <button class="btn-icon" onclick="editarFicha(${f.id})" title="Editar ficha">✏️</button>
-          <button class="btn-icon" onclick="abrirCampos(${f.id})" title="Editar campos">📋</button>
-          <button class="btn-icon" style="color:var(--${f.ativa?'orange':'green'})" onclick="toggleAtiva(${f.id},${f.ativa})" title="${f.ativa?'Desativar':'Ativar'}">${f.ativa?'⏸':'▶'}</button>
-          <button class="btn-icon" style="color:var(--red)" onclick="deletarFicha(${f.id},'${f.nome_se}')" title="Excluir">🗑</button>
+    <!-- Identificação técnico -->
+    <div class="identif-card">
+      <h2>Identificação</h2>
+      <div class="identif-grid">
+        <div class="field">
+          <label>Data da Inspeção *</label>
+          <input type="date" id="iData" value="${new Date().toISOString().slice(0,10)}"/>
+        </div>
+        <div class="field">
+          <label>Hora</label>
+          <input type="time" id="iHora" value="${new Date().toTimeString().slice(0,5)}"/>
+        </div>
+        <div class="field">
+          <label>Matrícula *</label>
+          <input type="text" id="iMatricula" inputmode="numeric" placeholder="ex: 4008402" oninput="onMatricula(this.value)"/>
+        </div>
+        <div class="field">
+          <label>Nome do Técnico</label>
+          <input type="text" id="iNome" placeholder="Preenchido automaticamente"/>
         </div>
       </div>
     </div>
-  `).join('');
+
+    <!-- Campos dinâmicos -->
+    ${Object.entries(grupos).map(([grupo, campos]) => `
+      <div class="grupo">
+        ${grupo !== '__sem_grupo__' ? `<div class="grupo-title">📌 ${grupo}</div>` : ''}
+        ${campos.map(c => renderCampo(c)).join('')}
+      </div>
+    `).join('')}
+
+    <!-- Obs geral -->
+    <div class="identif-card">
+      <h2>Observações Gerais</h2>
+      <textarea id="iObs" class="campo-input" rows="3" placeholder="Registre observações adicionais..."></textarea>
+    </div>
+
+    <button class="btn-primary" id="btnEnviar" onclick="enviar()">✅ Concluir Inspeção</button>
+    <button class="btn-primary" style="background:transparent;border:1px solid var(--border);color:var(--muted);margin-top:8px" onclick="salvarRascunho()">💾 Salvar Rascunho</button>
+  `;
 }
 
-function abrirNovaFicha() {
-  requireAuth(() => {
-    document.getElementById('fichaModalId').value = '';
-    document.getElementById('fichaModalTitle').textContent = 'Nova Ficha de Inspeção';
-    document.getElementById('fmCodigo').value = '';
-    document.getElementById('fmNome').value   = '';
-    document.getElementById('fmDesc').value   = '';
-    document.getElementById('fmCodigo').disabled = false;
-    // Resetar copiar
-    document.getElementById('fmCopiarNao').checked = true;
-    document.getElementById('fmCopiarSE').style.display = 'none';
-    document.getElementById('fmCopiarSE').value = '';
-    document.getElementById('fmCopiarPreview').style.display = 'none';
-    document.getElementById('fmCopiarWrap').style.display = '';
-    // Popular select com fichas existentes
-    const sel = document.getElementById('fmCopiarSE');
-    sel.innerHTML = '<option value="">Selecione a SE...</option>';
-    _fichas.forEach(f => {
-      const o = document.createElement('option');
-      o.value = f.id;
-      o.textContent = f.codigo_se + ' — ' + f.nome_se;
-      sel.appendChild(o);
-    });
-    abrirModal('fichaModal');
-  });
+// ── Renderização de campo por tipo ───────────────────────────────────────
+function renderFotoUploadHtml(campoId, lbl) {
+  return `
+    <div class="foto-multi-wrap" id="fw_${campoId}">
+      <div class="foto-grid" id="fg_${campoId}"></div>
+      <label class="foto-add-btn">
+        <input type="file" accept="image/*" capture="environment" multiple onchange="onFotoChange(${campoId},this)"/>
+        📷 ${lbl}
+      </label>
+    </div>
+  `;
 }
 
-function toggleCopiarSE() {
-  const sim = document.getElementById('fmCopiarSim').checked;
-  document.getElementById('fmCopiarSE').style.display = sim ? '' : 'none';
-  if (!sim) {
-    document.getElementById('fmCopiarPreview').style.display = 'none';
-    document.getElementById('fmCopiarSE').value = '';
-  }
-}
+function renderCampo(c) {
+  const obrigCls = c.obrigatorio ? 'obrig' : '';
+  let inputHtml = '';
+  let extraFotoHtml = '';
 
-async function onCopiarSEChange() {
-  const fichaId = document.getElementById('fmCopiarSE').value;
-  const prev    = document.getElementById('fmCopiarPreview');
-  if (!fichaId) { prev.style.display = 'none'; return; }
-  try {
-    const r = await fetch('/api/inspecao/fichas/' + fichaId).then(r=>r.json());
-    const campos = r.data?.campos || [];
-    prev.style.display = '';
-    prev.innerHTML = '✓ <strong>' + campos.length + ' campo(s)</strong> serão copiados de '
-      + '<strong>' + (r.data?.nome_se||'') + '</strong>';
-  } catch(e) { prev.style.display = 'none'; }
-}
-
-async function editarFicha(id) {
-  requireAuth(() => {
-    const f = _fichas.find(f => f.id === id);
-    if (!f) return;
-    document.getElementById('fichaModalId').value = id;
-    document.getElementById('fichaModalTitle').textContent = 'Editar Ficha';
-    document.getElementById('fmCodigo').value   = f.codigo_se;
-    document.getElementById('fmNome').value     = f.nome_se;
-    document.getElementById('fmDesc').value     = f.descricao || '';
-    document.getElementById('fmCodigo').disabled = true;
-    document.getElementById('fmCopiarWrap').style.display = 'none'; // não aparece na edição
-    abrirModal('fichaModal');
-  });
-}
-
-async function salvarFicha() {
-  const id   = document.getElementById('fichaModalId').value;
-  const body = {
-    codigo_se:  document.getElementById('fmCodigo').value.trim().toUpperCase(),
-    nome_se:    document.getElementById('fmNome').value.trim(),
-    descricao:  document.getElementById('fmDesc').value.trim(),
-  };
-  if (!body.codigo_se || !body.nome_se) return toast('Preencha código e nome', 'err');
-
-  const btnSalvar = document.getElementById('btnSalvarFicha');
-  btnSalvar.disabled = true;
-  btnSalvar.textContent = '⏳ Salvando...';
-
-  try {
-    let r;
-    if (id) {
-      r = await fetch(`/api/inspecao/fichas/${id}`, { method:'PATCH', headers: authH(), body: JSON.stringify(body) }).then(r=>r.json());
-    } else {
-      r = await fetch('/api/inspecao/fichas', { method:'POST', headers: authH(), body: JSON.stringify(body) }).then(r=>r.json());
-    }
-    if (!r.ok) {
-      btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar Ficha';
-      return toast(r.error || 'Erro', 'err');
-    }
-
-    // Copiar campos se nova ficha e opção selecionada
-    if (!id) {
-      const copiarSim  = document.getElementById('fmCopiarSim').checked;
-      const origemId   = document.getElementById('fmCopiarSE').value;
-      if (copiarSim && origemId) {
-        btnSalvar.textContent = '⏳ Copiando campos...';
-        await copiarCamposDe(origemId, r.data.id);
-      }
-    }
-
-    fecharModal('fichaModal');
-    toast(id ? 'Ficha atualizada' : 'Ficha criada' + (document.getElementById('fmCopiarSim')?.checked && document.getElementById('fmCopiarSE')?.value ? ' com campos copiados' : ''), 'ok');
-    loadFichas();
-  } catch(e) {
-    toast('Erro: ' + e.message, 'err');
-  } finally {
-    btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar Ficha';
-  }
-}
-
-async function copiarCamposDe(origemFichaId, destinoFichaId) {
-  const r = await fetch('/api/inspecao/fichas/' + origemFichaId).then(r=>r.json());
-  const campos = r.data?.campos || [];
-  if (!campos.length) return;
-  for (const c of campos) {
-    let opcoes = null;
-    try { opcoes = c.opcoes ? JSON.parse(c.opcoes) : null; } catch(e) {}
-    await fetch('/api/inspecao/fichas/' + destinoFichaId + '/campos', {
-      method: 'POST',
-      headers: authH(),
-      body: JSON.stringify({
-        label:       c.label,
-        tipo:        c.tipo,
-        opcoes:      opcoes,
-        obrigatorio: !!c.obrigatorio,
-        grupo:       c.grupo || null,
-        ordem:       c.ordem ?? 0,
-      })
-    });
-  }
-}
-
-async function toggleAtiva(id, ativa) {
-  requireAuth(async () => {
-    try {
-      await fetch(`/api/inspecao/fichas/${id}`, { method:'PATCH', headers: authH(), body: JSON.stringify({ ativa: !ativa }) }).then(r=>r.json());
-      loadFichas();
-    } catch(e) { toast('Erro', 'err'); }
-  });
-}
-
-async function deletarFicha(id, nome) {
-  pedirSenhaParaDeletar(
-    `Excluir a ficha <strong>${nome}</strong>?<br>Todos os campos e inspeções vinculadas serão apagados permanentemente.`,
-    async () => {
-      await fetch(`/api/inspecao/fichas/${id}`, { method:'DELETE', headers: authH() });
-      toast('Ficha excluída', 'ok');
-      loadFichas();
-    }
-  );
-}
-
-function abrirFormLink(fichaId) {
-  const url = location.origin + '/inspecao-form.html?ficha=' + fichaId;
-  const f   = _fichas.find(f => f.id === fichaId);
-  if (navigator.share) {
-    navigator.share({ title: 'Inspeção ' + (f?.nome_se||''), url }).catch(()=>{});
+  if (c.tipo === 'multipla_escolha') {
+    let opcoes = [];
+    try { opcoes = JSON.parse(c.opcoes || '[]'); } catch(e) {}
+    inputHtml = `<div class="opcoes-list">
+      ${opcoes.map((op,i) => `
+        <div class="opcao-item" onclick="selecionarOpcao(${c.id},${i},this)">
+          <input type="radio" name="campo_${c.id}" value="${op}" id="c${c.id}op${i}"/>
+          <label for="c${c.id}op${i}">${op}</label>
+        </div>
+      `).join('')}
+    </div>
+    <div class="opcao-hint">Toque novamente na opção selecionada para desmarcar</div>`;
+  } else if (c.tipo === 'sim_nao') {
+    inputHtml = `<div class="sn-row">
+      <button class="sn-btn" id="c${c.id}_sim" onclick="toggleSN(${c.id},'Sim',this)">✓ Sim</button>
+      <button class="sn-btn" id="c${c.id}_nao" onclick="toggleSN(${c.id},'Não',this)">✗ Não</button>
+    </div>
+    <div class="sn-obs-wrap" id="snobs_${c.id}" style="display:none">
+      <label>Motivo / observação</label>
+      <textarea class="campo-input" placeholder="Descreva o motivo..." oninput="onMotivoSN(${c.id},this.value)" rows="2"></textarea>
+      <span class="foto-extra-lbl">📎 Anexar foto(s) (opcional)</span>
+      ${renderFotoUploadHtml(c.id, 'Adicionar foto(s)')}
+    </div>`;
+  } else if (c.tipo === 'upload_foto') {
+    inputHtml = renderFotoUploadHtml(c.id, 'Adicionar foto(s)');
+  } else if (c.tipo === 'observacao') {
+    inputHtml = `<textarea class="campo-input" id="campo_${c.id}" placeholder="Digite sua observação..." oninput="onTexto(${c.id},this.value)" rows="3"></textarea>`
+      + `<span class="foto-extra-lbl">📎 Anexe quantas fotos quiser (opcional)</span>`
+      + renderFotoUploadHtml(c.id, 'Adicionar foto(s)');
+  } else if (c.tipo === 'numero') {
+    inputHtml = `<input type="number" class="campo-input" id="campo_${c.id}" placeholder="0" oninput="onTexto(${c.id},this.value)" step="any"/>`;
   } else {
-    navigator.clipboard.writeText(url).then(() => toast('Link copiado!', 'ok'));
+    inputHtml = `<input type="text" class="campo-input" id="campo_${c.id}" placeholder="Informe a resposta..." oninput="onTexto(${c.id},this.value)"/>`;
   }
+
+  // Permite anexar foto(s) extra em qualquer tipo que ainda não tenha upload embutido
+  if (c.permite_foto && c.tipo !== 'upload_foto' && c.tipo !== 'observacao' && c.tipo !== 'sim_nao') {
+    extraFotoHtml = `<span class="foto-extra-lbl">📎 Anexar foto(s) (opcional)</span>` + renderFotoUploadHtml(c.id, 'Adicionar foto(s)');
+  }
+
+  return `
+    <div class="campo-wrap ${obrigCls}" id="cw_${c.id}">
+      <span class="campo-label">${c.label}</span>
+      ${inputHtml}
+      ${extraFotoHtml}
+    </div>
+  `;
 }
 
-// ── Campos ────────────────────────────────────────────────────────────────
-let _camposFichaId = null;
-let _campos = [];
-
-async function abrirCampos(fichaId) {
-  requireAuth(async () => {
-    _camposFichaId = fichaId;
-    const f = _fichas.find(f => f.id === fichaId);
-    document.getElementById('camposModalTitle').textContent  = 'Campos — ' + (f?.nome_se||'');
-    document.getElementById('camposModalSubtitle').textContent = f?.codigo_se || '';
-    document.getElementById('camposModalFichaId').value = fichaId;
-    await recarregarCampos();
-    abrirModal('camposModal');
+// ── Interações ────────────────────────────────────────────────────────────
+function selecionarOpcao(campoId, idx, el) {
+  const jaSelecionado = el.classList.contains('selected');
+  el.closest('.opcoes-list').querySelectorAll('.opcao-item').forEach(i => {
+    i.classList.remove('selected');
+    i.querySelector('input[type=radio]').checked = false;
   });
+  if (jaSelecionado) {
+    // Desmarca — toque na mesma opção já selecionada
+    if (_respostas[campoId]) delete _respostas[campoId].opcao;
+  } else {
+    el.classList.add('selected');
+    el.querySelector('input[type=radio]').checked = true;
+    if (!_respostas[campoId]) _respostas[campoId] = {};
+    _respostas[campoId].opcao = el.querySelector('label').textContent;
+  }
+  atualizarProgress();
 }
 
-async function recarregarCampos() {
-  const r = await fetch(`/api/inspecao/fichas/${_camposFichaId}/campos`, { headers: authH() }).then(r=>r.json());
-  _campos = r.data || [];
-  renderCampoList();
+function toggleSN(campoId, val, btn) {
+  const cwEl   = btn.closest('.campo-wrap');
+  const simBtn = cwEl.querySelector('#c'+campoId+'_sim');
+  const naoBtn = cwEl.querySelector('#c'+campoId+'_nao');
+  const obsWrap = document.getElementById('snobs_' + campoId);
+  const jaSelecionado = btn.classList.contains(val === 'Sim' ? 'sel-sim' : 'sel-nao');
+
+  simBtn.classList.remove('sel-sim');
+  naoBtn.classList.remove('sel-nao');
+
+  if (jaSelecionado) {
+    // Desmarca — toque no mesmo botão já selecionado
+    if (_respostas[campoId]) delete _respostas[campoId].opcao;
+    if (obsWrap) obsWrap.style.display = 'none';
+  } else {
+    btn.classList.add(val === 'Sim' ? 'sel-sim' : 'sel-nao');
+    if (!_respostas[campoId]) _respostas[campoId] = {};
+    _respostas[campoId].opcao = val;
+    if (obsWrap) obsWrap.style.display = '';
+  }
+  atualizarProgress();
 }
 
-function tipoLabel(t) {
-  const m = { texto:'Texto', multipla_escolha:'Múltipla escolha', upload_foto:'📷 Foto', sim_nao:'Sim/Não', numero:'Número' };
-  return m[t] || t;
+function onMotivoSN(campoId, val) {
+  if (!_respostas[campoId]) _respostas[campoId] = {};
+  _respostas[campoId].texto = val;
 }
 
-function renderCampoList() {
-  const el = document.getElementById('campoList');
-  if (!_campos.length) { el.innerHTML = '<div class="empty-msg">Nenhum campo ainda</div>'; return; }
-  el.innerHTML = _campos.map((c,i) => `
-    <div class="campo-item" draggable="true" data-id="${c.id}" data-idx="${i}">
-      <span class="campo-drag">⠿</span>
-      <div class="campo-info">
-        <div class="cl">${c.label}${c.obrigatorio?'<span style="color:var(--red);margin-left:3px">*</span>':''}</div>
-        <div class="ct">${c.grupo?'<b>'+c.grupo+'</b> · ':''}<span class="tipo-badge">${tipoLabel(c.tipo)}</span></div>
-      </div>
-      <div class="campo-btns">
-        <button class="btn-icon" onclick="abrirEditCampo(${c.id})">✏️</button>
-        <button class="btn-icon" style="color:var(--red)" onclick="deletarCampo(${c.id})">🗑</button>
-      </div>
+function onTexto(campoId, val) {
+  if (!_respostas[campoId]) _respostas[campoId] = {};
+  _respostas[campoId].texto = val;
+  atualizarProgress();
+}
+
+// ── Fotos (múltiplas por campo) ──────────────────────────────────────────
+function renderFotoGrid(campoId) {
+  const grid = document.getElementById('fg_' + campoId);
+  if (!grid) return;
+  const resp = _respostas[campoId] || {};
+  const novas = resp.fotosNovas || [];
+  const enviadas = resp.fotosEnviadasCount || 0;
+
+  let html = novas.map((file, idx) => `
+    <div class="foto-thumb">
+      <img src="${URL.createObjectURL(file)}" alt=""/>
+      <button class="foto-thumb-remove" onclick="removerFotoNova(${campoId},${idx})">✕</button>
     </div>
   `).join('');
 
-  // drag-and-drop simples
-  let dragIdx = null;
-  el.querySelectorAll('.campo-item').forEach(item => {
-    item.addEventListener('dragstart', () => { dragIdx = parseInt(item.dataset.idx); });
-    item.addEventListener('dragover', e => { e.preventDefault(); item.style.background = 'var(--primary-bg)'; });
-    item.addEventListener('dragleave', () => { item.style.background = ''; });
-    item.addEventListener('drop', async () => {
-      item.style.background = '';
-      const dropIdx = parseInt(item.dataset.idx);
-      if (dragIdx === null || dragIdx === dropIdx) return;
-      const reordenado = [..._campos];
-      const [moved] = reordenado.splice(dragIdx, 1);
-      reordenado.splice(dropIdx, 0, moved);
-      const ordemPayload = reordenado.map((c, i) => ({ id: c.id, ordem: i }));
-      await fetch(`/api/inspecao/fichas/${_camposFichaId}/reordenar`, {
-        method:'POST', headers: authH(), body: JSON.stringify({ ordem: ordemPayload })
-      });
-      await recarregarCampos();
-    });
-  });
+  if (enviadas > 0) {
+    html += `<div class="foto-thumb foto-thumb-sent">✅<br>${enviadas} já enviada(s)</div>`;
+  }
+
+  grid.innerHTML = html;
 }
 
-function toggleOpcoes() {
-  const t = document.getElementById('ncTipo').value;
-  document.getElementById('ncOpcoesWrap').style.display = t === 'multipla_escolha' ? '' : 'none';
-}
-function toggleOpcoesEdit() {
-  const t = document.getElementById('ecTipo').value;
-  document.getElementById('ecOpcoesWrap').style.display = t === 'multipla_escolha' ? '' : 'none';
-}
-
-async function adicionarCampo() {
-  const label  = document.getElementById('ncLabel').value.trim();
-  const tipo   = document.getElementById('ncTipo').value;
-  const grupo  = document.getElementById('ncGrupo').value.trim();
-  const opStr  = document.getElementById('ncOpcoes').value.trim();
-  const obrig  = document.getElementById('ncObrig').checked;
-  if (!label) return toast('Informe o rótulo do campo', 'err');
-  const opcoes = tipo === 'multipla_escolha' && opStr ? opStr.split('|').map(s=>s.trim()).filter(Boolean) : null;
-  const ordem  = _campos.length;
-  try {
-    const r = await fetch(`/api/inspecao/fichas/${_camposFichaId}/campos`, {
-      method:'POST', headers: authH(),
-      body: JSON.stringify({ label, tipo, opcoes, obrigatorio: obrig, grupo: grupo||null, ordem })
-    }).then(r=>r.json());
-    if (!r.ok) return toast(r.error||'Erro', 'err');
-    document.getElementById('ncLabel').value  = '';
-    document.getElementById('ncGrupo').value  = '';
-    document.getElementById('ncOpcoes').value = '';
-    document.getElementById('ncObrig').checked = true;
-    await recarregarCampos();
-    toast('Campo adicionado', 'ok');
-  } catch(e) { toast('Erro: '+e.message, 'err'); }
+function onFotoChange(campoId, input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  if (!_respostas[campoId]) _respostas[campoId] = {};
+  if (!_respostas[campoId].fotosNovas) _respostas[campoId].fotosNovas = [];
+  _respostas[campoId].fotosNovas.push(...files);
+  input.value = '';
+  renderFotoGrid(campoId);
+  atualizarProgress();
 }
 
-function abrirEditCampo(id) {
-  const c = _campos.find(c => c.id === id);
-  if (!c) return;
-  document.getElementById('ecId').value     = c.id;
-  document.getElementById('ecLabel').value  = c.label;
-  document.getElementById('ecTipo').value   = c.tipo;
-  document.getElementById('ecGrupo').value  = c.grupo || '';
-  document.getElementById('ecObrig').checked = !!c.obrigatorio;
-  try {
-    const op = c.opcoes ? JSON.parse(c.opcoes) : [];
-    document.getElementById('ecOpcoes').value = op.join('|');
-  } catch(e) { document.getElementById('ecOpcoes').value = ''; }
-  toggleOpcoesEdit();
-  abrirModal('editCampoModal');
+function removerFotoNova(campoId, idx) {
+  _respostas[campoId].fotosNovas.splice(idx, 1);
+  renderFotoGrid(campoId);
+  atualizarProgress();
 }
 
-async function salvarEdicaoCampo() {
-  const id     = parseInt(document.getElementById('ecId').value);
-  const label  = document.getElementById('ecLabel').value.trim();
-  const tipo   = document.getElementById('ecTipo').value;
-  const grupo  = document.getElementById('ecGrupo').value.trim();
-  const opStr  = document.getElementById('ecOpcoes').value.trim();
-  const obrig  = document.getElementById('ecObrig').checked;
-  if (!label) return toast('Rótulo obrigatório', 'err');
-  const opcoes = tipo === 'multipla_escolha' && opStr ? opStr.split('|').map(s=>s.trim()).filter(Boolean) : null;
-  try {
-    const r = await fetch(`/api/inspecao/campos/${id}`, {
-      method:'PATCH', headers: authH(),
-      body: JSON.stringify({ label, tipo, opcoes, obrigatorio: obrig, grupo: grupo||null })
-    }).then(r=>r.json());
-    if (!r.ok) return toast(r.error||'Erro', 'err');
-    fecharModal('editCampoModal');
-    await recarregarCampos();
-    toast('Campo atualizado', 'ok');
-  } catch(e) { toast('Erro: '+e.message, 'err'); }
-}
-
-async function deletarCampo(id) {
-  const c = _campos.find(c => c.id === id);
-  pedirSenhaParaDeletar(
-    `Excluir o campo <strong>${c?.label || 'selecionado'}</strong>?`,
-    async () => {
-      await fetch(`/api/inspecao/campos/${id}`, { method:'DELETE', headers: authH() });
-      await recarregarCampos();
-      toast('Campo removido', 'ok');
-    }
-  );
-}
-
-// ── Histórico ─────────────────────────────────────────────────────────────
-async function loadHistoricoSESelect() {
-  try {
-    const r = await fetch('/api/inspecao/fichas').then(r=>r.json());
-    const sel = document.getElementById('hSE');
-    (r.data||[]).forEach(f => {
-      const o = document.createElement('option');
-      o.value = f.codigo_se; o.textContent = f.codigo_se + ' — ' + f.nome_se;
-      sel.appendChild(o);
-    });
-  } catch(e){}
-}
-
-async function loadHistorico() {
-  const de  = document.getElementById('hDe').value;
-  const ate = document.getElementById('hAte').value;
-  const se  = document.getElementById('hSE').value;
-  const st  = document.getElementById('hStatus').value;
-  const params = new URLSearchParams();
-  if (de)  params.set('dataDe', de);
-  if (ate) params.set('dataAte', ate);
-  if (se)  params.set('codigo_se', se);
-  if (st)  params.set('status', st);
-  document.getElementById('histTbody').innerHTML = '<tr><td colspan="8"><div class="spinner"></div></td></tr>';
-  try {
-    const r = await fetch('/api/inspecao/preenchimentos?' + params).then(r=>r.json());
-    const data = r.data || [];
-    document.getElementById('histTbody').innerHTML = data.length
-      ? data.map(p => `
-          <tr id="row-pre-${p.id}">
-            <td><strong>${p.codigo_se}</strong></td>
-            <td>${p.nome_tecnico||'—'}</td>
-            <td>${p.matricula||'—'}</td>
-            <td>${p.data_insp||'—'}</td>
-            <td>${p.hora_insp||'—'}</td>
-            <td><span class="badge ${p.status==='Concluído'?'ok':'pend'}">${p.status}</span></td>
-            <td style="color:var(--muted);font-size:.75rem">${p.nome_se||''}</td>
-            <td style="white-space:nowrap">
-              <button class="btn-icon" onclick="verPreenchimento(${p.id})">Ver</button>
-              <button class="btn-icon" style="color:var(--red)" onclick="apagarPreenchimento(${p.id})">🗑</button>
-            </td>
-          </tr>
-        `).join('')
-      : '<tr><td colspan="8" class="empty-msg">Nenhum resultado</td></tr>';
-  } catch(e) { document.getElementById('histTbody').innerHTML = '<tr><td colspan="8" class="empty-msg">Erro ao carregar</td></tr>'; }
-}
-
-function limparFiltrosHist() {
-  ['hDe','hAte'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('hSE').value     = '';
-  document.getElementById('hStatus').value = '';
-}
-
-async function apagarPreenchimento(id) {
-  pedirSenhaParaDeletar(
-    'Excluir este preenchimento de inspeção? Todas as respostas e fotos vinculadas serão removidas permanentemente.',
-    async () => {
-      const r = await fetch(`/api/inspecao/preenchimentos/${id}`, { method:'DELETE', headers: authH() }).then(r=>r.json());
-      if (!r.ok) throw new Error(r.error || 'Erro ao excluir');
-      // Remove a linha direto do DOM — não depende de reload
-      const row = document.getElementById('row-pre-' + id);
-      if (row) row.remove();
-      // Se a tabela ficou vazia, mostra mensagem
-      const tbody = document.getElementById('histTbody');
-      if (!tbody.children.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Nenhum registro</td></tr>';
+async function onMatricula(val) {
+  if (val.length >= 5) {
+    try {
+      const r = await fetch('/api/colaborador/' + val).then(r=>r.json());
+      if (r.data) {
+        document.getElementById('iNome').value = r.data.nome;
       }
-      toast('Inspeção removida', 'ok');
-      loadDash();
-    }
-  );
+    } catch(e){}
+  }
 }
 
-// ── Visualizar preenchimento ───────────────────────────────────────────────
-async function verPreenchimento(id) {
-  try {
-    const r = await fetch(`/api/inspecao/preenchimentos/${id}`).then(r=>r.json());
-    if (!r.ok) return toast('Erro ao carregar', 'err');
-    const p = r.data;
-    document.getElementById('verModalTitle').textContent =
-      `Inspeção ${p.codigo_se} — ${p.data_insp} ${p.hora_insp||''}`;
+// ── Preenchimento / progresso ────────────────────────────────────────────
+function campoTemFoto(resp) {
+  return !!((resp?.fotosNovas && resp.fotosNovas.length) || (resp?.fotosEnviadasCount > 0));
+}
 
-    // Agrupa respostas por grupo
-    const grupos = {};
-    const resMap = {};
-    (p.respostas||[]).forEach(r => { resMap[r.campo_id] = r; });
-    (p.campos||[]).forEach(c => {
-      const g = c.grupo || '—';
-      if (!grupos[g]) grupos[g] = [];
-      grupos[g].push(c);
-    });
+function campoPreenchido(c) {
+  const r = _respostas[c.id];
+  if (!r) return false;
+  const temFoto = campoTemFoto(r);
+  if (c.tipo === 'upload_foto') return temFoto;
+  if (c.tipo === 'observacao')  return !!(r.texto?.trim()) || temFoto;
+  return !!(r.texto?.trim()) || !!r.opcao || temFoto;
+}
 
-    let html = `
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;padding:14px;background:var(--bg);border-radius:8px;font-size:.8rem">
-        <div><div style="color:var(--muted);font-size:.7rem">Técnico</div><b>${p.nome_tecnico||'—'}</b></div>
-        <div><div style="color:var(--muted);font-size:.7rem">Matrícula</div><b>${p.matricula||'—'}</b></div>
-        <div><div style="color:var(--muted);font-size:.7rem">Status</div><span class="badge ${p.status==='Concluído'?'ok':'pend'}">${p.status}</span></div>
-      </div>`;
+function atualizarProgress() {
+  const total = _campos.length;
+  const preenchidos = _campos.filter(campoPreenchido).length;
+  const pct = total > 0 ? Math.round(preenchidos / total * 100) : 0;
+  document.getElementById('progBar').style.width = pct + '%';
+  document.getElementById('progLbl').textContent = preenchidos;
+}
 
-    for (const [grupo, campos] of Object.entries(grupos)) {
-      html += `<div class="resp-group"><div class="resp-group-title">${grupo}</div>`;
-      campos.forEach(c => {
-        const resp = resMap[c.id];
-        let valHtml = '<span style="color:var(--muted2)">—</span>';
-        if (resp) {
-          if (c.tipo === 'upload_foto' && resp.foto_path) {
-            valHtml = `<img class="resp-foto" src="/api/inspecao/foto/${resp.foto_path}" onclick="zoomFoto(this.src)" alt="foto"/>`;
-          } else if (c.tipo === 'sim_nao') {
-            const v = resp.resposta_opcao || resp.resposta_texto || '';
-            valHtml = `<span class="${v.toLowerCase()==='sim'?'resp-sim':'resp-nao'}">${v||'—'}</span>`;
-          } else {
-            const v = resp.resposta_opcao || resp.resposta_texto || '';
-            valHtml = v ? `<span>${v}</span>` : '<span style="color:var(--muted2)">—</span>';
-          }
-        }
-        html += `<div class="resp-row"><div class="resp-label">${c.label}${c.obrigatorio?'<span style="color:var(--red)">*</span>':''}</div><div class="resp-val">${valHtml}</div></div>`;
+// ── Envio ─────────────────────────────────────────────────────────────────
+async function criarOuUsarPreenchimento(status) {
+  const data  = document.getElementById('iData').value;
+  const hora  = document.getElementById('iHora').value;
+  const mat   = document.getElementById('iMatricula').value.trim();
+  const nome  = document.getElementById('iNome').value.trim();
+  const obs   = document.getElementById('iObs').value.trim();
+
+  if (!data || !mat) { toast('Preencha a data e matrícula', 'err'); throw new Error('missing'); }
+
+  const [y,m,d] = data.split('-');
+  const dataFmt = `${d}/${m}/${y}`;
+
+  if (_preId) {
+    return _preId;
+  }
+
+  const r = await fetch('/api/inspecao/preenchimentos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ficha_id:     _ficha.id,
+      codigo_se:    _ficha.codigo_se,
+      matricula:    mat,
+      nome_tecnico: nome || null,
+      data_insp:    dataFmt,
+      hora_insp:    hora || null,
+      obs_geral:    obs || null,
+    })
+  }).then(r => r.json());
+
+  if (!r.ok) throw new Error(r.error || 'Erro ao criar preenchimento');
+  _preId = r.data.id;
+  return _preId;
+}
+
+async function salvarTodasRespostas(preId) {
+  for (const c of _campos) {
+    const resp = _respostas[c.id];
+    if (!resp) continue;
+
+    // Envia fotos pendentes (qualquer campo que tenha fotosNovas) — não duplica em saves futuros
+    if (resp.fotosNovas && resp.fotosNovas.length) {
+      for (const file of resp.fotosNovas) {
+        const fd = new FormData();
+        fd.append('foto', file);
+        try {
+          const r = await fetch(`/api/inspecao/preenchimentos/${preId}/campo/${c.id}/foto`, {
+            method: 'POST', body: fd
+          }).then(r => r.json());
+          if (r.ok) resp.fotosEnviadasCount = (resp.fotosEnviadasCount || 0) + 1;
+        } catch(e) { console.error('[FOTO]', e); }
+      }
+      resp.fotosNovas = [];
+      renderFotoGrid(c.id);
+    }
+
+    // Envia texto/opção (qualquer tipo que tenha algo digitado/selecionado)
+    if (resp.texto !== undefined || resp.opcao !== undefined) {
+      await fetch(`/api/inspecao/preenchimentos/${preId}/respostas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campo_id:       c.id,
+          resposta_texto: resp.texto  || null,
+          resposta_opcao: resp.opcao  || null,
+        })
       });
-      html += '</div>';
     }
-
-    if (p.obs_geral) html += `<div style="margin-top:10px;padding:12px;background:var(--bg);border-radius:8px;font-size:.8rem"><b>Obs. Geral:</b> ${p.obs_geral}</div>`;
-
-    document.getElementById('verModalBody').innerHTML = html;
-    abrirModal('verModal');
-  } catch(e) { toast('Erro: '+e.message, 'err'); }
+  }
 }
 
-function zoomFoto(src) {
-  document.getElementById('fotoZoomImg').src = src;
-  document.getElementById('fotoZoom').classList.remove('hidden');
+async function validarObrigatorios() {
+  let erros = [];
+  for (const c of _campos) {
+    if (!c.obrigatorio) continue;
+    const preenchido = campoPreenchido(c);
+    const cwEl = document.getElementById('cw_' + c.id);
+    if (!preenchido) {
+      erros.push(c.label);
+      cwEl?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      const inp = cwEl?.querySelector('.campo-input');
+      inp?.classList.add('err-field');
+    } else {
+      cwEl?.querySelector('.campo-input')?.classList.remove('err-field');
+    }
+  }
+  return erros;
 }
 
-// ── Utils modais ──────────────────────────────────────────────────────────
-function abrirModal(id)  { document.getElementById(id).classList.remove('hidden'); }
-function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
-function closeIfBg(e, id) { if (e.target === document.getElementById(id)) fecharModal(id); }
+async function enviar() {
+  const erros = await validarObrigatorios();
+  if (erros.length) {
+    toast(`${erros.length} campo(s) obrigatório(s) não preenchido(s)`, 'err');
+    return;
+  }
+  const btn = document.getElementById('btnEnviar');
+  btn.disabled  = true;
+  btn.textContent = '⏳ Enviando...';
+  try {
+    const preId = await criarOuUsarPreenchimento('Concluído');
+    await salvarTodasRespostas(preId);
+    await fetch(`/api/inspecao/preenchimentos/${preId}/concluir`, { method:'POST' });
+    renderSuccess();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✅ Concluir Inspeção';
+    if (e.message !== 'missing') toast('Erro ao enviar: ' + e.message, 'err');
+  }
+}
 
+async function salvarRascunho() {
+  try {
+    const preId = await criarOuUsarPreenchimento('Rascunho');
+    await salvarTodasRespostas(preId);
+    toast('Rascunho salvo!', 'ok');
+  } catch(e) {
+    if (e.message !== 'missing') toast('Erro: ' + e.message, 'err');
+  }
+}
+
+// ── Telas ─────────────────────────────────────────────────────────────────
+function renderSuccess() {
+  document.getElementById('formWrap').innerHTML = `
+    <div class="success-screen">
+      <div class="ico">✅</div>
+      <h2>Inspeção Concluída!</h2>
+      <p style="margin-bottom:6px">${_ficha.nome_se} — ${new Date().toLocaleDateString('pt-BR')}</p>
+      <p>Suas respostas foram registradas com sucesso.</p>
+      <button class="btn-primary" style="max-width:260px;margin:28px auto 0" onclick="location.reload()">Nova Inspeção</button>
+    </div>
+  `;
+}
+
+function renderNotFound(msg) {
+  document.getElementById('formWrap').innerHTML = `
+    <div class="not-found">
+      <div style="font-size:3rem;margin-bottom:12px">⚠️</div>
+      <h2>Formulário não encontrado</h2>
+      <p>${msg}</p>
+    </div>
+  `;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
 function toast(msg, tipo='ok') {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className   = 'show ' + tipo;
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.className = '', 3000);
+  toast._t = setTimeout(() => el.className = '', 3200);
 }
 
-// ── Modal exclusão com senha ──────────────────────────────────────────────
-let _deleteCallback = null;
-
-function pedirSenhaParaDeletar(mensagem, callback) {
-  _deleteCallback = callback;
-  document.getElementById('delMsg').innerHTML = mensagem;
-  document.getElementById('delSenha').value   = '';
-  document.getElementById('delErr').textContent = '';
-  document.getElementById('btnConfirmarDel').disabled = false;
-  document.getElementById('btnConfirmarDel').textContent = 'Excluir';
-  document.getElementById('deleteModal').classList.remove('hidden');
-  setTimeout(() => document.getElementById('delSenha').focus(), 80);
-}
-
-function fecharDeleteModal() {
-  document.getElementById('deleteModal').classList.add('hidden');
-  _deleteCallback = null;
-}
-
-async function confirmarDelecao() {
-  const senha = document.getElementById('delSenha').value;
-  if (!senha) { document.getElementById('delErr').textContent = 'Informe a senha.'; return; }
-
-  const btn = document.getElementById('btnConfirmarDel');
-  btn.disabled = true;
-  btn.textContent = '⏳ Verificando...';
-  document.getElementById('delErr').textContent = '';
-
-  try {
-    // Valida senha via API de login
-    const r = await fetch('/api/inspecao/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario: 'supervisor', senha })
-    }).then(r => r.json());
-
-    if (!r.ok) {
-      document.getElementById('delErr').textContent = 'Senha incorreta.';
-      btn.disabled = false;
-      btn.textContent = 'Excluir';
-      document.getElementById('delSenha').select();
-      return;
-    }
-
-    // Senha correta — salvar token e executar
-    TOKEN = r.token;
-    localStorage.setItem('insp_token', TOKEN);
-    document.getElementById('userBadge').style.display = 'inline-flex';
-
-    // Salvar callback ANTES de fechar (fecharDeleteModal zera _deleteCallback)
-    const cb = _deleteCallback;
-    fecharDeleteModal();
-    if (cb) {
-      try { await cb(); }
-      catch(e) { toast('Erro ao excluir: ' + e.message, 'err'); }
-    }
-  } catch(e) {
-    document.getElementById('delErr').textContent = 'Erro de conexão.';
-    btn.disabled = false;
-    btn.textContent = 'Excluir';
-  }
-}
-
-// Fechar ao clicar fora
-document.getElementById('deleteModal').addEventListener('click', function(e) {
-  if (e.target === this) fecharDeleteModal();
-});
-
-// ── Formatação de data/hora ──────────────────────────────────────────────
-function formatDT(s) {
-  if (!s || s === '—') return '—';
-  // YYYY-MM-DD HH:MM:SS → HH:MM:SS DD/MM/YYYY
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2}:\d{2})/);
-  if (m) return `${m[4]} ${m[3]}/${m[2]}/${m[1]}`;
-  // YYYY-MM-DD → DD/MM/YYYY
-  const d = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (d) return `${d[3]}/${d[2]}/${d[1]}`;
-  // HH:MM → HH:MM
-  return s;
-}
-
-// ── Boot ──────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>
