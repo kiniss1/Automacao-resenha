@@ -1020,11 +1020,8 @@ function startServer() {
       const osEtapa      = osHoje.filter(o => o.status === 'Etapa Concluída');
       const osCanceladas = osHoje.filter(o => o.status === 'Cancelado');
 
-      // Colaboradores em campo agora — combina check-ins ativos + equipe das OS em andamento
-      // (alguns colaboradores só registram atividade, sem usar o check-in separado)
-      const checkinsAtivos = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`);
+      // Colaboradores em campo agora — baseado apenas na equipe das OS em andamento HOJE
       const colabSet = new Set();
-      checkinsAtivos.forEach(c => { const n = (c.nome || c.matricula || '').trim(); if (n) colabSet.add(n); });
       osAndamento.forEach(os => {
         (os.equipe || '').split(',').forEach(n => { const t = n.trim(); if (t) colabSet.add(t); });
       });
