@@ -146,9 +146,50 @@ let _preId     = null;
 let _respostas = {};
 
 // ── Init ──────────────────────────────────────────────────────────────────
+function converterDataBR(d) {
+  if (!d) return new Date().toISOString().slice(0,10);
+  const p = d.split('/');
+  if (p.length !== 3) return new Date().toISOString().slice(0,10);
+  return `${p[2]}-${p[1]}-${p[0]}`;
+}
+
 async function init() {
-  const params = new URLSearchParams(location.search);
-  const fichaId = params.get('ficha');
+  const params   = new URLSearchParams(location.search);
+  const preParam = params.get('pre');
+  const fichaId  = params.get('ficha');
+
+  // Retomar um rascunho existente
+  if (preParam) {
+    try {
+      const r = await fetch(`/api/inspecao/preenchimentos/${preParam}`).then(r=>r.json());
+      if (!r.ok || !r.data) return renderNotFound('Rascunho não encontrado.');
+      const p = r.data;
+      _preId  = p.id;
+      _campos = p.campos || [];
+
+      const fr = await fetch(`/api/inspecao/fichas/${p.ficha_id}`).then(r=>r.json());
+      _ficha = (fr.ok && fr.data) ? fr.data : { id: p.ficha_id, codigo_se: p.codigo_se, nome_se: p.nome_se || p.codigo_se, descricao: null };
+
+      // Reconstrói as respostas já salvas
+      (p.respostas || []).forEach(resp => {
+        let fotosCount = 0;
+        try { fotosCount = resp.fotos ? JSON.parse(resp.fotos).length : (resp.foto_path ? 1 : 0); }
+        catch(e) { fotosCount = resp.foto_path ? 1 : 0; }
+        _respostas[resp.campo_id] = {
+          texto: resp.resposta_texto || undefined,
+          opcao: resp.resposta_opcao || undefined,
+          fotosEnviadasCount: fotosCount,
+        };
+      });
+
+      document.getElementById('pageTitle').textContent = `Inspeção — ${_ficha.codigo_se}`;
+      renderForm(p);
+      aplicarRespostasExistentes();
+    } catch(e) { renderNotFound('Erro ao carregar rascunho.'); }
+    return;
+  }
+
+  // Nova inspeção a partir da ficha
   if (!fichaId) return renderNotFound('Nenhuma ficha especificada na URL.');
   try {
     const r = await fetch(`/api/inspecao/fichas/${fichaId}`).then(r=>r.json());
@@ -160,8 +201,40 @@ async function init() {
   } catch(e) { renderNotFound('Erro ao carregar ficha.'); }
 }
 
+// Aplica visualmente respostas já salvas (ao retomar um rascunho)
+function aplicarRespostasExistentes() {
+  _campos.forEach(c => {
+    const r = _respostas[c.id];
+    if (!r) return;
+
+    if (c.tipo === 'multipla_escolha' && r.opcao) {
+      document.querySelectorAll(`#cw_${c.id} .opcao-item`).forEach(item => {
+        if (item.querySelector('label').textContent === r.opcao) {
+          item.classList.add('selected');
+          item.querySelector('input[type=radio]').checked = true;
+        }
+      });
+    } else if (c.tipo === 'sim_nao' && r.opcao) {
+      const btn = document.getElementById(`c${c.id}_${r.opcao === 'Sim' ? 'sim' : 'nao'}`);
+      btn?.classList.add(r.opcao === 'Sim' ? 'sel-sim' : 'sel-nao');
+      const obsWrap = document.getElementById('snobs_' + c.id);
+      if (obsWrap) {
+        obsWrap.style.display = '';
+        const ta = obsWrap.querySelector('textarea');
+        if (ta && r.texto) ta.value = r.texto;
+      }
+    } else {
+      const inp = document.getElementById('campo_' + c.id);
+      if (inp && r.texto) inp.value = r.texto;
+    }
+
+    renderFotoGrid(c.id);
+  });
+  atualizarProgress();
+}
+
 // ── Render form ───────────────────────────────────────────────────────────
-function renderForm() {
+function renderForm(preExistente) {
   const wrap = document.getElementById('formWrap');
   const total = _campos.length;
 
@@ -176,6 +249,7 @@ function renderForm() {
   wrap.innerHTML = `
     <!-- Cabeçalho SE -->
     <div style="background:var(--primary);border-radius:12px;padding:18px 20px;margin-bottom:20px;color:#fff">
+      ${preExistente ? `<div style="font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);display:inline-block;padding:2px 8px;border-radius:5px;margin-bottom:6px">📋 RETOMANDO RASCUNHO</div><br>` : ''}
       <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;opacity:.8;margin-bottom:2px">FICHA DE INSPEÇÃO</div>
       <div style="font-size:1.2rem;font-weight:800">${_ficha.nome_se}</div>
       ${_ficha.descricao?`<div style="font-size:.78rem;opacity:.8;margin-top:4px">${_ficha.descricao}</div>`:''}
@@ -191,19 +265,19 @@ function renderForm() {
       <div class="identif-grid">
         <div class="field">
           <label>Data da Inspeção *</label>
-          <input type="date" id="iData" value="${new Date().toISOString().slice(0,10)}"/>
+          <input type="date" id="iData" value="${preExistente ? converterDataBR(preExistente.data_insp) : new Date().toISOString().slice(0,10)}"/>
         </div>
         <div class="field">
           <label>Hora</label>
-          <input type="time" id="iHora" value="${new Date().toTimeString().slice(0,5)}"/>
+          <input type="time" id="iHora" value="${preExistente?.hora_insp || new Date().toTimeString().slice(0,5)}"/>
         </div>
         <div class="field">
           <label>Matrícula *</label>
-          <input type="text" id="iMatricula" inputmode="numeric" placeholder="ex: 4008402" oninput="onMatricula(this.value)"/>
+          <input type="text" id="iMatricula" inputmode="numeric" placeholder="ex: 4008402" value="${preExistente?.matricula || ''}" oninput="onMatricula(this.value)"/>
         </div>
         <div class="field">
           <label>Nome do Técnico</label>
-          <input type="text" id="iNome" placeholder="Preenchido automaticamente"/>
+          <input type="text" id="iNome" placeholder="Preenchido automaticamente" value="${preExistente?.nome_tecnico || ''}"/>
         </div>
       </div>
     </div>
@@ -219,7 +293,7 @@ function renderForm() {
     <!-- Obs geral -->
     <div class="identif-card">
       <h2>Observações Gerais</h2>
-      <textarea id="iObs" class="campo-input" rows="3" placeholder="Registre observações adicionais..."></textarea>
+      <textarea id="iObs" class="campo-input" rows="3" placeholder="Registre observações adicionais...">${preExistente?.obs_geral || ''}</textarea>
     </div>
 
     <button class="btn-primary" id="btnEnviar" onclick="enviar()">✅ Concluir Inspeção</button>
