@@ -206,10 +206,11 @@ function buscarPreenchimento(id) {
   return get(`SELECT * FROM inspecao_preenchimentos WHERE id=?`, [id]);
 }
 
-function listarPreenchimentos({ ficha_id, codigo_se, dataDe, dataAte, status } = {}) {
+function listarPreenchimentos({ ficha_id, codigo_se, matricula, dataDe, dataAte, status } = {}) {
   const cond = [], params = [];
   if (ficha_id)  { cond.push('ficha_id=?');   params.push(ficha_id); }
   if (codigo_se) { cond.push('codigo_se=?');  params.push(codigo_se.toUpperCase()); }
+  if (matricula) { cond.push('matricula=?');  params.push(matricula); }
   if (status)    { cond.push('status=?');     params.push(status); }
   if (dataDe)    { cond.push("date(criado_em) >= date(?)"); params.push(dataDe); }
   if (dataAte)   { cond.push("date(criado_em) <= date(?)"); params.push(dataAte); }
