@@ -94,6 +94,14 @@
     .checkout-card-row span:first-child{color:var(--muted);white-space:nowrap}
     .checkout-empty-card{text-align:center;padding:28px 16px;background:var(--bg);border:1px dashed var(--border);border-radius:12px;color:var(--muted);margin-top:4px}
 
+    /* ── Rascunho ── */
+    .rascunho-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .rascunho-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+    .rascunho-se{font-weight:700;font-size:.92rem}
+    .rascunho-meta{font-size:.72rem;color:var(--muted)}
+    .btn-continuar{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:opacity .15s}
+    .btn-continuar:hover{opacity:.88}
+
     /* ── Prompt de inspeção ── */
     .insp-prompt{display:none;margin-top:14px;background:var(--primary-bg);border:1px solid var(--primary-dark);border-radius:12px;padding:16px}
     .insp-prompt.show{display:block}
@@ -126,6 +134,7 @@
   <div class="tabs">
     <button class="tab active" onclick="setTab('checkin')">▶ Entrada</button>
     <button class="tab" onclick="setTab('checkout')">◀ Saída</button>
+    <button class="tab" onclick="setTab('rascunho')">📋 Rascunho</button>
   </div>
 
   <!-- CHECKIN -->
@@ -215,6 +224,35 @@
       <div style="font-size:2rem;margin-bottom:8px">🔍</div>
       <div style="font-weight:600;margin-bottom:4px">Sem entrada ativa</div>
       <div style="font-size:.78rem;color:var(--muted)" id="checkoutSemAtivoMsg"></div>
+    </div>
+  </div>
+
+  <!-- RASCUNHO -->
+  <div class="panel" id="panelRascunho">
+    <div class="result" id="resultRascunho"></div>
+    <div class="field">
+      <label>Matrícula</label>
+      <div class="colab-wrap">
+        <div class="colab-row">
+          <input type="text" inputmode="numeric" id="rascunhoMatricula"
+                 class="colab-input" placeholder="Digite sua matrícula..."
+                 oninput="lookupRascunho(this)"
+                 onkeydown="if(event.key==='Enter') buscarRascunhos()"/>
+        </div>
+        <div class="colab-name" id="rascunhoNome"></div>
+      </div>
+    </div>
+    <button class="btn btn-checkin" id="btnBuscarRascunho" onclick="buscarRascunhos()">🔍 Buscar Inspeções em Rascunho</button>
+
+    <div id="rascunhoListWrap" style="display:none;margin-top:16px">
+      <div class="ativos-title">Inspeções pendentes</div>
+      <div id="rascunhoList"></div>
+    </div>
+
+    <div class="checkout-empty-card" id="rascunhoVazio" style="display:none">
+      <div style="font-size:2rem;margin-bottom:8px">📋</div>
+      <div style="font-weight:600;margin-bottom:4px">Nenhum rascunho encontrado</div>
+      <div style="font-size:.78rem;color:var(--muted)">Essa matrícula não possui inspeções em andamento.</div>
     </div>
   </div>
 </div>
@@ -537,19 +575,79 @@ ${res.checkin.nome || mat} saiu de ${res.checkin.subestacao}`, 'ok');
 
   // ── Tabs ───────────────────────────────────────────────────────────────────
   function setTab(tab) {
-    document.querySelectorAll('.tab').forEach((t, i) =>
-      t.classList.toggle('active', (i===0&&tab==='checkin') || (i===1&&tab==='checkout')));
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const names = ['checkin','checkout','rascunho'];
+      t.classList.toggle('active', names[i] === tab);
+    });
     document.getElementById('panelCheckin').classList.toggle('active', tab==='checkin');
     document.getElementById('panelCheckout').classList.toggle('active', tab==='checkout');
+    document.getElementById('panelRascunho').classList.toggle('active', tab==='rascunho');
     if (tab === 'checkout') {
       // Foca no campo de matrícula automaticamente
       setTimeout(() => document.getElementById('checkoutMatricula')?.focus(), 80);
     }
+    if (tab === 'rascunho') {
+      setTimeout(() => document.getElementById('rascunhoMatricula')?.focus(), 80);
+    }
+  }
+
+  // ── Rascunho ──────────────────────────────────────────────────────────────
+  async function lookupRascunho(inp) {
+    const mat = inp.value.trim();
+    const nameEl = document.getElementById('rascunhoNome');
+    if (mat.length >= 4) {
+      try {
+        const { data } = await fetch('/api/colaborador/' + mat).then(r => r.json());
+        if (data) { nameEl.textContent = '✓ ' + data.nome; nameEl.className = 'colab-name'; }
+        else { nameEl.textContent = '✗ Matrícula não encontrada'; nameEl.className = 'colab-name error'; }
+      } catch(e) {}
+    } else {
+      nameEl.textContent = '';
+    }
+  }
+
+  async function buscarRascunhos() {
+    const mat = document.getElementById('rascunhoMatricula').value.trim();
+    if (!mat) { showResult('rascunho', 'Informe a matrícula.', 'err'); return; }
+
+    const btn = document.getElementById('btnBuscarRascunho');
+    btn.disabled = true; btn.textContent = '⏳ Buscando...';
+    document.getElementById('rascunhoListWrap').style.display = 'none';
+    document.getElementById('rascunhoVazio').style.display = 'none';
+
+    try {
+      const r = await fetch(`/api/inspecao/preenchimentos?matricula=${encodeURIComponent(mat)}&status=Rascunho`).then(r=>r.json());
+      const lista = r.data || [];
+
+      if (!lista.length) {
+        document.getElementById('rascunhoVazio').style.display = '';
+      } else {
+        document.getElementById('rascunhoListWrap').style.display = '';
+        document.getElementById('rascunhoList').innerHTML = lista.map(p => `
+          <div class="rascunho-item">
+            <div class="rascunho-info">
+              <div class="rascunho-se">📍 ${p.nome_se || p.codigo_se}</div>
+              <div class="rascunho-meta">${p.data_insp || ''}${p.hora_insp ? ' às ' + p.hora_insp : ''}</div>
+            </div>
+            <button class="btn-continuar" onclick="continuarRascunho(${p.id})">Continuar →</button>
+          </div>
+        `).join('');
+      }
+    } catch(e) {
+      showResult('rascunho', 'Erro ao buscar rascunhos: ' + e.message, 'err');
+    }
+
+    btn.disabled = false; btn.textContent = '🔍 Buscar Inspeções em Rascunho';
+  }
+
+  function continuarRascunho(preId) {
+    location.href = '/inspecao-form.html?pre=' + preId;
   }
 
   // ── Utils ──────────────────────────────────────────────────────────────────
   function showResult(panel, msg, type) {
-    const id = panel === 'checkin' ? 'resultCheckin' : 'resultCheckout';
+    const ids = { checkin:'resultCheckin', checkout:'resultCheckout', rascunho:'resultRascunho' };
+    const id = ids[panel] || 'resultCheckin';
     const el = document.getElementById(id);
     el.textContent = msg; el.className = 'result show ' + type;
     clearTimeout(el._t);
