@@ -801,10 +801,47 @@ function startServer() {
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
-  app.post('/api/inspecao/preenchimentos/:id/concluir', (req, res) => {
+  app.post('/api/inspecao/preenchimentos/:id/concluir', async (req, res) => {
     try {
       const p = insp.concluirPreenchimento(parseInt(req.params.id));
       res.json({ ok: true, data: p });
+
+      // Notifica o grupo de inspeções (não bloqueia a resposta)
+      try {
+        const botState = require('./state');
+        if (botState.isReady() && global._waClient && p) {
+          const ficha = insp.buscarFicha(p.ficha_id);
+          const hora = new Date(Date.now() - 3*60*60*1000).toISOString().slice(11,16);
+          const msgWA =
+            `🤖 *Sistema de Monitoramento Automático*\n` +
+            `🔍 Inspeção concluída\n` +
+            `📍 SE ${p.codigo_se}${ficha?.nome_se ? ' — ' + ficha.nome_se : ''}\n` +
+            `👷 ${p.nome_tecnico || p.matricula}\n` +
+            `⏰ ${hora}\n\n` +
+            `_Gerado automaticamente pelo sistema OOMC_`;
+
+          const grupoNome = process.env.GRUPO_INSP_NOME || process.env.GRUPO_NOME || 'Resenha';
+
+          if (global._grupoInspId) {
+            const chat = await global._waClient.getChatById(global._grupoInspId);
+            await chat.sendMessage(msgWA);
+          } else {
+            const chats = await global._waClient.getChats();
+            const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+            if (grupo) {
+              global._grupoInspId = grupo.id._serialized;
+              await grupo.sendMessage(msgWA);
+            } else {
+              console.warn('[INSPECAO] Grupo "' + grupoNome + '" não encontrado.');
+            }
+          }
+        }
+      } catch(e) {
+        console.error('[INSPECAO] Erro ao notificar grupo:', e.message);
+        if (e.message?.includes('not found') || e.message?.includes('404')) {
+          global._grupoInspId = null;
+        }
+      }
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
