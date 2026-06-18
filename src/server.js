@@ -776,8 +776,8 @@ function startServer() {
 
   app.get('/api/inspecao/preenchimentos', (req, res) => {
     try {
-      const { ficha_id, codigo_se, dataDe, dataAte, status } = req.query;
-      res.json({ ok: true, data: insp.listarPreenchimentos({ ficha_id, codigo_se, dataDe, dataAte, status }) });
+      const { ficha_id, codigo_se, matricula, dataDe, dataAte, status } = req.query;
+      res.json({ ok: true, data: insp.listarPreenchimentos({ ficha_id, codigo_se, matricula, dataDe, dataAte, status }) });
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
