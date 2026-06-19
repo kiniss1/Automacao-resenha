@@ -429,7 +429,7 @@ function startServer() {
   }
 
   // ── Envio manual WhatsApp ─────────────────────────────────────────────────
-  app.post('/api/os/:id/enviar-resumo', async (req, res) => {
+  app.post('/api/os/:id/enviar-resumo', requireAuth, requirePermissao('enviar_relatorio_painel'), async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       const os = db.buscarPorId(id);
