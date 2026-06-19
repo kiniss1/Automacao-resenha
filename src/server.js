@@ -994,6 +994,134 @@ function startServer() {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // ── AUTOINSPEÇÃO DE EPI ────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  const autoInsp = require('./db_autoinspecao');
+
+  // Itens da checklist — pública (o colaborador precisa ver sem login)
+  app.get('/api/autoinspecao/campos', (req, res) => {
+    try { res.json({ ok: true, data: autoInsp.listarCampos() }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // Gerenciar itens da checklist — protegido
+  app.post('/api/autoinspecao/campos', requireAuth, requirePermissao('gerenciar_inspecao'), express.json(), (req, res) => {
+    try { res.json({ ok: true, data: autoInsp.criarCampo(req.body) }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.patch('/api/autoinspecao/campos/:id', requireAuth, requirePermissao('gerenciar_inspecao'), express.json(), (req, res) => {
+    try { res.json({ ok: true, data: autoInsp.atualizarCampo(parseInt(req.params.id), req.body) }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/api/autoinspecao/campos/:id', requireAuth, requirePermissao('gerenciar_inspecao'), (req, res) => {
+    try { autoInsp.deletarCampo(parseInt(req.params.id)); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // Preenchimento — público (colaborador faz a autoinspeção sem login)
+  app.post('/api/autoinspecao/preenchimentos', express.json(), (req, res) => {
+    try {
+      const { matricula, nome_tecnico, data_insp, hora_insp } = req.body;
+      if (!matricula || !data_insp) return res.status(400).json({ ok: false, error: 'matricula e data_insp obrigatórios' });
+      res.json({ ok: true, data: autoInsp.criarPreenchimento({ matricula, nome_tecnico, data_insp, hora_insp }) });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/autoinspecao/preenchimentos/:id/respostas', express.json(), (req, res) => {
+    try {
+      const preenchimento_id = parseInt(req.params.id);
+      const { campo_id, resposta_opcao, validade_data, observacao_texto } = req.body;
+      if (!campo_id) return res.status(400).json({ ok: false, error: 'campo_id obrigatório' });
+      res.json({ ok: true, data: autoInsp.salvarResposta({ preenchimento_id, campo_id, resposta_opcao, validade_data, observacao_texto }) });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/autoinspecao/preenchimentos/:preId/campo/:campoId/foto',
+    insp_upload.single('foto'), (req, res) => {
+      try {
+        if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
+        const r = autoInsp.adicionarFoto({
+          preenchimento_id: parseInt(req.params.preId),
+          campo_id: parseInt(req.params.campoId),
+          foto_path: req.file.filename,
+        });
+        res.json({ ok: true, data: r, foto_path: req.file.filename });
+      } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+    }
+  );
+
+  app.get('/api/autoinspecao/preenchimentos/:id', (req, res) => {
+    try {
+      const p = autoInsp.buscarPreenchimento(parseInt(req.params.id));
+      if (!p) return res.status(404).json({ ok: false, error: 'Não encontrado' });
+      res.json({ ok: true, data: { ...p, respostas: autoInsp.listarRespostas(p.id) } });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // Conclui e dispara alerta no WhatsApp se houver item irregular
+  app.post('/api/autoinspecao/preenchimentos/:id/concluir', async (req, res) => {
+    try {
+      const preId = parseInt(req.params.id);
+      const p = autoInsp.buscarPreenchimento(preId);
+      if (!p) return res.status(404).json({ ok: false, error: 'Não encontrado' });
+      const irregularidades = autoInsp.listarIrregularidades(preId);
+      res.json({ ok: true, data: p, irregularidades });
+
+      if (irregularidades.length) {
+        try {
+          const botState = require('./state');
+          if (botState.isReady() && global._waClient) {
+            const hora = new Date(Date.now() - 3*60*60*1000).toISOString().slice(11,16);
+            const linhas = irregularidades.map(r => {
+              const venc = r.validade_data ? ` (venceu ${r.validade_data})` : '';
+              return `• ${r.label} — ${r.resposta_opcao}${venc}`;
+            }).join('\n');
+            const msgWA =
+              `🤖 *Sistema de Monitoramento Automático*\n` +
+              `⚠️ Itens irregulares na autoinspeção\n` +
+              `👷 ${p.nome_tecnico || p.matricula}\n` +
+              `📋 ${irregularidades.length} item(ns) irregular(es):\n${linhas}\n` +
+              `⏰ ${hora}\n\n` +
+              `_Gerado automaticamente pelo sistema OOMC_`;
+
+            const grupoNome = process.env.GRUPO_INSP_NOME || process.env.GRUPO_NOME || 'Resenha';
+            if (global._grupoInspId) {
+              const chat = await global._waClient.getChatById(global._grupoInspId);
+              await chat.sendMessage(msgWA);
+            } else {
+              const chats = await global._waClient.getChats();
+              const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+              if (grupo) { global._grupoInspId = grupo.id._serialized; await grupo.sendMessage(msgWA); }
+            }
+          }
+        } catch(e) {
+          console.error('[AUTOINSPECAO] Erro ao notificar grupo:', e.message);
+          if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoInspId = null;
+        }
+      }
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // Dashboard e listagem — protegidos
+  app.get('/api/autoinspecao/preenchimentos', requireAuth, requirePermissao('gerenciar_inspecao'), (req, res) => {
+    try {
+      const { matricula, dataDe, dataAte } = req.query;
+      res.json({ ok: true, data: autoInsp.listarPreenchimentos({ matricula, dataDe, dataAte }) });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/api/autoinspecao/dashboard', requireAuth, requirePermissao('gerenciar_inspecao'), (req, res) => {
+    try {
+      const data_insp = req.query.data || (() => {
+        const d = new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+      })();
+      res.json({ ok: true, data: autoInsp.estatisticasDia(data_insp) });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
 
   // ── Relatório de Inspeções WhatsApp (grupo separado) ─────────────────────
   app.post('/api/relatorio/inspecoes/enviar', requireAuth, requirePermissao('enviar_relatorio_operacao'), async (req, res) => {
