@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Autoinspeção de EPI — OOMC</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d1a19;--surface:#112220;--surface2:#163330;--border:#1e3836;--border2:#2a4f4c;
+      --text:#e8f4f3;--muted:#7aaba7;--muted2:#4a7572;
+      --primary:#009B91;--primary-bg:#0d2e2c;--primary-dark:#005852;
+      --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
+      --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+    }
+    body.light{
+      --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
+      --text:#414141;--muted:#7F7F7F;--muted2:#CDCDCD;
+      --primary:#009B91;--primary-bg:#e0f5f4;--primary-dark:#005852;
+      --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
+      --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+    .page-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+    .ph-left{display:flex;align-items:center;gap:10px}
+    .ph-logo{width:30px;height:30px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .ph-left h1{font-size:14px;font-weight:700;line-height:1.2}
+    .ph-left span{font-size:11px;color:var(--muted)}
+    .btn-tema{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:5px 10px;font-size:.75rem;cursor:pointer}
+
+    .form-wrap{max-width:680px;margin:0 auto;padding:20px 16px 60px}
+
+    .identif-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px}
+    .identif-card h2{font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+    .field label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+    .field input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none;-webkit-appearance:none;appearance:none}
+    .field input:focus{border-color:var(--primary)}
+    .colab-nome{font-size:.78rem;margin-top:6px;font-weight:600}
+    .colab-nome.ok{color:var(--green)}
+    .colab-nome.err{color:var(--red)}
+
+    .progress-lbl{font-size:.72rem;color:var(--muted);margin-bottom:6px;text-align:right}
+    .progress-bar-wrap{background:var(--border);border-radius:6px;height:6px;margin-bottom:20px;overflow:hidden}
+    .progress-bar-fill{height:100%;background:var(--primary);border-radius:6px;transition:width .3s}
+
+    .campo-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
+    .campo-label{font-size:.86rem;font-weight:600;margin-bottom:10px;display:block}
+    .status-row{display:flex;gap:10px}
+    .status-btn{flex:1;padding:11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .15s;text-align:center}
+    .status-btn:hover{border-color:var(--border2)}
+    .status-btn.sel-bom{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+    .status-btn.sel-ruim{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+    .validade-wrap{margin-top:10px;display:none}
+    .validade-wrap label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:5px}
+    .validade-wrap input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none}
+    .validade-wrap input:focus{border-color:var(--primary)}
+    .validade-wrap.vencida input{border-color:var(--red)}
+    .validade-hint{font-size:.68rem;color:var(--red);margin-top:4px;display:none}
+
+    .btn-primary{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px 24px;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .15s;width:100%;margin-top:6px}
+    .btn-primary:hover{opacity:.88}
+    .btn-primary:disabled{opacity:.4;cursor:default}
+
+    .success-screen{text-align:center;padding:60px 20px}
+    .success-screen .ico{font-size:4rem;margin-bottom:16px}
+    .success-screen h2{font-size:1.3rem;font-weight:700;margin-bottom:8px}
+    .success-screen p{font-size:.88rem;color:var(--muted)}
+    .alerta-resumo{background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:14px;margin-top:20px;text-align:left}
+    .alerta-resumo div.title{color:var(--red);font-weight:700;font-size:.85rem;margin-bottom:8px}
+    .alerta-resumo ul{list-style:none;font-size:.8rem;color:var(--text)}
+    .alerta-resumo li{padding:3px 0}
+
+    .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:.83rem;opacity:0;transition:all .2s;z-index:200;white-space:nowrap}
+    #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+    #toast.err{border-color:var(--red-border);color:var(--red)}
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="ph-left">
+    <div class="ph-logo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+    </div>
+    <div>
+      <h1>Autoinspeção de EPI</h1>
+      <span>OOMC — Manutenção Alta Tensão</span>
+    </div>
+  </div>
+  <button class="btn-tema" onclick="toggleTema()">🌙 Tema</button>
+</div>
+
+<div class="form-wrap" id="formWrap">
+  <div class="spinner"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  function toggleTema(){ document.body.classList.toggle('light'); localStorage.setItem('autoinsp_tema', document.body.classList.contains('light')?'light':'dark'); }
+  if (localStorage.getItem('autoinsp_tema') === 'light') document.body.classList.add('light');
+
+  let _campos = [];
+  let _preId  = null;
+  let _respostas = {}; // campo_id -> { opcao, validade_data }
+
+  async function init() {
+    try {
+      const r = await fetch('/api/autoinspecao/campos').then(r=>r.json());
+      _campos = r.data || [];
+      renderForm();
+    } catch(e) { toast('Erro ao carregar checklist: ' + e.message, 'err'); }
+  }
+
+  function renderForm() {
+    const wrap = document.getElementById('formWrap');
+    wrap.innerHTML = `
+      <div style="background:var(--primary);border-radius:12px;padding:18px 20px;margin-bottom:20px;color:#fff">
+        <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;opacity:.8;margin-bottom:2px">CHECKLIST DIÁRIA</div>
+        <div style="font-size:1.2rem;font-weight:800">Autoinspeção de EPI</div>
+        <div style="font-size:.78rem;opacity:.8;margin-top:4px">Confira seus equipamentos antes de iniciar a atividade</div>
+      </div>
+
+      <div class="progress-lbl"><span id="progLbl">0</span> / ${_campos.length} itens conferidos</div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div>
+
+      <div class="identif-card">
+        <h2>Identificação</h2>
+        <div class="field">
+          <label>Matrícula *</label>
+          <input type="text" id="iMatricula" inputmode="numeric" placeholder="Digite sua matrícula" oninput="onMatricula(this.value)"/>
+          <div class="colab-nome" id="colabNome"></div>
+        </div>
+      </div>
+
+      ${_campos.map(c => renderCampo(c)).join('')}
+
+      <button class="btn-primary" id="btnEnviar" onclick="enviar()">✅ Concluir Autoinspeção</button>
+    `;
+  }
+
+  function renderCampo(c) {
+    const [op1, op2] = c.opcoes;
+    const cls1 = op1.toUpperCase() === 'RUIM' || op1.toUpperCase().includes('VENCID') ? 'ruim' : 'bom';
+    return `
+      <div class="campo-wrap" id="cw_${c.id}">
+        <span class="campo-label">${c.label}</span>
+        <div class="status-row">
+          <button class="status-btn" id="c${c.id}_op1" onclick="selecionar(${c.id},'${op1}',this)">${op1}</button>
+          <button class="status-btn" id="c${c.id}_op2" onclick="selecionar(${c.id},'${op2}',this)">${op2}</button>
+        </div>
+        ${c.tem_validade ? `
+          <div class="validade-wrap" id="vw_${c.id}">
+            <label>Data de validade</label>
+            <input type="date" id="vd_${c.id}" onchange="onValidade(${c.id}, this.value)"/>
+            <div class="validade-hint" id="vh_${c.id}">⚠️ Essa data já passou — confirme se a opção marcada está correta.</div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  function selecionar(campoId, valor, btn) {
+    const wrap = btn.closest('.campo-wrap');
+    const op1 = document.getElementById('c'+campoId+'_op1');
+    const op2 = document.getElementById('c'+campoId+'_op2');
+    const ruimValores = ['RUIM','VENCIDA','VENCIDO'];
+    [op1, op2].forEach(b => { b.classList.remove('sel-bom','sel-ruim'); });
+    const isRuim = ruimValores.includes(valor.toUpperCase());
+    btn.classList.add(isRuim ? 'sel-ruim' : 'sel-bom');
+
+    if (!_respostas[campoId]) _respostas[campoId] = {};
+    _respostas[campoId].opcao = valor;
+
+    const vw = document.getElementById('vw_'+campoId);
+    if (vw) vw.style.display = '';
+
+    atualizarProgress();
+  }
+
+  function onValidade(campoId, valor) {
+    if (!_respostas[campoId]) _respostas[campoId] = {};
+    _respostas[campoId].validade_data = valor;
+    const hint = document.getElementById('vh_'+campoId);
+    const vw   = document.getElementById('vw_'+campoId);
+    if (valor) {
+      const venceu = new Date(valor) < new Date(new Date().toDateString());
+      if (hint) hint.style.display = venceu ? '' : 'none';
+      if (vw)   vw.classList.toggle('vencida', venceu);
+    }
+  }
+
+  async function onMatricula(val) {
+    const nomeEl = document.getElementById('colabNome');
+    if (val.length >= 4) {
+      try {
+        const { data } = await fetch('/api/colaborador/' + val).then(r => r.json());
+        if (data) { nomeEl.textContent = '✓ ' + data.nome; nomeEl.className = 'colab-nome ok'; }
+        else { nomeEl.textContent = '✗ Matrícula não encontrada'; nomeEl.className = 'colab-nome err'; }
+      } catch(e) {}
+    } else { nomeEl.textContent = ''; }
+  }
+
+  function atualizarProgress() {
+    const total = _campos.length;
+    const preenchidos = Object.values(_respostas).filter(r => r.opcao).length;
+    document.getElementById('progBar').style.width = (total ? preenchidos/total*100 : 0) + '%';
+    document.getElementById('progLbl').textContent = preenchidos;
+  }
+
+  function toast(msg, tipo='ok') {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className = 'show ' + tipo;
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.className = '', 3500);
+  }
+
+  function converterDataISO(iso) {
+    if (!iso) return null;
+    const [y,m,d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  async function enviar() {
+    const matricula = document.getElementById('iMatricula').value.trim();
+    if (!matricula) { toast('Informe sua matrícula', 'err'); return; }
+
+    const faltando = _campos.filter(c => !_respostas[c.id]?.opcao);
+    if (faltando.length) {
+      toast(`Faltam ${faltando.length} item(ns) pra conferir`, 'err');
+      document.getElementById('cw_'+faltando[0].id)?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true; btn.textContent = '⏳ Enviando...';
+
+    try {
+      const nomeEl = document.getElementById('colabNome');
+      const nome   = nomeEl.classList.contains('ok') ? nomeEl.textContent.replace('✓ ','') : null;
+
+      const agora = new Date();
+      const dataInsp = String(agora.getDate()).padStart(2,'0')+'/'+String(agora.getMonth()+1).padStart(2,'0')+'/'+agora.getFullYear();
+      const horaInsp = agora.toTimeString().slice(0,5);
+
+      const rPre = await fetch('/api/autoinspecao/preenchimentos', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ matricula, nome_tecnico: nome, data_insp: dataInsp, hora_insp: horaInsp })
+      }).then(r=>r.json());
+      if (!rPre.ok) throw new Error(rPre.error || 'Erro ao registrar');
+      _preId = rPre.data.id;
+
+      for (const c of _campos) {
+        const resp = _respostas[c.id];
+        await fetch(`/api/autoinspecao/preenchimentos/${_preId}/respostas`, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ campo_id: c.id, resposta_opcao: resp.opcao, validade_data: resp.validade_data || null })
+        });
+      }
+
+      const rConcluir = await fetch(`/api/autoinspecao/preenchimentos/${_preId}/concluir`, { method:'POST' }).then(r=>r.json());
+      renderSuccess(rConcluir.irregularidades || []);
+    } catch(e) {
+      toast('Erro ao enviar: ' + e.message, 'err');
+      btn.disabled = false; btn.textContent = '✅ Concluir Autoinspeção';
+    }
+  }
+
+  function renderSuccess(irregularidades) {
+    document.getElementById('formWrap').innerHTML = `
+      <div class="success-screen">
+        <div class="ico">✅</div>
+        <h2>Autoinspeção Concluída!</h2>
+        <p>${new Date().toLocaleDateString('pt-BR')} — seus EPIs foram registrados.</p>
+        ${irregularidades.length ? `
+          <div class="alerta-resumo">
+            <div class="title">⚠️ ${irregularidades.length} item(ns) que precisam de atenção:</div>
+            <ul>${irregularidades.map(r => `<li>• ${r.label} — ${r.resposta_opcao}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  init();
+</script>
+</body>
+</html>
