@@ -92,7 +92,7 @@ function startServer() {
     }
   });
 
-  app.patch('/api/os/:id', (req, res) => {
+  app.patch('/api/os/:id', requireAuth, requirePermissao('alterar_status_os'), (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       const { status } = req.body;
@@ -107,7 +107,7 @@ function startServer() {
     }
   });
 
-  app.delete('/api/os/:id', (req, res) => {
+  app.delete('/api/os/:id', requireAuth, requirePermissao('excluir_os'), (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       const removida = db.removerOS(id);
@@ -283,7 +283,7 @@ function startServer() {
     catch(err) { res.status(500).json({ ok: false, error: err.message }); }
   });
 
-  app.delete('/api/checkin/:id', (req, res) => {
+  app.delete('/api/checkin/:id', requireAuth, requirePermissao('excluir_checkin'), (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       checkin.deletarCheckin(id);
@@ -553,7 +553,7 @@ function startServer() {
   });
 
   // ── Edição completa de OS (painel gestor) ───────────────────────────────
-  app.patch('/api/os/:id/edit', express.json(), (req, res) => {
+  app.patch('/api/os/:id/edit', requireAuth, requirePermissao('editar_os'), express.json(), (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       const b  = req.body;
@@ -601,7 +601,7 @@ function startServer() {
   });
 
   // ── SharePoint Queue ─────────────────────────────────────────────────────
-  app.post('/api/sp-enviar/:id', express.json(), (req, res) => {
+  app.post('/api/sp-enviar/:id', requireAuth, requirePermissao('enviar_sharepoint'), express.json(), (req, res) => {
     try {
       const id   = parseInt(req.params.id, 10);
       const peso = req.body?.peso || null;
@@ -647,6 +647,82 @@ function startServer() {
 
   app.get('/api/bot-status', (_req, res) => {
     res.json({ ready: state.isReady(), hasQR: !!state.getQR() });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ── AUTENTICAÇÃO E PERMISSÕES ──────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  const auth = require('./db_auth');
+
+  function requireAuth(req, res, next) {
+    const header = req.headers['authorization'] || '';
+    const token  = req.headers['x-auth-token'] || header.replace('Bearer ', '').trim();
+    const usuario = auth.verificarToken(token);
+    if (!usuario) return res.status(401).json({ ok: false, error: 'Não autenticado. Faça login novamente.' });
+    req.user = usuario;
+    next();
+  }
+
+  function requirePermissao(perm) {
+    return (req, res, next) => {
+      if (!req.user) return res.status(401).json({ ok: false, error: 'Não autenticado.' });
+      if (!req.user.permissoes.includes(perm)) {
+        return res.status(403).json({ ok: false, error: 'Você não tem permissão para esta ação.' });
+      }
+      next();
+    };
+  }
+
+  app.post('/api/auth/login', express.json(), (req, res) => {
+    try {
+      const { username, senha } = req.body;
+      if (!username || !senha) return res.status(400).json({ ok: false, error: 'Informe usuário e senha.' });
+      const r = auth.login(username, senha);
+      if (!r.ok) return res.status(401).json(r);
+      res.json(r);
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/api/auth/me', requireAuth, (req, res) => {
+    res.json({ ok: true, usuario: req.user });
+  });
+
+  app.get('/api/auth/permissoes-info', (req, res) => {
+    res.json({ ok: true, data: auth.PERMISSOES_INFO });
+  });
+
+  app.get('/api/auth/usuarios', requireAuth, requirePermissao('gerenciar_usuarios'), (req, res) => {
+    try { res.json({ ok: true, data: auth.listarUsuarios() }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/auth/usuarios', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
+    try {
+      const { username, senha, nome, permissoes } = req.body;
+      if (!username || !senha || !nome) return res.status(400).json({ ok: false, error: 'Usuário, senha e nome são obrigatórios.' });
+      const u = auth.criarUsuario({ username, senha, nome, permissoes });
+      res.json({ ok: true, data: u });
+    } catch(e) {
+      const msg = e.message.includes('UNIQUE') ? 'Esse nome de usuário já existe.' : e.message;
+      res.status(500).json({ ok: false, error: msg });
+    }
+  });
+
+  app.patch('/api/auth/usuarios/:id', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
+    try {
+      const u = auth.atualizarUsuario(parseInt(req.params.id), req.body);
+      res.json({ ok: true, data: u });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/api/auth/usuarios/:id', requireAuth, requirePermissao('gerenciar_usuarios'), (req, res) => {
+    try {
+      if (req.user.id === parseInt(req.params.id)) {
+        return res.status(400).json({ ok: false, error: 'Você não pode excluir o próprio usuário.' });
+      }
+      auth.deletarUsuario(parseInt(req.params.id));
+      res.json({ ok: true });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -884,7 +960,7 @@ function startServer() {
   // ═══════════════════════════════════════════════════════════════════════════
 
   // ── Relatório de Inspeções WhatsApp (grupo separado) ─────────────────────
-  app.post('/api/relatorio/inspecoes/enviar', async (req, res) => {
+  app.post('/api/relatorio/inspecoes/enviar', requireAuth, requirePermissao('enviar_relatorio_operacao'), async (req, res) => {
     try {
       const botState = require('./state');
       if (!botState.isReady() || !global._waClient) {
@@ -990,7 +1066,7 @@ function startServer() {
   });
 
   // ── Relatório diário WhatsApp ─────────────────────────────────────────────
-  app.post('/api/relatorio/enviar', async (req, res) => {
+  app.post('/api/relatorio/enviar', requireAuth, requirePermissao('enviar_relatorio_painel'), async (req, res) => {
     try {
       const botState = require('./state');
       if (!botState.isReady() || !global._waClient) {
