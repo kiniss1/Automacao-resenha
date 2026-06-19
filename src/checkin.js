@@ -7,7 +7,9 @@ const path = require('path');
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'os_local.db');
 let db;
 
-const COLABORADORES = [
+// Lista usada apenas para popular a tabela `colaboradores` na primeira execução.
+// Depois disso, a fonte de verdade é o banco — gerenciável via /colaboradores.html
+const COLABORADORES_SEED = [
   { matricula: '4010928', nome: 'ADRIANA DE OLIVEIRA RIBEIRO', cargo: 'AGENTE ADMINISTRATIVO JR' },
   { matricula: '4005819', nome: 'ADRIANO DA ROCHA LIMA', cargo: 'TECNICO DE CAMPO' },
   { matricula: '4005265', nome: 'ADRIANO SANTANA DA SILVA', cargo: 'ELETRICISTA MANTENEDOR DE SUBESTACOES JR' },
@@ -162,6 +164,27 @@ function setDb(database) {
   `);
   db.run(`CREATE INDEX IF NOT EXISTS idx_checkin_status ON checkins(status)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_checkin_mat ON checkins(matricula)`);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS colaboradores (
+      matricula  TEXT PRIMARY KEY,
+      nome       TEXT NOT NULL,
+      cargo      TEXT,
+      ativo      INTEGER NOT NULL DEFAULT 1,
+      criado_em  TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    )
+  `);
+
+  // Popula a tabela com a lista antiga, só na primeira vez (tabela vazia)
+  const count = get(`SELECT COUNT(*) AS n FROM colaboradores`);
+  if (!count || count.n === 0) {
+    COLABORADORES_SEED.forEach(c => {
+      try { db.run(`INSERT INTO colaboradores (matricula, nome, cargo) VALUES (?,?,?)`, [c.matricula, c.nome, c.cargo]); }
+      catch(e) {}
+    });
+    persist();
+    console.log(`[CHECKIN] ${COLABORADORES_SEED.length} colaboradores migrados pro banco.`);
+  }
 }
 
 function persist() {
@@ -184,7 +207,35 @@ function all(sql, params = []) {
 }
 
 function buscarColaborador(matricula) {
-  return COLABORADORES.find(c => c.matricula === String(matricula).trim()) || null;
+  const c = get(`SELECT * FROM colaboradores WHERE matricula=? AND ativo=1`, [String(matricula).trim()]);
+  return c ? { matricula: c.matricula, nome: c.nome, cargo: c.cargo } : null;
+}
+
+function listarColaboradores() {
+  return all(`SELECT * FROM colaboradores ORDER BY nome`);
+}
+
+function criarColaborador({ matricula, nome, cargo }) {
+  matricula = String(matricula).trim();
+  if (!matricula || !nome) throw new Error('Matrícula e nome são obrigatórios.');
+  run(`INSERT INTO colaboradores (matricula, nome, cargo, ativo) VALUES (?,?,?,1)`,
+    [matricula, nome.toUpperCase().trim(), (cargo||'').toUpperCase().trim() || null]);
+  return get(`SELECT * FROM colaboradores WHERE matricula=?`, [matricula]);
+}
+
+function atualizarColaborador(matricula, { nome, cargo, ativo }) {
+  const fields = [], vals = [];
+  if (nome !== undefined)  { fields.push('nome=?');  vals.push(nome.toUpperCase().trim()); }
+  if (cargo !== undefined) { fields.push('cargo=?'); vals.push((cargo||'').toUpperCase().trim() || null); }
+  if (ativo !== undefined) { fields.push('ativo=?'); vals.push(ativo ? 1 : 0); }
+  if (!fields.length) return get(`SELECT * FROM colaboradores WHERE matricula=?`, [matricula]);
+  vals.push(matricula);
+  run(`UPDATE colaboradores SET ${fields.join(', ')} WHERE matricula=?`, vals);
+  return get(`SELECT * FROM colaboradores WHERE matricula=?`, [matricula]);
+}
+
+function deletarColaborador(matricula) {
+  run(`DELETE FROM colaboradores WHERE matricula=?`, [matricula]);
 }
 
 function fazerCheckin({ matricula, subestacao, atividade }) {
@@ -234,4 +285,8 @@ function deletarCheckin(id) {
   run(`DELETE FROM checkins WHERE id=?`, [id]);
 }
 
-module.exports = { setDb, fazerCheckin, fazerCheckout, listarAtivos, listarHistorico, estatisticasCheckin, buscarColaborador, deletarCheckin, COLABORADORES, SUBESTACOES };
+module.exports = {
+  setDb, fazerCheckin, fazerCheckout, listarAtivos, listarHistorico, estatisticasCheckin,
+  buscarColaborador, deletarCheckin, SUBESTACOES,
+  listarColaboradores, criarColaborador, atualizarColaborador, deletarColaborador,
+};
