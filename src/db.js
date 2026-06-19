@@ -55,6 +55,10 @@ async function init() {
   const dbInsp = require('./db_inspecao');
   dbInsp.setDb(db);
 
+  // Inicializa tabela de usuários/login
+  const auth = require('./db_auth');
+  auth.setDb(db);
+
   persist();
   console.log('[DB] Banco iniciado:', DB_PATH);
 }
