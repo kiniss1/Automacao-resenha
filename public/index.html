@@ -259,8 +259,10 @@
   <div class="header-right">
     <a href="/atividade.html" class="hbtn primary">+ Nova Atividade</a>
     <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
-    <button class="hbtn" onclick="abrirRelatorio()" style="border-color:#25d366;color:#25d366">📤 Relatório</button>
+    <button class="hbtn" id="btnRelatorio" onclick="abrirRelatorio()" style="border-color:#25d366;color:#25d366">📤 Relatório</button>
+    <a href="/usuarios.html" class="hbtn" id="linkUsuarios" style="display:none">👥 Usuários</a>
     <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Tema: Escuro</button>
+    <button class="hbtn" onclick="logout()" title="Sair">🚪 Sair</button>
     <div class="bot-badge">
       <div class="dot" id="botDot"></div>
       <span id="botLabel">Verificando...</span>
@@ -444,6 +446,34 @@
 <div id="toast"></div>
 
 <script>
+  // ── Autenticação ──────────────────────────────────────────────────────────
+  const TOKEN = localStorage.getItem('oomc_token');
+  let USUARIO = {};
+  try { USUARIO = JSON.parse(localStorage.getItem('oomc_usuario') || '{}'); } catch(e) {}
+  if (!TOKEN) location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
+
+  function temPermissao(p) { return (USUARIO.permissoes || []).includes(p); }
+
+  function authFetch(url, opts = {}) {
+    opts.headers = { ...(opts.headers||{}), 'x-auth-token': TOKEN };
+    return fetch(url, opts).then(async r => {
+      if (r.status === 401) { localStorage.removeItem('oomc_token'); location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); throw new Error('Sessão expirada'); }
+      return r;
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('oomc_token');
+    localStorage.removeItem('oomc_usuario');
+    location.href = '/login.html';
+  }
+
+  function aplicarPermissoesUI() {
+    if (!temPermissao('enviar_relatorio_painel')) document.getElementById('btnRelatorio')?.remove();
+    if (temPermissao('gerenciar_usuarios')) document.getElementById('linkUsuarios').style.display = '';
+  }
+  aplicarPermissoesUI();
+
   const STATUS = ['Andamento', 'Etapa Concluída', 'Concluído', 'Cancelado'];
   let _debounce, _unidades = new Set(), _currentId = null, _currentOs = null;
 
@@ -731,7 +761,7 @@
         document.getElementById('delOsSenha').select();
         return;
       }
-      const res = await fetch('/api/os/' + _currentId, {method:'DELETE'}).then(r => r.json());
+      const res = await authFetch('/api/os/' + _currentId, {method:'DELETE'}).then(r => r.json());
       if (!res.ok) throw new Error(res.error);
       fecharDelOsModal();
       closeModalDirect();
@@ -754,7 +784,7 @@
     if(card) card.querySelectorAll('.btn-status').forEach(b=>b.disabled=true);
     document.querySelectorAll('.modal-btn').forEach(b=>b.disabled=true);
     try{
-      const res=await fetch('/api/os/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).then(r=>r.json());
+      const res=await authFetch('/api/os/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).then(r=>r.json());
       if(!res.ok) throw new Error(res.error);
       if(card) card.outerHTML=renderCard(res.data);
       if(_currentId===id) fillModal(res.data);
@@ -793,7 +823,7 @@
     const badge=document.getElementById('spBadgeModal');
     btn.disabled=true; btn.textContent='⏳ Enviando...';
     try{
-      const res=await fetch('/api/sp-enviar/'+_currentId,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({peso:Number(peso)})}).then(r=>r.json());
+      const res=await authFetch('/api/sp-enviar/'+_currentId,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({peso:Number(peso)})}).then(r=>r.json());
       if(!res.ok) throw new Error(res.error);
       badge.className='sp-badge fila'; badge.textContent='⏳ Na fila — aguardando PC local';
       btn.textContent='⏳ Na fila'; btn.disabled=true;
@@ -852,7 +882,7 @@
       data:             dataFmt,
     };
     try{
-      const res=await fetch('/api/os/'+_currentId+'/edit',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
+      const res=await authFetch('/api/os/'+_currentId+'/edit',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
       if(!res.ok) throw new Error(res.error||'Erro');
       msg.style.color='var(--green)'; msg.textContent='✅ Salvo!';
       const card=document.getElementById('card-'+_currentId);
@@ -933,7 +963,7 @@
     btn.disabled = true; btn.textContent = '⏳ Enviando...';
     fb.textContent = '';
     try {
-      const res = await fetch('/api/relatorio/enviar', { method: 'POST' }).then(r=>r.json());
+      const res = await authFetch('/api/relatorio/enviar', { method: 'POST' }).then(r=>r.json());
       if (!res.ok) throw new Error(res.error);
       fb.style.color = 'var(--green)'; fb.textContent = '✅ Relatório enviado ao grupo!';
       btn.textContent = '✅ Enviado!';
