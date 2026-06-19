@@ -130,6 +130,31 @@ function startServer() {
     res.json({ ok: true, data: colab || null });
   });
 
+  app.get('/api/colaboradores', requireAuth, requirePermissao('gerenciar_usuarios'), (req, res) => {
+    try { res.json({ ok: true, data: checkin.listarColaboradores() }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/colaboradores', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
+    try {
+      const c = checkin.criarColaborador(req.body);
+      res.json({ ok: true, data: c });
+    } catch(e) {
+      const msg = e.message.includes('UNIQUE') ? 'Já existe um colaborador com essa matrícula.' : e.message;
+      res.status(400).json({ ok: false, error: msg });
+    }
+  });
+
+  app.patch('/api/colaboradores/:matricula', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
+    try { res.json({ ok: true, data: checkin.atualizarColaborador(req.params.matricula, req.body) }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/api/colaboradores/:matricula', requireAuth, requirePermissao('gerenciar_usuarios'), (req, res) => {
+    try { checkin.deletarColaborador(req.params.matricula); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
   app.get('/api/checkin/ativo/:matricula', (req, res) => {
     try {
       const c = require('./checkin');
