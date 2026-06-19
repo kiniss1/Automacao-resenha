@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Colaboradores — OOMC</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1a19;--surface:#112220;--border:#1e3836;
+    --text:#e8f4f3;--muted:#7aaba7;
+    --primary:#009B91;--primary-bg:#0d2e2c;--primary-dark:#005852;
+    --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+    --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px}
+  .wrap{max-width:880px;margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+  header h1{font-size:1.1rem;font-weight:700}
+  header span{font-size:.78rem;color:var(--muted)}
+  .nav-links{display:flex;gap:8px}
+  .nav-link{font-size:.8rem;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px}
+  .nav-link:hover{border-color:var(--primary);color:var(--primary)}
+
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .btn-novo{background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:.85rem;font-weight:700;cursor:pointer}
+  .btn-novo:hover{opacity:.88}
+  .search-input{flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px 14px;font-size:.85rem;outline:none}
+  .search-input:focus{border-color:var(--primary)}
+  .contador{font-size:.75rem;color:var(--muted);margin-bottom:10px}
+
+  .colab-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+  .colab-info{display:flex;flex-direction:column;gap:2px;min-width:200px}
+  .colab-nome{font-weight:700;font-size:.92rem}
+  .colab-meta{font-size:.75rem;color:var(--muted)}
+  .colab-badge{font-size:.65rem;padding:2px 7px;border-radius:5px;display:inline-block;margin-top:4px;width:fit-content}
+  .colab-badge.ativo{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+  .colab-badge.inativo{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+  .colab-actions{display:flex;gap:6px}
+  .btn-icon{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:7px 11px;font-size:.78rem;cursor:pointer}
+  .btn-icon:hover{border-color:var(--primary);color:var(--primary)}
+  .btn-icon.danger:hover{border-color:var(--red);color:var(--red)}
+
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px}
+  #modal.hidden{display:none}
+  .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px}
+  .modal-box h2{font-size:1rem;font-weight:700}
+  .field label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+  .field input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none}
+  .field input:focus{border-color:var(--primary)}
+  .field input:disabled{opacity:.5}
+  .toggle-ativo{display:flex;align-items:center;gap:8px;font-size:.82rem}
+  .modal-footer{display:flex;gap:8px;margin-top:6px}
+  .btn-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:10px;font-size:.85rem;cursor:pointer}
+  .btn-salvar{flex:1;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:.85rem;font-weight:700;cursor:pointer}
+  .btn-salvar:disabled{opacity:.4;cursor:default}
+  .err{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:8px;padding:8px 11px;font-size:.78rem;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>👷 Colaboradores</h1>
+      <span>Sistema OOMC</span>
+    </div>
+    <div class="nav-links">
+      <a href="/" class="nav-link">🔧 Painel</a>
+      <a href="/usuarios.html" class="nav-link">👥 Usuários</a>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn-novo" onclick="abrirModal()">+ Novo Colaborador</button>
+    <input type="text" class="search-input" id="busca" placeholder="Buscar por nome, matrícula ou cargo..." oninput="renderLista()"/>
+  </div>
+  <div class="contador" id="contador"></div>
+  <div id="lista"></div>
+</div>
+
+<div id="modal" class="hidden">
+  <div class="modal-box">
+    <h2 id="modalTitulo">Novo Colaborador</h2>
+    <div class="err" id="modalErr"></div>
+    <input type="hidden" id="editMatricula"/>
+    <div class="field"><label>Matrícula</label><input type="text" id="fMatricula" inputmode="numeric"/></div>
+    <div class="field"><label>Nome completo</label><input type="text" id="fNome"/></div>
+    <div class="field"><label>Cargo</label><input type="text" id="fCargo"/></div>
+    <div class="toggle-ativo" id="ativoWrap" style="display:none">
+      <input type="checkbox" id="fAtivo" checked/> <label for="fAtivo">Colaborador ativo</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" id="btnSalvar" onclick="salvarColaborador()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOKEN = localStorage.getItem('oomc_token');
+  let _colaboradores = [];
+
+  function authFetch(url, opts = {}) {
+    opts.headers = { ...(opts.headers||{}), 'x-auth-token': TOKEN };
+    return fetch(url, opts);
+  }
+
+  async function init() {
+    if (!TOKEN) { location.href = '/login.html?redirect=/colaboradores.html'; return; }
+    const me = await authFetch('/api/auth/me').then(r=>r.json()).catch(()=>null);
+    if (!me || !me.ok) { location.href = '/login.html?redirect=/colaboradores.html'; return; }
+    if (!me.usuario.permissoes.includes('gerenciar_usuarios')) {
+      document.querySelector('.wrap').innerHTML = '<p style="padding:40px;text-align:center;color:var(--muted)">⚠️ Você não tem permissão para acessar esta página.</p>';
+      return;
+    }
+    await carregarColaboradores();
+  }
+
+  async function carregarColaboradores() {
+    const r = await authFetch('/api/colaboradores').then(r=>r.json());
+    _colaboradores = r.data || [];
+    renderLista();
+  }
+
+  function renderLista() {
+    const termo = document.getElementById('busca').value.trim().toLowerCase();
+    const filtrados = !termo ? _colaboradores : _colaboradores.filter(c =>
+      c.nome.toLowerCase().includes(termo) || c.matricula.includes(termo) || (c.cargo||'').toLowerCase().includes(termo)
+    );
+    document.getElementById('contador').textContent = `${filtrados.length} de ${_colaboradores.length} colaborador(es)`;
+
+    document.getElementById('lista').innerHTML = filtrados.map(c => `
+      <div class="colab-card">
+        <div class="colab-info">
+          <div class="colab-nome">${c.nome}</div>
+          <div class="colab-meta">Mat. ${c.matricula}${c.cargo ? ' · ' + c.cargo : ''}</div>
+          <span class="colab-badge ${c.ativo ? 'ativo':'inativo'}">${c.ativo ? '● Ativo':'● Inativo'}</span>
+        </div>
+        <div class="colab-actions">
+          <button class="btn-icon" onclick="editarColaborador('${c.matricula}')">✏️ Editar</button>
+          <button class="btn-icon danger" onclick="excluirColaborador('${c.matricula}','${c.nome.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
+        </div>
+      </div>
+    `).join('') || '<p style="color:var(--muted);text-align:center;padding:30px">Nenhum colaborador encontrado.</p>';
+  }
+
+  function abrirModal() {
+    document.getElementById('modalTitulo').textContent = 'Novo Colaborador';
+    document.getElementById('editMatricula').value = '';
+    document.getElementById('fMatricula').value = '';
+    document.getElementById('fMatricula').disabled = false;
+    document.getElementById('fNome').value = '';
+    document.getElementById('fCargo').value = '';
+    document.getElementById('ativoWrap').style.display = 'none';
+    document.getElementById('modalErr').style.display = 'none';
+    document.getElementById('modal').classList.remove('hidden');
+  }
+
+  function editarColaborador(matricula) {
+    const c = _colaboradores.find(x => x.matricula === matricula);
+    if (!c) return;
+    document.getElementById('modalTitulo').textContent = 'Editar Colaborador';
+    document.getElementById('editMatricula').value = c.matricula;
+    document.getElementById('fMatricula').value = c.matricula;
+    document.getElementById('fMatricula').disabled = true;
+    document.getElementById('fNome').value = c.nome;
+    document.getElementById('fCargo').value = c.cargo || '';
+    document.getElementById('ativoWrap').style.display = 'flex';
+    document.getElementById('fAtivo').checked = !!c.ativo;
+    document.getElementById('modalErr').style.display = 'none';
+    document.getElementById('modal').classList.remove('hidden');
+  }
+
+  function fecharModal() { document.getElementById('modal').classList.add('hidden'); }
+
+  async function salvarColaborador() {
+    const matriculaEdit = document.getElementById('editMatricula').value;
+    const matricula = document.getElementById('fMatricula').value.trim();
+    const nome      = document.getElementById('fNome').value.trim();
+    const cargo     = document.getElementById('fCargo').value.trim();
+    const errEl = document.getElementById('modalErr');
+    errEl.style.display = 'none';
+
+    if (!matricula || !nome) { errEl.textContent = 'Matrícula e nome são obrigatórios.'; errEl.style.display='block'; return; }
+
+    const btn = document.getElementById('btnSalvar');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    try {
+      let r;
+      if (matriculaEdit) {
+        r = await authFetch('/api/colaboradores/'+matriculaEdit, {
+          method:'PATCH', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ nome, cargo, ativo: document.getElementById('fAtivo').checked })
+        }).then(r=>r.json());
+      } else {
+        r = await authFetch('/api/colaboradores', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ matricula, nome, cargo })
+        }).then(r=>r.json());
+      }
+      if (!r.ok) throw new Error(r.error);
+      fecharModal();
+      await carregarColaboradores();
+    } catch(e) {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+
+  async function excluirColaborador(matricula, nome) {
+    if (!confirm('Excluir o colaborador "'+nome+'"? Essa ação não pode ser desfeita.')) return;
+    try {
+      const r = await authFetch('/api/colaboradores/'+matricula, { method:'DELETE' }).then(r=>r.json());
+      if (!r.ok) throw new Error(r.error);
+      await carregarColaboradores();
+    } catch(e) { alert('Erro: ' + e.message); }
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) fecharModal(); });
+
+  init();
+</script>
+</body>
+</html>
