@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Autoinspeção — Dashboard — OOMC</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1a19;--surface:#112220;--surface2:#163330;--border:#1e3836;--border2:#2a4f4c;
+    --text:#e8f4f3;--muted:#7aaba7;
+    --primary:#009B91;--primary-bg:#0d2e2c;--primary-dark:#005852;
+    --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
+    --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+    --orange:#F5AA41;--orange-bg:#2d1f00;--orange-border:#EB8C0A;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px}
+  .wrap{max-width:920px;margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+  header h1{font-size:1.1rem;font-weight:700}
+  header span{font-size:.78rem;color:var(--muted)}
+  .nav-links{display:flex;gap:8px}
+  .nav-link{font-size:.8rem;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;background:none}
+  .nav-link:hover{border-color:var(--primary);color:var(--primary)}
+  .nav-link.active{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  @media(max-width:600px){.stats-grid{grid-template-columns:1fr}}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .stat-card .num{font-size:1.7rem;font-weight:800}
+  .stat-card .lbl{font-size:.75rem;color:var(--muted);margin-top:2px}
+  .stat-card.alerta .num{color:var(--red)}
+
+  .date-picker{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .date-picker input{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.85rem;outline:none}
+
+  .section-title{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:24px 0 10px}
+
+  .colab-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+  .colab-info{display:flex;flex-direction:column;gap:2px}
+  .colab-nome{font-weight:700;font-size:.9rem}
+  .colab-meta{font-size:.72rem;color:var(--muted)}
+  .badge-ok{font-size:.68rem;padding:2px 8px;border-radius:5px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+  .badge-alerta{font-size:.68rem;padding:2px 8px;border-radius:5px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+  .irr-card{background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:12px 16px;margin-bottom:8px;font-size:.82rem}
+  .irr-card b{color:var(--red)}
+
+  /* Editor de itens */
+  .item-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .item-info{font-size:.85rem}
+  .item-tipo{font-size:.68rem;color:var(--muted);margin-top:2px}
+  .btn-icon{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:6px 10px;font-size:.76rem;cursor:pointer}
+  .btn-icon:hover{border-color:var(--primary);color:var(--primary)}
+  .btn-icon.danger:hover{border-color:var(--red);color:var(--red)}
+  .btn-novo{background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:.85rem;font-weight:700;cursor:pointer;margin-bottom:16px}
+
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px}
+  #modal.hidden{display:none}
+  .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px}
+  .modal-box h2{font-size:1rem;font-weight:700}
+  .field label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+  .field input,.field select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none}
+  .toggle-row{display:flex;align-items:center;gap:8px;font-size:.82rem}
+  .modal-footer{display:flex;gap:8px;margin-top:6px}
+  .btn-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:10px;font-size:.85rem;cursor:pointer}
+  .btn-salvar{flex:1;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:.85rem;font-weight:700;cursor:pointer}
+  .err{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:8px;padding:8px 11px;font-size:.78rem;display:none}
+
+  .vazio{color:var(--muted);text-align:center;padding:30px;font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🦺 Autoinspeção de EPI</h1>
+      <span>Sistema OOMC</span>
+    </div>
+    <div class="nav-links">
+      <a href="/" class="nav-link">🔧 Painel</a>
+      <a href="/inspecao.html" class="nav-link">🔍 Inspeção SE</a>
+    </div>
+  </header>
+
+  <div class="nav-links" style="margin-bottom:18px">
+    <button class="nav-link active" id="tabDash" onclick="setTab('dash')">📊 Dashboard</button>
+    <button class="nav-link" id="tabItens" onclick="setTab('itens')">📋 Itens da Checklist</button>
+  </div>
+
+  <div id="painelDash">
+    <div class="date-picker">
+      <input type="date" id="dataFiltro" onchange="carregarDashboard()"/>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="num" id="numTotal">—</div><div class="lbl">Autoinspeções hoje</div></div>
+      <div class="stat-card alerta"><div class="num" id="numIrregulares">—</div><div class="lbl">Item(ns) irregular(es)</div></div>
+      <div class="stat-card"><div class="num" id="numColabIrr">—</div><div class="lbl">Colaborador(es) com pendência</div></div>
+    </div>
+
+    <div class="section-title">Irregularidades do dia</div>
+    <div id="listaIrregularidades"></div>
+
+    <div class="section-title">Autoinspeções realizadas</div>
+    <div id="listaPreenchimentos"></div>
+  </div>
+
+  <div id="painelItens" style="display:none">
+    <button class="btn-novo" onclick="abrirModalItem()">+ Novo Item</button>
+    <div id="listaItens"></div>
+  </div>
+</div>
+
+<div id="modal" class="hidden">
+  <div class="modal-box">
+    <h2 id="modalTitulo">Novo Item</h2>
+    <div class="err" id="modalErr"></div>
+    <input type="hidden" id="editId"/>
+    <div class="field"><label>Nome do item</label><input type="text" id="fLabel"/></div>
+    <div class="field">
+      <label>Tipo de resposta</label>
+      <select id="fOpcoes">
+        <option value="BOM,RUIM">Bom / Ruim</option>
+        <option value="BOA,RUIM">Boa / Ruim</option>
+        <option value="EM DIA,VENCIDO">Em dia / Vencido</option>
+        <option value="EM DIA,VENCIDA">Em dia / Vencida</option>
+      </select>
+    </div>
+    <div class="toggle-row"><input type="checkbox" id="fValidade"/> <label for="fValidade">Pedir data de validade</label></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" id="btnSalvarItem" onclick="salvarItem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOKEN = localStorage.getItem('oomc_token');
+  let USUARIO = {};
+  try { USUARIO = JSON.parse(localStorage.getItem('oomc_usuario') || '{}'); } catch(e) {}
+  let _itens = [];
+
+  function authFetch(url, opts = {}) {
+    opts.headers = { ...(opts.headers||{}), 'x-auth-token': TOKEN };
+    return fetch(url, opts).then(async r => {
+      if (r.status === 401) { localStorage.removeItem('oomc_token'); location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); throw new Error('Sessão expirada'); }
+      return r;
+    });
+  }
+
+  function hojeBR() {
+    const d = new Date();
+    return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  }
+  function hojeISO() {
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function isoParaBR(iso) {
+    const [y,m,d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  async function init() {
+    if (!TOKEN) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); return; }
+    const me = await authFetch('/api/auth/me').then(r=>r.json()).catch(()=>null);
+    if (!me || !me.ok) { location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); return; }
+    if (!me.usuario.permissoes.includes('gerenciar_inspecao')) {
+      document.querySelector('.wrap').innerHTML = '<p style="padding:40px;text-align:center;color:var(--muted)">⚠️ Você não tem permissão para acessar esta página.</p>';
+      return;
+    }
+    document.getElementById('dataFiltro').value = hojeISO();
+    await carregarDashboard();
+  }
+
+  function setTab(tab) {
+    document.getElementById('tabDash').classList.toggle('active', tab==='dash');
+    document.getElementById('tabItens').classList.toggle('active', tab==='itens');
+    document.getElementById('painelDash').style.display  = tab==='dash' ? '' : 'none';
+    document.getElementById('painelItens').style.display = tab==='itens' ? '' : 'none';
+    if (tab === 'itens') carregarItens();
+  }
+
+  async function carregarDashboard() {
+    const iso = document.getElementById('dataFiltro').value || hojeISO();
+    const dataBR = isoParaBR(iso);
+    const r = await authFetch('/api/autoinspecao/dashboard?data=' + encodeURIComponent(dataBR)).then(r=>r.json());
+    const d = r.data || { total:0, preenchimentos:[], irregularidades:[] };
+
+    document.getElementById('numTotal').textContent = d.total;
+    document.getElementById('numIrregulares').textContent = d.irregularidades.length;
+    document.getElementById('numColabIrr').textContent = new Set(d.irregularidades.map(i=>i.preenchimento_id)).size;
+
+    document.getElementById('listaIrregularidades').innerHTML = d.irregularidades.length
+      ? d.irregularidades.map(i => {
+          const p = d.preenchimentos.find(p => p.id === i.preenchimento_id);
+          return `<div class="irr-card"><b>${p ? (p.nome_tecnico||p.matricula) : 'Colaborador'}</b> — ${i.label}: <b>${i.resposta_opcao}</b></div>`;
+        }).join('')
+      : '<div class="vazio">Nenhuma irregularidade no dia.</div>';
+
+    document.getElementById('listaPreenchimentos').innerHTML = d.preenchimentos.length
+      ? d.preenchimentos.map(p => {
+          const temIrr = d.irregularidades.some(i => i.preenchimento_id === p.id);
+          return `
+            <div class="colab-card">
+              <div class="colab-info">
+                <div class="colab-nome">${p.nome_tecnico || p.matricula}</div>
+                <div class="colab-meta">Mat. ${p.matricula} · ${p.hora_insp || ''}</div>
+              </div>
+              <span class="${temIrr ? 'badge-alerta' : 'badge-ok'}">${temIrr ? '⚠️ Com pendência' : '✅ Tudo OK'}</span>
+            </div>
+          `;
+        }).join('')
+      : '<div class="vazio">Nenhuma autoinspeção registrada nesse dia.</div>';
+  }
+
+  // ── Editor de itens ────────────────────────────────────────────────────
+  async function carregarItens() {
+    const r = await authFetch('/api/autoinspecao/campos').then(r=>r.json());
+    _itens = r.data || [];
+    document.getElementById('listaItens').innerHTML = _itens.map(c => `
+      <div class="item-card">
+        <div>
+          <div class="item-info">${c.label}</div>
+          <div class="item-tipo">${c.opcoes.join(' / ')}${c.tem_validade ? ' · pede validade' : ''}</div>
+        </div>
+        <div>
+          <button class="btn-icon" onclick="editarItem(${c.id})">✏️ Editar</button>
+          <button class="btn-icon danger" onclick="excluirItem(${c.id},'${c.label.replace(/'/g,"\\'")}')">🗑️</button>
+        </div>
+      </div>
+    `).join('') || '<div class="vazio">Nenhum item cadastrado.</div>';
+  }
+
+  function abrirModalItem() {
+    document.getElementById('modalTitulo').textContent = 'Novo Item';
+    document.getElementById('editId').value = '';
+    document.getElementById('fLabel').value = '';
+    document.getElementById('fOpcoes').value = 'BOM,RUIM';
+    document.getElementById('fValidade').checked = false;
+    document.getElementById('modalErr').style.display = 'none';
+    document.getElementById('modal').classList.remove('hidden');
+  }
+
+  function editarItem(id) {
+    const c = _itens.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('modalTitulo').textContent = 'Editar Item';
+    document.getElementById('editId').value = c.id;
+    document.getElementById('fLabel').value = c.label;
+    document.getElementById('fOpcoes').value = c.opcoes.join(',');
+    document.getElementById('fValidade').checked = c.tem_validade;
+    document.getElementById('modalErr').style.display = 'none';
+    document.getElementById('modal').classList.remove('hidden');
+  }
+
+  function fecharModal() { document.getElementById('modal').classList.add('hidden'); }
+
+  async function salvarItem() {
+    const id = document.getElementById('editId').value;
+    const label = document.getElementById('fLabel').value.trim();
+    const opcoes = document.getElementById('fOpcoes').value.split(',');
+    const tem_validade = document.getElementById('fValidade').checked;
+    const errEl = document.getElementById('modalErr');
+    errEl.style.display = 'none';
+    if (!label) { errEl.textContent = 'Informe o nome do item.'; errEl.style.display='block'; return; }
+
+    const btn = document.getElementById('btnSalvarItem');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try {
+      const body = { label, opcoes, tem_validade, tipo: tem_validade ? 'status_validade' : 'status' };
+      const r = id
+        ? await authFetch('/api/autoinspecao/campos/'+id, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r=>r.json())
+        : await authFetch('/api/autoinspecao/campos', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r=>r.json());
+      if (!r.ok) throw new Error(r.error);
+      fecharModal();
+      await carregarItens();
+    } catch(e) {
+      errEl.textContent = e.message; errEl.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+
+  async function excluirItem(id, label) {
+    if (!confirm('Excluir o item "'+label+'"?')) return;
+    try {
+      const r = await authFetch('/api/autoinspecao/campos/'+id, { method:'DELETE' }).then(r=>r.json());
+      if (!r.ok) throw new Error(r.error);
+      await carregarItens();
+    } catch(e) { alert('Erro: ' + e.message); }
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) fecharModal(); });
+
+  init();
+</script>
+</body>
+</html>
