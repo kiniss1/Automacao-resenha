@@ -469,7 +469,10 @@
   }
 
   function aplicarPermissoesUI() {
-    if (!temPermissao('enviar_relatorio_painel')) document.getElementById('btnRelatorio')?.remove();
+    if (!temPermissao('enviar_relatorio_painel')) {
+      document.getElementById('btnRelatorio')?.remove();
+      document.getElementById('btnEnviarWA')?.remove();
+    }
     if (temPermissao('gerenciar_usuarios')) document.getElementById('linkUsuarios').style.display = '';
   }
   aplicarPermissoesUI();
@@ -695,8 +698,8 @@
         const safeS=s.replace(/'/g,"\'");
         return '<button class="modal-btn" data-active="'+(active?s:'')+'" onclick="updateStatus('+os.id+',\''+safeS+'\')" '+(active?'disabled':'')+'>'+s+'</button>';
       }).join('')+
-      '<button class="modal-btn" onclick="abrirEditor()">✏️ Editar</button>'+
-      '<button class="modal-btn btn-delete" onclick="pedirSenhaExclusaoOS()">🗑️ Excluir</button>';
+      (temPermissao('editar_os') ? '<button class="modal-btn" onclick="abrirEditor()">✏️ Editar</button>' : '')+
+      (temPermissao('excluir_os') ? '<button class="modal-btn btn-delete" onclick="pedirSenhaExclusaoOS()">🗑️ Excluir</button>' : '');
   }
 
   async function loadAprInModal(id){
@@ -803,7 +806,7 @@
     const fb=document.getElementById('waMsgFeedback');
     btn.disabled=true; btn.textContent='⏳ Enviando...'; fb.textContent='';
     try{
-      const res=await fetch('/api/os/'+_currentId+'/enviar-resumo',{method:'POST'}).then(r=>r.json());
+      const res=await authFetch('/api/os/'+_currentId+'/enviar-resumo',{method:'POST'}).then(r=>r.json());
       if(!res.ok) throw new Error(res.error);
       fb.style.color='var(--green)'; fb.textContent='✅ '+res.msg;
       toast('✅ Resumo enviado ao WhatsApp!');
