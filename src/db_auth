@@ -1,0 +1,150 @@
+// src/db_auth.js — sistema de login e permissões granulares
+const bcrypt = require('bcryptjs');
+const jwt    = require('jsonwebtoken');
+
+let db;
+const JWT_SECRET = process.env.JWT_SECRET || 'oomc-troque-este-segredo-em-producao';
+
+// Lista oficial de permissões do sistema
+const PERMISSOES_INFO = [
+  { key: 'ver_os',                     grupo: 'Painel Principal', label: 'Ver Painel de OS' },
+  { key: 'editar_os',                  grupo: 'Painel Principal', label: 'Editar dados da OS' },
+  { key: 'alterar_status_os',          grupo: 'Painel Principal', label: 'Alterar status (Andamento/Etapa/Concluído/Cancelado)' },
+  { key: 'excluir_os',                 grupo: 'Painel Principal', label: 'Excluir Ordens de Serviço' },
+  { key: 'enviar_relatorio_painel',    grupo: 'Painel Principal', label: 'Enviar Relatório WhatsApp (Painel Principal)' },
+  { key: 'ver_operacao',               grupo: 'Operação',         label: 'Ver aba Operação (check-ins, dashboard)' },
+  { key: 'excluir_checkin',            grupo: 'Operação',         label: 'Excluir registros de check-in' },
+  { key: 'enviar_relatorio_operacao',  grupo: 'Operação',         label: 'Enviar Relatório WhatsApp (Operação/Inspeções)' },
+  { key: 'gerenciar_inspecao',         grupo: 'Inspeção',         label: 'Criar/editar fichas de inspeção por SE' },
+  { key: 'excluir_historico_inspecao', grupo: 'Inspeção',         label: 'Excluir inspeções do histórico' },
+  { key: 'enviar_sharepoint',          grupo: 'Integrações',      label: 'Enviar dados ao SharePoint' },
+  { key: 'gerenciar_usuarios',         grupo: 'Administração',    label: 'Gerenciar usuários' },
+];
+const PERMISSOES = PERMISSOES_INFO.map(p => p.key);
+
+function setDb(database) {
+  db = database;
+  db.run(`
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      username    TEXT NOT NULL UNIQUE,
+      senha_hash  TEXT NOT NULL,
+      nome        TEXT NOT NULL,
+      permissoes  TEXT NOT NULL DEFAULT '[]',
+      ativo       INTEGER NOT NULL DEFAULT 1,
+      criado_em   TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    )
+  `);
+  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_username ON usuarios(username)`);
+
+  // Cria usuário admin padrão na primeira vez que o sistema rodar
+  const count = get(`SELECT COUNT(*) as n FROM usuarios`);
+  if (!count || count.n === 0) {
+    const hash = bcrypt.hashSync('admin123', 10);
+    runInsert(
+      `INSERT INTO usuarios (username, senha_hash, nome, permissoes, ativo) VALUES (?,?,?,?,1)`,
+      ['admin', hash, 'Administrador', JSON.stringify(PERMISSOES)]
+    );
+    console.log('[AUTH] Usuário padrão criado → username: admin / senha: admin123 — TROQUE A SENHA!');
+  }
+}
+
+function persist() {
+  try {
+    const fs   = require('fs');
+    const path = require('path');
+    const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'os_local.db');
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+  } catch (err) { console.error('[DB_AUTH] Erro ao salvar:', err.message); }
+}
+
+function run(sql, params = []) { db.run(sql, params); persist(); }
+
+// Para INSERTs: captura o ID gerado ANTES de persistir (db.export() reseta last_insert_rowid)
+function runInsert(sql, params = []) {
+  db.run(sql, params);
+  const idRow = db.exec('SELECT last_insert_rowid() AS id');
+  const newId = idRow?.[0]?.values?.[0]?.[0];
+  persist();
+  return newId;
+}
+
+function get(sql, params = []) {
+  const s = db.prepare(sql); s.bind(params);
+  const r = s.step() ? s.getAsObject() : null; s.free(); return r;
+}
+
+function all(sql, params = []) {
+  const rows = []; const s = db.prepare(sql); s.bind(params);
+  while (s.step()) rows.push(s.getAsObject()); s.free(); return rows;
+}
+
+function parsePermissoes(u) {
+  let permissoes = [];
+  try { permissoes = JSON.parse(u.permissoes || '[]'); } catch(e) {}
+  return { id: u.id, username: u.username, nome: u.nome, permissoes, ativo: !!u.ativo, criado_em: u.criado_em };
+}
+
+// ── Login / Token ────────────────────────────────────────────────────────
+function login(username, senha) {
+  const u = get(`SELECT * FROM usuarios WHERE username=?`, [String(username).toLowerCase().trim()]);
+  if (!u) return { ok: false, error: 'Usuário ou senha incorretos.' };
+  if (!u.ativo) return { ok: false, error: 'Este usuário está desativado.' };
+  if (!bcrypt.compareSync(senha, u.senha_hash)) return { ok: false, error: 'Usuário ou senha incorretos.' };
+
+  const usuario = parsePermissoes(u);
+  const token = jwt.sign({ id: u.id, username: u.username }, JWT_SECRET, { expiresIn: '12h' });
+  return { ok: true, token, usuario };
+}
+
+function verificarToken(token) {
+  if (!token) return null;
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const u = get(`SELECT * FROM usuarios WHERE id=?`, [payload.id]);
+    if (!u || !u.ativo) return null;
+    return parsePermissoes(u);
+  } catch(e) { return null; }
+}
+
+// ── CRUD usuários (admin) ───────────────────────────────────────────────
+function listarUsuarios() {
+  return all(`SELECT * FROM usuarios ORDER BY nome`).map(parsePermissoes);
+}
+
+function buscarUsuario(id) {
+  const u = get(`SELECT * FROM usuarios WHERE id=?`, [id]);
+  return u ? parsePermissoes(u) : null;
+}
+
+function criarUsuario({ username, senha, nome, permissoes }) {
+  const hash = bcrypt.hashSync(senha, 10);
+  const newId = runInsert(
+    `INSERT INTO usuarios (username, senha_hash, nome, permissoes, ativo) VALUES (?,?,?,?,1)`,
+    [String(username).toLowerCase().trim(), hash, nome, JSON.stringify(permissoes || [])]
+  );
+  return buscarUsuario(newId);
+}
+
+function atualizarUsuario(id, { nome, permissoes, ativo, senha }) {
+  const fields = [], vals = [];
+  if (nome !== undefined)       { fields.push('nome=?');       vals.push(nome); }
+  if (permissoes !== undefined) { fields.push('permissoes=?'); vals.push(JSON.stringify(permissoes)); }
+  if (ativo !== undefined)      { fields.push('ativo=?');      vals.push(ativo ? 1 : 0); }
+  if (senha)                    { fields.push('senha_hash=?'); vals.push(bcrypt.hashSync(senha, 10)); }
+  if (!fields.length) return buscarUsuario(id);
+  vals.push(id);
+  run(`UPDATE usuarios SET ${fields.join(', ')} WHERE id=?`, vals);
+  return buscarUsuario(id);
+}
+
+function deletarUsuario(id) {
+  run(`DELETE FROM usuarios WHERE id=?`, [id]);
+}
+
+module.exports = {
+  setDb, login, verificarToken,
+  listarUsuarios, buscarUsuario, criarUsuario, atualizarUsuario, deletarUsuario,
+  PERMISSOES, PERMISSOES_INFO,
+};
