@@ -139,8 +139,14 @@ function removerOS(id) {
 
 function estatisticas({ dataDe, dataAte } = {}) {
   const cond = [], params = [];
-  if (dataDe) { cond.push("date(criado_em) >= date(?)"); params.push(dataDe); }
-  if (dataAte) { cond.push("date(criado_em) <= date(?)"); params.push(dataAte); }
+  if (dataDe) {
+    const [y,m,d] = dataDe.split('-');
+    cond.push("data >= ?"); params.push(`${d}/${m}/${y}`);
+  }
+  if (dataAte) {
+    const [y,m,d] = dataAte.split('-');
+    cond.push("data <= ?"); params.push(`${d}/${m}/${y}`);
+  }
   const where = cond.length ? 'WHERE ' + cond.join(' AND ') : '';
   return get(`SELECT COUNT(*) AS total,
     SUM(status='Andamento')       AS andamento,
