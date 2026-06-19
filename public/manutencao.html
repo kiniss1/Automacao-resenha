@@ -130,7 +130,8 @@
       <a href="/manutencao.html" class="nav-link active">⚙️ Operação</a>
       <a href="/inspecao.html" class="nav-link">🔍 Inspeção</a>
     </div>
-    <button onclick="abrirRelInsp()" style="background:transparent;border:1px solid #25d366;color:#25d366;border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;white-space:nowrap">📤 Relatório Inspeções</button>
+    <button id="btnRelInsp" onclick="abrirRelInsp()" style="background:transparent;border:1px solid #25d366;color:#25d366;border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;white-space:nowrap">📤 Relatório Inspeções</button>
+    <button onclick="logout()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:.8rem;cursor:pointer" title="Sair">🚪 Sair</button>
   </div>
 </header>
 
@@ -223,6 +224,38 @@
 </div>
 
 <script>
+  // ── Autenticação ──────────────────────────────────────────────────────────
+  const TOKEN = localStorage.getItem('oomc_token');
+  let USUARIO = {};
+  try { USUARIO = JSON.parse(localStorage.getItem('oomc_usuario') || '{}'); } catch(e) {}
+  if (!TOKEN) location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
+
+  function temPermissao(p) { return (USUARIO.permissoes || []).includes(p); }
+
+  function authFetch(url, opts = {}) {
+    opts.headers = { ...(opts.headers||{}), 'x-auth-token': TOKEN };
+    return fetch(url, opts).then(async r => {
+      if (r.status === 401) { localStorage.removeItem('oomc_token'); location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname); throw new Error('Sessão expirada'); }
+      return r;
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('oomc_token');
+    localStorage.removeItem('oomc_usuario');
+    location.href = '/login.html';
+  }
+
+  function aplicarPermissoesUI() {
+    if (!temPermissao('ver_operacao')) {
+      document.body.innerHTML = '<p style="padding:60px;text-align:center;color:var(--muted)">⚠️ Você não tem permissão para acessar esta página.</p>';
+      return false;
+    }
+    if (!temPermissao('enviar_relatorio_operacao')) document.getElementById('btnRelInsp')?.remove();
+    return true;
+  }
+  const _permitido = aplicarPermissoesUI();
+
   let _subs = [];
 
   function toggleQrGrid() {
@@ -387,7 +420,7 @@
       }
       // Salvar id antes de fechar (fecharDelCiModal zera _delCiId)
       const idParaDeletar = _delCiId;
-      const res = await fetch('/api/checkin/' + idParaDeletar, { method: 'DELETE' }).then(r => r.json());
+      const res = await authFetch('/api/checkin/' + idParaDeletar, { method: 'DELETE' }).then(r => r.json());
       if (!res.ok) throw new Error(res.error || 'Erro ao excluir');
       const row = document.getElementById('row-ci-' + idParaDeletar);
       if (row) row.remove();
@@ -405,7 +438,7 @@
     }
   }
 
-  document.getElementById('delCiModal').addEventListener('click', function(e) {
+  document.getElementById('delCiModal')?.addEventListener('click', function(e) {
     if (e.target === this) fecharDelCiModal();
   });
 
@@ -498,7 +531,7 @@
     btn.disabled = true; btn.textContent = '⏳ Enviando...';
     fb.textContent = '';
     try {
-      const res = await fetch('/api/relatorio/inspecoes/enviar', { method: 'POST' }).then(r=>r.json());
+      const res = await authFetch('/api/relatorio/inspecoes/enviar', { method: 'POST' }).then(r=>r.json());
       if (!res.ok) throw new Error(res.error);
       fb.style.color = 'var(--green)'; fb.textContent = '✅ ' + res.msg;
       btn.textContent = '✅ Enviado!';
@@ -509,13 +542,15 @@
     }
   }
 
-  document.getElementById('relInspModal').addEventListener('click', function(e) {
-    if (e.target === this) fecharRelInsp();
-  });
+  if (_permitido) {
+    document.getElementById('relInspModal')?.addEventListener('click', function(e) {
+      if (e.target === this) fecharRelInsp();
+    });
 
-  init();
-  setInterval(loadStats, 30_000);
-  setInterval(loadCheckins, 60_000);
+    init();
+    setInterval(loadStats, 30_000);
+    setInterval(loadCheckins, 60_000);
+  }
 </script>
 </body>
 </html>
