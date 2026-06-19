@@ -1,0 +1,265 @@
+// src/db_autoinspecao.js — Autoinspeção de EPI do colaborador
+let db;
+
+// Itens-padrão da checklist (semeados na primeira execução)
+const ITENS_SEED = [
+  { label: 'AVE/CNH',                                   tipo: 'status_validade', opcoes: ['EM DIA','VENCIDA'],  tem_validade: 1 },
+  { label: 'ACESSO AO SEP',                              tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO'], tem_validade: 1 },
+  { label: 'AVENTAL',                                    tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'BALACLAVA',                                  tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'BOLSA PARA CAPACETE',                        tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'BOLSA PARA EPI',                             tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'BOTA DE SEGURANÇA',                          tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'CALÇA ANTI CHAMAS',                          tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'CAMISA ANTI CHAMAS',                         tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'CAPACETE',                                   tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'CASACO ANTI CHAMAS',                         tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'CINTA ERGONÔMICA',                           tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'CINTO PARAQUEDISTA RF',                      tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'CONJUNTO CONTRA CHUVA RF',                   tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'CRACHÁ',                                     tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'LUVA SUEDINE',                                tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'LUVA CLASSE 00',                             tipo: 'status_validade', opcoes: ['BOA','RUIM'], tem_validade: 1 },
+  { label: 'LUVA CLASSE 02',                             tipo: 'status_validade', opcoes: ['BOA','RUIM'], tem_validade: 1 },
+  { label: 'LUVA CLASSE 04',                             tipo: 'status_validade', opcoes: ['BOA','RUIM'], tem_validade: 1 },
+  { label: 'LUVA COBERTURA CLASSE 00',                   tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'LUVA COBERTURA CLASSE 02',                   tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'LUVA COBERTURA CLASSE 04',                   tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'LUVA HIFLEX',                                tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'LUVA NITRILICA',                             tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'LUVA VAQUETA',                               tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'MASCARA CONTRA GASES',                       tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'FILTRO RESPIRADOR PARA MASCARA DE GASES',    tipo: 'status_validade', opcoes: ['BOM','RUIM'], tem_validade: 1 },
+  { label: 'OCULOS DE SEGURANÇA INCOLOR',                tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'OCULOS DE SEGURANÇA ESCURO',                 tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'PROTETOR AURICULAR',                         tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'PROTETOR FACIAL INCOLOR',                    tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'PROTETOR FACIAL ESCURO CLASSE 2',            tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'PROTETOR SOLAR',                             tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO'], tem_validade: 1 },
+  { label: 'REPELENTE',                                  tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO'], tem_validade: 1 },
+  { label: 'TALABARTE DE POSICIONAMENTO COM MOSQUETÃO',  tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'TALABARTE "Y" COM MOSQUETÃO',                tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'TRAVA QUEDAS COM MOSQUETÃO',                 tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'ÓCULOS AMPLA VISÃO',                         tipo: 'status', opcoes: ['BOM','RUIM'] },
+  { label: 'PERNEIRA/COTURNO',                           tipo: 'status', opcoes: ['BOA','RUIM'] },
+];
+
+// Valores que indicam item irregular (dispara alerta no WhatsApp)
+const VALORES_ALERTA = ['RUIM', 'VENCIDA', 'VENCIDO'];
+
+function setDb(database) {
+  db = database;
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS autoinspecao_campos (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      ordem        INTEGER NOT NULL DEFAULT 0,
+      label        TEXT NOT NULL,
+      tipo         TEXT NOT NULL DEFAULT 'status',
+      opcoes       TEXT,
+      tem_validade INTEGER NOT NULL DEFAULT 0,
+      permite_foto INTEGER NOT NULL DEFAULT 0,
+      ativo        INTEGER NOT NULL DEFAULT 1
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS autoinspecao_preenchimentos (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      matricula    TEXT NOT NULL,
+      nome_tecnico TEXT,
+      data_insp    TEXT NOT NULL,
+      hora_insp    TEXT,
+      criado_em    TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS autoinspecao_respostas (
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      preenchimento_id INTEGER NOT NULL,
+      campo_id         INTEGER NOT NULL,
+      resposta_opcao   TEXT,
+      validade_data    TEXT,
+      observacao_texto TEXT,
+      fotos            TEXT
+    )
+  `);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_autoinsp_resp_pre ON autoinspecao_respostas(preenchimento_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_autoinsp_pre_data ON autoinspecao_preenchimentos(data_insp)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_autoinsp_pre_mat ON autoinspecao_preenchimentos(matricula)`);
+
+  // Semeia os itens-padrão só na primeira execução
+  const count = get(`SELECT COUNT(*) AS n FROM autoinspecao_campos`);
+  if (!count || count.n === 0) {
+    ITENS_SEED.forEach((item, i) => {
+      try {
+        db.run(
+          `INSERT INTO autoinspecao_campos (ordem, label, tipo, opcoes, tem_validade) VALUES (?,?,?,?,?)`,
+          [i, item.label, item.tipo, JSON.stringify(item.opcoes), item.tem_validade ? 1 : 0]
+        );
+      } catch(e) {}
+    });
+    persist();
+    console.log(`[AUTOINSPECAO] ${ITENS_SEED.length} itens padrão cadastrados.`);
+  }
+}
+
+function persist() {
+  try {
+    const fs   = require('fs');
+    const path = require('path');
+    const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'os_local.db');
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+  } catch (err) { console.error('[DB_AUTOINSP] Erro ao salvar:', err.message); }
+}
+
+function run(sql, params = []) { db.run(sql, params); persist(); }
+
+function runInsert(sql, params = []) {
+  db.run(sql, params);
+  const idRow = db.exec('SELECT last_insert_rowid() AS id');
+  const newId = idRow?.[0]?.values?.[0]?.[0];
+  persist();
+  return newId;
+}
+
+function get(sql, params = []) {
+  const s = db.prepare(sql); s.bind(params);
+  const r = s.step() ? s.getAsObject() : null; s.free(); return r;
+}
+
+function all(sql, params = []) {
+  const rows = []; const s = db.prepare(sql); s.bind(params);
+  while (s.step()) rows.push(s.getAsObject()); s.free(); return rows;
+}
+
+function parseCampo(c) {
+  let opcoes = [];
+  try { opcoes = JSON.parse(c.opcoes || '[]'); } catch(e) {}
+  return { ...c, opcoes, tem_validade: !!c.tem_validade, permite_foto: !!c.permite_foto, ativo: !!c.ativo };
+}
+
+// ── Campos (itens da checklist) ────────────────────────────────────────────
+function listarCampos(somenteAtivos = true) {
+  const where = somenteAtivos ? 'WHERE ativo=1' : '';
+  return all(`SELECT * FROM autoinspecao_campos ${where} ORDER BY ordem, id`).map(parseCampo);
+}
+
+function criarCampo({ label, tipo, opcoes, tem_validade, permite_foto, ordem }) {
+  const newId = runInsert(
+    `INSERT INTO autoinspecao_campos (ordem, label, tipo, opcoes, tem_validade, permite_foto) VALUES (?,?,?,?,?,?)`,
+    [ordem ?? 999, label, tipo || 'status', JSON.stringify(opcoes || ['BOM','RUIM']), tem_validade ? 1 : 0, permite_foto ? 1 : 0]
+  );
+  return parseCampo(get(`SELECT * FROM autoinspecao_campos WHERE id=?`, [newId]));
+}
+
+function atualizarCampo(id, { label, tipo, opcoes, tem_validade, permite_foto, ordem, ativo }) {
+  const fields = [], vals = [];
+  if (label !== undefined)        { fields.push('label=?');        vals.push(label); }
+  if (tipo !== undefined)         { fields.push('tipo=?');         vals.push(tipo); }
+  if (opcoes !== undefined)       { fields.push('opcoes=?');       vals.push(JSON.stringify(opcoes)); }
+  if (tem_validade !== undefined) { fields.push('tem_validade=?'); vals.push(tem_validade ? 1 : 0); }
+  if (permite_foto !== undefined) { fields.push('permite_foto=?'); vals.push(permite_foto ? 1 : 0); }
+  if (ordem !== undefined)        { fields.push('ordem=?');        vals.push(ordem); }
+  if (ativo !== undefined)        { fields.push('ativo=?');        vals.push(ativo ? 1 : 0); }
+  if (!fields.length) return parseCampo(get(`SELECT * FROM autoinspecao_campos WHERE id=?`, [id]));
+  vals.push(id);
+  run(`UPDATE autoinspecao_campos SET ${fields.join(', ')} WHERE id=?`, vals);
+  return parseCampo(get(`SELECT * FROM autoinspecao_campos WHERE id=?`, [id]));
+}
+
+function deletarCampo(id) { run(`DELETE FROM autoinspecao_campos WHERE id=?`, [id]); }
+
+// ── Preenchimentos ──────────────────────────────────────────────────────────
+function criarPreenchimento({ matricula, nome_tecnico, data_insp, hora_insp }) {
+  const newId = runInsert(
+    `INSERT INTO autoinspecao_preenchimentos (matricula, nome_tecnico, data_insp, hora_insp) VALUES (?,?,?,?)`,
+    [matricula, nome_tecnico || null, data_insp, hora_insp || null]
+  );
+  return get(`SELECT * FROM autoinspecao_preenchimentos WHERE id=?`, [newId]);
+}
+
+function buscarPreenchimento(id) {
+  return get(`SELECT * FROM autoinspecao_preenchimentos WHERE id=?`, [id]);
+}
+
+function listarPreenchimentos({ matricula, dataDe, dataAte } = {}) {
+  const cond = [], params = [];
+  if (matricula) { cond.push('matricula=?'); params.push(matricula); }
+  if (dataDe)    { cond.push("data_insp >= ?"); params.push(dataDe); }
+  if (dataAte)   { cond.push("data_insp <= ?"); params.push(dataAte); }
+  const where = cond.length ? 'WHERE ' + cond.join(' AND ') : '';
+  return all(`SELECT * FROM autoinspecao_preenchimentos ${where} ORDER BY criado_em DESC LIMIT 300`, params);
+}
+
+// ── Respostas ────────────────────────────────────────────────────────────
+function salvarResposta({ preenchimento_id, campo_id, resposta_opcao, validade_data, observacao_texto }) {
+  const existente = get(`SELECT * FROM autoinspecao_respostas WHERE preenchimento_id=? AND campo_id=?`, [preenchimento_id, campo_id]);
+  if (existente) {
+    run(`UPDATE autoinspecao_respostas SET resposta_opcao=?, validade_data=?, observacao_texto=? WHERE id=?`,
+      [resposta_opcao || null, validade_data || null, observacao_texto || null, existente.id]);
+    return get(`SELECT * FROM autoinspecao_respostas WHERE id=?`, [existente.id]);
+  }
+  const newId = runInsert(
+    `INSERT INTO autoinspecao_respostas (preenchimento_id, campo_id, resposta_opcao, validade_data, observacao_texto) VALUES (?,?,?,?,?)`,
+    [preenchimento_id, campo_id, resposta_opcao || null, validade_data || null, observacao_texto || null]
+  );
+  return get(`SELECT * FROM autoinspecao_respostas WHERE id=?`, [newId]);
+}
+
+function adicionarFoto({ preenchimento_id, campo_id, foto_path }) {
+  const existente = get(`SELECT * FROM autoinspecao_respostas WHERE preenchimento_id=? AND campo_id=?`, [preenchimento_id, campo_id]);
+  if (existente) {
+    let fotos = [];
+    try { fotos = JSON.parse(existente.fotos || '[]'); } catch(e) {}
+    fotos.push(foto_path);
+    run(`UPDATE autoinspecao_respostas SET fotos=? WHERE id=?`, [JSON.stringify(fotos), existente.id]);
+    return get(`SELECT * FROM autoinspecao_respostas WHERE id=?`, [existente.id]);
+  }
+  const newId = runInsert(
+    `INSERT INTO autoinspecao_respostas (preenchimento_id, campo_id, fotos) VALUES (?,?,?)`,
+    [preenchimento_id, campo_id, JSON.stringify([foto_path])]
+  );
+  return get(`SELECT * FROM autoinspecao_respostas WHERE id=?`, [newId]);
+}
+
+function listarRespostas(preenchimento_id) {
+  return all(
+    `SELECT r.*, c.label, c.tipo, c.opcoes FROM autoinspecao_respostas r
+     JOIN autoinspecao_campos c ON c.id = r.campo_id
+     WHERE r.preenchimento_id=? ORDER BY c.ordem`,
+    [preenchimento_id]
+  );
+}
+
+// Itens irregulares de um preenchimento (RUIM / VENCIDA / VENCIDO)
+function listarIrregularidades(preenchimento_id) {
+  return listarRespostas(preenchimento_id).filter(r => VALORES_ALERTA.includes((r.resposta_opcao||'').toUpperCase()));
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────────
+function estatisticasDia(data_insp) {
+  const preenchimentos = listarPreenchimentos({ dataDe: data_insp, dataAte: data_insp });
+  const totalItensRuins = all(
+    `SELECT r.preenchimento_id, r.resposta_opcao, c.label FROM autoinspecao_respostas r
+     JOIN autoinspecao_campos c ON c.id = r.campo_id
+     JOIN autoinspecao_preenchimentos p ON p.id = r.preenchimento_id
+     WHERE p.data_insp = ? AND UPPER(r.resposta_opcao) IN ('RUIM','VENCIDA','VENCIDO')`,
+    [data_insp]
+  );
+  return {
+    total: preenchimentos.length,
+    preenchimentos,
+    irregularidades: totalItensRuins,
+  };
+}
+
+module.exports = {
+  setDb, VALORES_ALERTA,
+  listarCampos, criarCampo, atualizarCampo, deletarCampo,
+  criarPreenchimento, buscarPreenchimento, listarPreenchimentos,
+  salvarResposta, adicionarFoto, listarRespostas, listarIrregularidades,
+  estatisticasDia,
+};
