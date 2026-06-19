@@ -259,6 +259,7 @@
   <div class="header-right">
     <a href="/atividade.html" class="hbtn primary">+ Nova Atividade</a>
     <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
+    <a href="/autoinspecao-dashboard.html" class="hbtn" id="linkAutoinsp" style="display:none">🦺 Autoinspeção</a>
     <button class="hbtn" id="btnRelatorio" onclick="abrirRelatorio()" style="border-color:#25d366;color:#25d366">📤 Relatório</button>
     <a href="/usuarios.html" class="hbtn" id="linkUsuarios" style="display:none">👥 Usuários</a>
     <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Tema: Escuro</button>
@@ -474,6 +475,7 @@
       document.getElementById('btnEnviarWA')?.remove();
     }
     if (temPermissao('gerenciar_usuarios')) document.getElementById('linkUsuarios').style.display = '';
+    if (temPermissao('gerenciar_inspecao')) document.getElementById('linkAutoinsp').style.display = '';
   }
   aplicarPermissoesUI();
 
