@@ -1069,6 +1069,35 @@ function startServer() {
       const irregularidades = autoInsp.listarIrregularidades(preId);
       res.json({ ok: true, data: p, irregularidades });
 
+      // Notifica SEMPRE que uma autoinspeção é registrada (grupo de retorno de atividades)
+      try {
+        const botState = require('./state');
+        if (botState.isReady() && global._waClient) {
+          const link = `${req.protocol}://${req.get('host')}/autoinspecao-detalhe.html?id=${preId}`;
+          const msgRetorno =
+            `🤖 *Sistema de Monitoramento Automático*\n` +
+            `✅ Nova inspeção registrada no sistema\n` +
+            `👷 ${p.nome_tecnico || p.matricula}\n` +
+            `📅 ${p.data_insp}\n` +
+            `📄 ${link}\n\n` +
+            `_Gerado automaticamente pelo sistema OOMC_`;
+
+          const grupoRetornoNome = process.env.GRUPO_RETORNO_NOME || process.env.GRUPO_NOME || 'Resenha';
+          if (global._grupoRetornoId) {
+            const chat = await global._waClient.getChatById(global._grupoRetornoId);
+            await chat.sendMessage(msgRetorno);
+          } else {
+            const chats = await global._waClient.getChats();
+            const grupo = chats.find(c => c.isGroup && c.name === grupoRetornoNome);
+            if (grupo) { global._grupoRetornoId = grupo.id._serialized; await grupo.sendMessage(msgRetorno); }
+            else console.warn('[AUTOINSPECAO] Grupo "' + grupoRetornoNome + '" não encontrado. Verifique GRUPO_RETORNO_NOME no .env');
+          }
+        }
+      } catch(e) {
+        console.error('[AUTOINSPECAO] Erro ao notificar grupo de retorno:', e.message);
+        if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoRetornoId = null;
+      }
+
       if (irregularidades.length) {
         try {
           const botState = require('./state');
