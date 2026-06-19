@@ -59,6 +59,10 @@ async function init() {
   const auth = require('./db_auth');
   auth.setDb(db);
 
+  // Inicializa tabelas de autoinspeção de EPI
+  const autoInsp = require('./db_autoinspecao');
+  autoInsp.setDb(db);
+
   persist();
   console.log('[DB] Banco iniciado:', DB_PATH);
 }
