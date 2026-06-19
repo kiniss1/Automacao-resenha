@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Login — OOMC</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1a19;--surface:#112220;--border:#1e3836;
+    --text:#e8f4f3;--muted:#7aaba7;
+    --primary:#009B91;--primary-dark:#005852;
+    --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 32px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:18px}
+  .logo{width:56px;height:56px;background:var(--primary);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px}
+  h1{font-size:1.15rem;font-weight:800;text-align:center}
+  p.sub{font-size:.78rem;color:var(--muted);text-align:center;margin-top:-8px}
+  .field label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+  .field input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:11px 13px;font-size:.92rem;outline:none}
+  .field input:focus{border-color:var(--primary)}
+  .btn{background:var(--primary);color:#fff;border:none;border-radius:9px;padding:12px;font-size:.92rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+  .btn:hover{opacity:.88}
+  .btn:disabled{opacity:.4;cursor:default}
+  .err{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:8px;padding:9px 12px;font-size:.8rem;display:none}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
+      </svg>
+    </div>
+    <h1>Sistema OOMC</h1>
+    <p class="sub">Manutenção Alta Tensão</p>
+    <div class="err" id="err"></div>
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" id="username" autocomplete="username" onkeydown="if(event.key==='Enter') fazerLogin()"/>
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="senha" autocomplete="current-password" onkeydown="if(event.key==='Enter') fazerLogin()"/>
+    </div>
+    <button class="btn" id="btnLogin" onclick="fazerLogin()">Entrar</button>
+  </div>
+
+<script>
+  async function fazerLogin() {
+    const username = document.getElementById('username').value.trim();
+    const senha    = document.getElementById('senha').value;
+    const errEl    = document.getElementById('err');
+    const btn      = document.getElementById('btnLogin');
+    errEl.style.display = 'none';
+    if (!username || !senha) {
+      errEl.textContent = 'Informe usuário e senha.';
+      errEl.style.display = 'block';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Entrando...';
+    try {
+      const r = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, senha })
+      }).then(r => r.json());
+      if (!r.ok) throw new Error(r.error || 'Usuário ou senha incorretos.');
+      localStorage.setItem('oomc_token', r.token);
+      localStorage.setItem('oomc_usuario', JSON.stringify(r.usuario));
+      const redirect = new URLSearchParams(location.search).get('redirect') || '/';
+      location.href = redirect;
+    } catch(e) {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  }
+</script>
+</body>
+</html>
