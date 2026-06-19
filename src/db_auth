@@ -37,6 +37,14 @@ function setDb(database) {
   `);
   db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_username ON usuarios(username)`);
 
+  // Migrações — colunas novas pra rastrear login/atividade/desconexão forçada
+  const migrations = [
+    `ALTER TABLE usuarios ADD COLUMN token_versao INTEGER NOT NULL DEFAULT 0`,
+    `ALTER TABLE usuarios ADD COLUMN ultimo_login TEXT`,
+    `ALTER TABLE usuarios ADD COLUMN ultima_atividade TEXT`,
+  ];
+  for (const m of migrations) { try { db.run(m); } catch(e) { /* coluna já existe */ } }
+
   // Cria usuário admin padrão na primeira vez que o sistema rodar
   const count = get(`SELECT COUNT(*) as n FROM usuarios`);
   if (!count || count.n === 0) {
@@ -83,7 +91,13 @@ function all(sql, params = []) {
 function parsePermissoes(u) {
   let permissoes = [];
   try { permissoes = JSON.parse(u.permissoes || '[]'); } catch(e) {}
-  return { id: u.id, username: u.username, nome: u.nome, permissoes, ativo: !!u.ativo, criado_em: u.criado_em };
+  const ONLINE_LIMITE_MS = 3 * 60 * 1000; // considera "online" se ativo nos últimos 3min
+  const online = !!u.ultima_atividade && (Date.now() - new Date(u.ultima_atividade.replace(' ','T')).getTime()) < ONLINE_LIMITE_MS;
+  return {
+    id: u.id, username: u.username, nome: u.nome, permissoes, ativo: !!u.ativo,
+    criado_em: u.criado_em, ultimo_login: u.ultimo_login || null,
+    ultima_atividade: u.ultima_atividade || null, online,
+  };
 }
 
 // ── Login / Token ────────────────────────────────────────────────────────
@@ -93,8 +107,10 @@ function login(username, senha) {
   if (!u.ativo) return { ok: false, error: 'Este usuário está desativado.' };
   if (!bcrypt.compareSync(senha, u.senha_hash)) return { ok: false, error: 'Usuário ou senha incorretos.' };
 
-  const usuario = parsePermissoes(u);
-  const token = jwt.sign({ id: u.id, username: u.username }, JWT_SECRET, { expiresIn: '12h' });
+  run(`UPDATE usuarios SET ultimo_login=datetime('now','localtime'), ultima_atividade=datetime('now','localtime') WHERE id=?`, [u.id]);
+  const atualizado = get(`SELECT * FROM usuarios WHERE id=?`, [u.id]);
+  const usuario = parsePermissoes(atualizado);
+  const token = jwt.sign({ id: u.id, username: u.username, tv: u.token_versao || 0 }, JWT_SECRET, { expiresIn: '12h' });
   return { ok: true, token, usuario };
 }
 
@@ -104,8 +120,26 @@ function verificarToken(token) {
     const payload = jwt.verify(token, JWT_SECRET);
     const u = get(`SELECT * FROM usuarios WHERE id=?`, [payload.id]);
     if (!u || !u.ativo) return null;
+    // Se o admin forçou desconexão (incrementou token_versao), invalida tokens antigos
+    if ((payload.tv || 0) !== (u.token_versao || 0)) return null;
     return parsePermissoes(u);
   } catch(e) { return null; }
+}
+
+// Atualiza "última atividade" com throttle em memória (evita gravar no disco a cada request)
+const _ultimaGravacaoAtividade = {};
+function registrarAtividade(id) {
+  const agora = Date.now();
+  if (_ultimaGravacaoAtividade[id] && (agora - _ultimaGravacaoAtividade[id]) < 60_000) return;
+  _ultimaGravacaoAtividade[id] = agora;
+  try { run(`UPDATE usuarios SET ultima_atividade=datetime('now','localtime') WHERE id=?`, [id]); }
+  catch(e) {}
+}
+
+// Invalida imediatamente todos os tokens ativos do usuário (força novo login)
+function forcarDesconexao(id) {
+  run(`UPDATE usuarios SET token_versao=token_versao+1, ultima_atividade=NULL WHERE id=?`, [id]);
+  return buscarUsuario(id);
 }
 
 // ── CRUD usuários (admin) ───────────────────────────────────────────────
@@ -144,7 +178,7 @@ function deletarUsuario(id) {
 }
 
 module.exports = {
-  setDb, login, verificarToken,
+  setDb, login, verificarToken, registrarAtividade, forcarDesconexao,
   listarUsuarios, buscarUsuario, criarUsuario, atualizarUsuario, deletarUsuario,
   PERMISSOES, PERMISSOES_INFO,
 };
