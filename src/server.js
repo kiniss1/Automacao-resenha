@@ -660,6 +660,7 @@ function startServer() {
     const usuario = auth.verificarToken(token);
     if (!usuario) return res.status(401).json({ ok: false, error: 'Não autenticado. Faça login novamente.' });
     req.user = usuario;
+    auth.registrarAtividade(usuario.id);
     next();
   }
 
@@ -722,6 +723,16 @@ function startServer() {
       }
       auth.deletarUsuario(parseInt(req.params.id));
       res.json({ ok: true });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/auth/usuarios/:id/desconectar', requireAuth, requirePermissao('gerenciar_usuarios'), (req, res) => {
+    try {
+      if (req.user.id === parseInt(req.params.id)) {
+        return res.status(400).json({ ok: false, error: 'Você não pode desconectar a si mesmo.' });
+      }
+      const u = auth.forcarDesconexao(parseInt(req.params.id));
+      res.json({ ok: true, data: u });
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
