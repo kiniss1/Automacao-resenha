@@ -484,8 +484,23 @@ function startServer() {
         ordens,
       });
 
-      if (!global._waClient || !global._grupoRetornoId) {
-        return res.status(503).json({ ok: false, error: 'Bot WhatsApp não conectado' });
+      if (!global._waClient) {
+        // Aguarda até 15s pelo _waClient ser atribuído após scan do QR
+        await new Promise((resolve, reject) => {
+          let elapsed = 0;
+          const t = setInterval(() => {
+            if (global._waClient) { clearInterval(t); resolve(); }
+            else if ((elapsed += 500) >= 15000) { clearInterval(t); reject(new Error('Bot WhatsApp não conectado')); }
+          }, 500);
+        });
+      }
+
+      if (!global._grupoRetornoId) {
+        const grupoNome = process.env.GRUPO_RETORNO_NOME || process.env.GRUPO_NOME || 'Resenha';
+        const chats = await global._waClient.getChats();
+        const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+        if (!grupo) return res.status(404).json({ ok: false, error: `Grupo "${grupoNome}" não encontrado.` });
+        global._grupoRetornoId = grupo.id._serialized;
       }
 
       const chat = await global._waClient.getChatById(global._grupoRetornoId);
@@ -671,7 +686,7 @@ function startServer() {
   });
 
   app.get('/api/bot-status', (_req, res) => {
-    res.json({ ready: state.isReady(), hasQR: !!state.getQR() });
+    res.json({ ready: state.isReady() && !!global._waClient, hasQR: !!state.getQR() });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1082,15 +1097,15 @@ function startServer() {
             `📄 ${link}\n\n` +
             `_Gerado automaticamente pelo sistema OOMC_`;
 
-          const grupoRetornoNome = process.env.GRUPO_RETORNO_NOME || process.env.GRUPO_NOME || 'Resenha';
-          if (global._grupoRetornoId) {
-            const chat = await global._waClient.getChatById(global._grupoRetornoId);
+          const grupoRetornoNome = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+          if (global._grupoRelId) {
+            const chat = await global._waClient.getChatById(global._grupoRelId);
             await chat.sendMessage(msgRetorno);
           } else {
             const chats = await global._waClient.getChats();
             const grupo = chats.find(c => c.isGroup && c.name === grupoRetornoNome);
-            if (grupo) { global._grupoRetornoId = grupo.id._serialized; await grupo.sendMessage(msgRetorno); }
-            else console.warn('[AUTOINSPECAO] Grupo "' + grupoRetornoNome + '" não encontrado. Verifique GRUPO_RETORNO_NOME no .env');
+            if (grupo) { global._grupoRelId = grupo.id._serialized; await grupo.sendMessage(msgRetorno); }
+            else console.warn('[AUTOINSPECAO] Grupo "' + grupoRetornoNome + '" não encontrado. Verifique GRUPO_RELATORIO_NOME no .env');
           }
         }
       } catch(e) {
