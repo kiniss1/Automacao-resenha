@@ -44,6 +44,22 @@
     .dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
     .dot.online{background:var(--primary);animation:pulse 2s infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .menu-wrap{position:relative}
+    .menu-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:600;transition:all .12s}
+    .menu-btn:hover,.menu-btn.open{border-color:var(--primary);color:var(--primary)}
+    .menu-btn .arrow{font-size:9px;color:var(--muted);transition:transform .15s}
+    .menu-btn.open .arrow{transform:rotate(180deg)}
+    .menu-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:10px;min-width:210px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:200;display:none}
+    .menu-dropdown.show{display:block;animation:menuIn .12s ease}
+    @keyframes menuIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+    .menu-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:.82rem;color:var(--muted);cursor:pointer;text-decoration:none;transition:all .1s;background:none;border:none;width:100%;text-align:left}
+    .menu-item:hover{background:var(--surface2);color:var(--text)}
+    .menu-item .ico{width:18px;text-align:center}
+    .menu-item.highlight{color:var(--primary);font-weight:600}
+    .menu-item.highlight:hover{background:var(--primary-bg)}
+    .menu-item.danger{color:var(--red)}
+    .menu-item.danger:hover{background:rgba(224,90,78,.08)}
+    .menu-divider{height:1px;background:var(--border);margin:4px 0}
     .stats-bar{display:flex;gap:10px;padding:16px 20px;flex-wrap:wrap}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;min-width:80px;text-align:center;transition:border-color .12s;cursor:default}
     .stat-card:hover{border-color:var(--border2)}
@@ -257,16 +273,29 @@
     </div>
   </div>
   <div class="header-right">
-    <a href="/atividade.html" class="hbtn primary">+ Nova Atividade</a>
-    <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
-    <a href="/autoinspecao-dashboard.html" class="hbtn" id="linkAutoinsp" style="display:none">🦺 Autoinspeção</a>
-    <button class="hbtn" id="btnRelatorio" onclick="abrirRelatorio()" style="border-color:#25d366;color:#25d366">📤 Relatório</button>
-    <a href="/usuarios.html" class="hbtn" id="linkUsuarios" style="display:none">👥 Usuários</a>
-    <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Tema: Escuro</button>
-    <button class="hbtn" onclick="logout()" title="Sair">🚪 Sair</button>
     <div class="bot-badge">
       <div class="dot" id="botDot"></div>
       <span id="botLabel">Verificando...</span>
+    </div>
+    <div class="menu-wrap">
+      <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+        ⚙️ Menu <span class="arrow">▼</span>
+      </button>
+      <div class="menu-dropdown" id="menuDropdown">
+        <a href="/atividade.html" class="menu-item highlight"><span class="ico">➕</span> Nova Atividade</a>
+        <div class="menu-divider"></div>
+        <a href="/manutencao.html" class="menu-item"><span class="ico">⚙️</span> Operação</a>
+        <a href="/inspecao.html" class="menu-item"><span class="ico">🔍</span> Inspeção SE</a>
+        <a href="/autoinspecao-dashboard.html" class="menu-item" id="linkAutoinsp" style="display:none"><span class="ico">🦺</span> Autoinspeção</a>
+        <div class="menu-divider"></div>
+        <a href="/usuarios.html" class="menu-item" id="linkUsuarios" style="display:none"><span class="ico">👥</span> Usuários</a>
+        <a href="/colaboradores.html" class="menu-item" id="linkColabs" style="display:none"><span class="ico">👷</span> Colaboradores</a>
+        <div class="menu-divider"></div>
+        <button class="menu-item" id="btnRelatorio" onclick="fecharMenu();abrirRelatorio()" style="display:none"><span class="ico" style="color:#25d366">📤</span> Relatório</button>
+        <button class="menu-item" onclick="toggleTema()"><span class="ico">🌙</span> <span id="temaLabel">Tema: Escuro</span></button>
+        <div class="menu-divider"></div>
+        <button class="menu-item danger" onclick="logout()"><span class="ico">🚪</span> Sair</button>
+      </div>
     </div>
   </div>
 </header>
@@ -473,11 +502,23 @@
     if (!temPermissao('enviar_relatorio_painel')) {
       document.getElementById('btnRelatorio')?.remove();
       document.getElementById('btnEnviarWA')?.remove();
+    } else {
+      document.getElementById('btnRelatorio').style.display = '';
     }
-    if (temPermissao('gerenciar_usuarios')) document.getElementById('linkUsuarios').style.display = '';
-    if (temPermissao('gerenciar_inspecao')) document.getElementById('linkAutoinsp').style.display = '';
+    if (temPermissao('gerenciar_usuarios'))  { document.getElementById('linkUsuarios').style.display = ''; document.getElementById('linkColabs').style.display = ''; }
+    if (temPermissao('gerenciar_inspecao'))  document.getElementById('linkAutoinsp').style.display = '';
   }
   aplicarPermissoesUI();
+
+  function toggleMenu() {
+    document.getElementById('menuBtn').classList.toggle('open');
+    document.getElementById('menuDropdown').classList.toggle('show');
+  }
+  function fecharMenu() {
+    document.getElementById('menuBtn').classList.remove('open');
+    document.getElementById('menuDropdown').classList.remove('show');
+  }
+  document.addEventListener('click', e => { if (!e.target.closest('.menu-wrap')) fecharMenu(); });
 
   const STATUS = ['Andamento', 'Etapa Concluída', 'Concluído', 'Cancelado'];
   let _debounce, _unidades = new Set(), _currentId = null, _currentOs = null;
@@ -986,13 +1027,15 @@
 
   function toggleTema(){
     const isLight=document.body.classList.toggle('light');
-    document.getElementById('btnTema').textContent=isLight?'☀️ Tema: Claro':'🌙 Tema: Escuro';
+    const lbl = document.getElementById('temaLabel');
+    if (lbl) lbl.textContent = isLight ? 'Tema: Claro' : 'Tema: Escuro';
     localStorage.setItem('tema',isLight?'light':'dark');
+    fecharMenu();
   }
   if(localStorage.getItem('tema')==='light'){
     document.body.classList.add('light');
     document.addEventListener('DOMContentLoaded',()=>{
-      const b=document.getElementById('btnTema');if(b)b.textContent='☀️ Tema: Claro';
+      const lbl=document.getElementById('temaLabel'); if(lbl) lbl.textContent='Tema: Claro';
     });
   }
 
