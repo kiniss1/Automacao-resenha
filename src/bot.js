@@ -4,13 +4,15 @@ const qrcode = require('qrcode');
 const { parseOS } = require('./parser');
 const db = require('./db');
 const state = require('./state');
+const fs   = require('fs');
+const path = require('path');
 
 const GRUPO_NOME = process.env.GRUPO_NOME || 'Resenha';
 const DATA_PATH  = process.env.WA_DATA_PATH || '/data/.wwebjs_auth';
 const EXEC_PATH  = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 
 const MAX_RETRY = 3;
-const RETRY_DELAY = 2000; // ms
+const RETRY_DELAY = 2000;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -34,13 +36,11 @@ async function processarMensagem(msg) {
     const chat = await msg.getChat();
     console.log(`[MSG] Chat: "${chat.name}" | isGroup: ${chat.isGroup}`);
     if (!chat.isGroup || chat.name !== GRUPO_NOME) return;
-    // Ignora TODAS as mensagens enviadas pelo próprio bot
     if (msg.fromMe) return;
 
     const resultado = parseOS(msg.body);
-    if (!resultado) return; // mensagem comum, não é resenha
+    if (!resultado) return;
 
-    // Resenha sem 🧰 — avisa no grupo
     if (resultado.erro) {
       await msg.reply(resultado.aviso);
       return;
@@ -60,24 +60,16 @@ async function processarMensagem(msg) {
       }
     }
 
-    // Monta resposta
     const linhas = [];
-
     if (registradas.length) {
       linhas.push(`✅ *${registradas.length} OS(s) registrada(s):*`);
       linhas.push(...registradas);
     }
-
-    if (falhas.length) {
-      linhas.push(`\n❌ Falha ao salvar: ${falhas.join(', ')}`);
-    }
-
-    // Avisos de campos ausentes ou status não reconhecido
+    if (falhas.length) linhas.push(`\n❌ Falha ao salvar: ${falhas.join(', ')}`);
     if (avisos.length) {
       linhas.push(`\n⚠️ *Atenção:*`);
       avisos.forEach(a => linhas.push(`  ${a}`));
     }
-
     if (linhas.length) await msg.reply(linhas.join('\n'));
 
   } catch (err) {
@@ -86,36 +78,30 @@ async function processarMensagem(msg) {
 }
 
 function limparLockChromium() {
-  // Remove arquivo de lock que o Chromium deixa ao ser encerrado abruptamente
-  const lockFiles = [
-    '/data/.wwebjs_auth/Default/SingletonLock',
-    '/data/.wwebjs_auth/Default/SingletonSocket',
-    '/data/.wwebjs_auth/Default/SingletonCookie',
-  ];
-  lockFiles.forEach(f => {
-    try {
-      if (require('fs').existsSync(f)) {
-        require('fs').unlinkSync(f);
-        console.log('[BOT] Lock removido:', f);
-      }
-    } catch (e) { /* silencioso */ }
-  });
+  const lockNames = ['SingletonLock', 'SingletonSocket', 'SingletonCookie'];
 
-  // Remove também qualquer SingletonLock dentro de subpastas do perfil
-  try {
-    const base = '/data/.wwebjs_auth';
-    const fs = require('fs');
-    if (fs.existsSync(base)) {
-      fs.readdirSync(base).forEach(dir => {
-        const lock = require('path').join(base, dir, 'SingletonLock');
-        if (fs.existsSync(lock)) { fs.unlinkSync(lock); console.log('[BOT] Lock removido:', lock); }
-      });
-    }
-  } catch (e) { /* silencioso */ }
+  function removerLocksEm(dir) {
+    try {
+      if (!fs.existsSync(dir)) return;
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          removerLocksEm(fullPath);
+        } else if (lockNames.includes(entry.name)) {
+          try { fs.unlinkSync(fullPath); console.log('[BOT] Lock removido:', fullPath); }
+          catch(e) { console.warn('[BOT] Não foi possível remover lock:', fullPath); }
+        }
+      }
+    } catch(e) { /* silencioso */ }
+  }
+
+  removerLocksEm(DATA_PATH);
 }
 
 function startBot() {
   limparLockChromium();
+
   const client = new Client({
     authStrategy: new LocalAuth({ dataPath: DATA_PATH }),
     puppeteer: {
@@ -172,7 +158,6 @@ function startBot() {
     state.clearQR();
     global._waClient = client;
 
-    // Salva o chat ID do grupo para envio direto
     try {
       const chats = await client.getChats();
       const grupo = chats.find(c => c.isGroup && c.name === GRUPO_NOME);
@@ -196,15 +181,19 @@ function startBot() {
 
   client.on('disconnected', (reason) => {
     state.setReady(false);
+    global._waClient = null;
+    global._grupoId = null;
+    global._grupoInspId = null;
+    global._grupoCheckinId = null;
+    global._grupoRetornoId = null;
     console.warn('[BOT] Desconectado:', reason);
-    // Tenta reinicializar após 10s
     setTimeout(() => {
+      limparLockChromium();
       console.log('[BOT] Tentando reconectar...');
       client.initialize().catch(err => console.error('[BOT] Erro ao reconectar:', err.message));
     }, 10000);
   });
 
-  // Leitura de mensagens desabilitada — registros feitos exclusivamente pelo formulário web
   // client.on('message', processarMensagem);
 
   client.initialize();
