@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Inspeção — Detalhe — OOMC</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1a19;--surface:#112220;--border:#1e3836;
+    --text:#e8f4f3;--muted:#7aaba7;
+    --primary:#009B91;--primary-bg:#0d2e2c;
+    --green:#009B91;--green-bg:#0d2e2c;--green-border:#005852;
+    --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px}
+  .wrap{max-width:800px;margin:0 auto}
+  .header-card{background:var(--primary);border-radius:12px;padding:18px 20px;margin-bottom:20px;color:#fff}
+  .header-card .tag{font-size:.7rem;font-weight:700;letter-spacing:.1em;opacity:.8;margin-bottom:4px}
+  .header-card .nome{font-size:1.2rem;font-weight:800}
+  .header-card .meta{font-size:.8rem;opacity:.85;margin-top:6px}
+  
+  .campo-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+  .campo-titulo{font-weight:700;font-size:.9rem;margin-bottom:8px}
+  .campo-resp{font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .campo-resp b{color:var(--text);font-weight:600}
+  
+  .fotos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:8px}
+  .foto-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:opacity .15s}
+  .foto-card:hover{opacity:.8}
+  .foto-card img{width:100%;height:120px;object-fit:cover}
+  
+  .modal-foto{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;display:none}
+  .modal-foto.show{display:flex}
+  .modal-foto img{max-width:90vw;max-height:90vh;object-fit:contain}
+  
+  .vazio{text-align:center;color:var(--muted);padding:30px 20px}
+  .spinner{text-align:center;padding:60px 20px}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="spinner">Carregando...</div>
+</div>
+
+<div class="modal-foto" id="modalFoto" onclick="if(event.target===this) this.classList.remove('show')">
+  <img id="modalFotoImg"/>
+</div>
+
+<script>
+  function verFoto(src) {
+    document.getElementById('modalFotoImg').src = src;
+    document.getElementById('modalFoto').classList.add('show');
+  }
+
+  async function init() {
+    const id = new URLSearchParams(location.search).get('id');
+    const wrap = document.getElementById('wrap');
+    if (!id) { wrap.innerHTML = '<p class="vazio">Nenhuma inspeção especificada.</p>'; return; }
+    try {
+      const r = await fetch('/api/inspecao/preenchimentos/' + id).then(r=>r.json());
+      if (!r.ok || !r.data) { wrap.innerHTML = '<p class="vazio">Inspeção não encontrada.</p>'; return; }
+      const p = r.data;
+      const campos = (p.campos || []);
+      const respostas = (p.respostas || []);
+
+      wrap.innerHTML = `
+        <div class="header-card">
+          <div class="tag">FICHA DE INSPEÇÃO</div>
+          <div class="nome">${p.nome_se || p.codigo_se}</div>
+          <div class="meta">Técnico: ${p.nome_tecnico || '—'} (Mat. ${p.matricula}) · ${p.data_insp}${p.hora_insp ? ' às ' + p.hora_insp : ''}</div>
+        </div>
+
+        <div style="margin-bottom:20px">
+          ${respostas.length ? respostas.map(resp => {
+            const campo = campos.find(c => c.id === resp.campo_id);
+            if (!campo) return '';
+            let fotos = [];
+            try { fotos = resp.fotos ? JSON.parse(resp.fotos) : []; } catch(e) {}
+            
+            return `
+              <div class="campo-wrap">
+                <div class="campo-titulo">${campo.nome_se || campo.label || 'Sem título'}</div>
+                <div class="campo-resp">
+                  ${resp.resposta_texto ? `<div><b>Texto:</b> ${resp.resposta_texto}</div>` : ''}
+                  ${resp.resposta_opcao ? `<div><b>Opção:</b> ${resp.resposta_opcao}</div>` : ''}
+                </div>
+                ${fotos.length ? `
+                  <div class="fotos-grid">
+                    ${fotos.map(f => `<div class="foto-card" onclick="verFoto('/api/inspecao/foto/${f}')"><img src="/api/inspecao/foto/${f}" loading="lazy"/></div>`).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('') : '<p class="vazio">Nenhum campo respondido.</p>'}
+        </div>
+
+        ${p.obs_geral ? `
+          <div class="campo-wrap">
+            <div class="campo-titulo">Observação Geral</div>
+            <div class="campo-resp">${p.obs_geral}</div>
+          </div>
+        ` : ''}
+      `;
+    } catch(e) { wrap.innerHTML = '<p class="vazio">Erro ao carregar: ' + e.message + '</p>'; }
+  }
+  init();
+</script>
+</body>
+</html>
