@@ -394,20 +394,20 @@ function startServer() {
           const ordensComLink = registradas.map(r => ({ ...r, aprLink: baseUrl + '/apr.html?os=' + encodeURIComponent(r.os) }));
           const msgWA = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: ordensComLink });
 
-          if (global._grupoId) {
-            const chat = await global._waClient.getChatById(global._grupoId);
+          if (global._grupoRetornoId) {
+            const chat = await global._waClient.getChatById(global._grupoRetornoId);
             await chat.sendMessage(msgWA);
             console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo.');
           } else {
-            const grupoNome = process.env.GRUPO_NOME || 'Resenha';
+            const grupoNome = process.env.GRUPO_RETORNO_NOME || process.env.GRUPO_NOME || 'Resenha';
             const chats = await global._waClient.getChats();
             const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
             if (grupo) {
-              global._grupoId = grupo.id._serialized;
+              global._grupoRetornoId = grupo.id._serialized;
               await grupo.sendMessage(msgWA);
               console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo (fallback).');
             } else {
-              console.warn('[ATIVIDADE] ⚠️ Grupo não encontrado. GRUPO_NOME =', grupoNome);
+              console.warn('[ATIVIDADE] ⚠️ Grupo não encontrado. GRUPO_RETORNO_NOME =', grupoNome);
             }
           }
         } else {
@@ -484,11 +484,11 @@ function startServer() {
         ordens,
       });
 
-      if (!global._waClient || !global._grupoId) {
+      if (!global._waClient || !global._grupoRetornoId) {
         return res.status(503).json({ ok: false, error: 'Bot WhatsApp não conectado' });
       }
 
-      const chat = await global._waClient.getChatById(global._grupoId);
+      const chat = await global._waClient.getChatById(global._grupoRetornoId);
       await chat.sendMessage(msgWA);
       res.json({ ok: true, msg: 'Resumo enviado ao grupo!' });
     } catch(e) {
@@ -1262,8 +1262,17 @@ function startServer() {
   app.post('/api/relatorio/enviar', requireAuth, requirePermissao('enviar_relatorio_painel'), async (req, res) => {
     try {
       const botState = require('./state');
+
+      // Aguarda até 10s pelo bot ficar pronto (caso tenha acabado de escanear o QR)
       if (!botState.isReady() || !global._waClient) {
-        return res.status(503).json({ ok: false, error: 'Bot WhatsApp não conectado' });
+        await new Promise((resolve, reject) => {
+          const MAX = 10000, STEP = 500;
+          let elapsed = 0;
+          const t = setInterval(() => {
+            if (botState.isReady() && global._waClient) { clearInterval(t); resolve(); }
+            else if ((elapsed += STEP) >= MAX) { clearInterval(t); reject(new Error('Bot WhatsApp não conectado')); }
+          }, STEP);
+        });
       }
 
       // Data/hora de Brasília (UTC-3)
@@ -1344,16 +1353,16 @@ function startServer() {
 
       const msg = linhas.join('\n').trim();
 
-      // Envia ao grupo
-      if (global._grupoId) {
-        const chat = await global._waClient.getChatById(global._grupoId);
+      // Envia ao grupo de relatórios (separado do grupo de monitoramento de resenha)
+      const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+      if (global._grupoRelId) {
+        const chat = await global._waClient.getChatById(global._grupoRelId);
         await chat.sendMessage(msg);
       } else {
-        const GRUPO = process.env.GRUPO_NOME || 'Resenha';
         const chats = await global._waClient.getChats();
-        const grupo  = chats.find(c => c.isGroup && c.name === GRUPO);
-        if (!grupo) return res.status(404).json({ ok: false, error: 'Grupo não encontrado' });
-        global._grupoId = grupo.id._serialized;
+        const grupo  = chats.find(c => c.isGroup && c.name === GRUPO_REL);
+        if (!grupo) return res.status(404).json({ ok: false, error: `Grupo "${GRUPO_REL}" não encontrado. Verifique GRUPO_RELATORIO_NOME.` });
+        global._grupoRelId = grupo.id._serialized;
         await grupo.sendMessage(msg);
       }
 
