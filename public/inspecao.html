@@ -212,6 +212,7 @@
   </div>
   <div class="hdr-right">
     <span id="userBadge">👤 Supervisor</span>
+    <a href="/autoinspecao-dashboard.html" class="hbtn">🦺 Autoinspeção</a>
     <a href="/manutencao.html" class="hbtn">⚙️ Operação</a>
     <a href="/" class="hbtn">🔧 Painel OS</a>
     <button id="btnTema" class="hbtn" onclick="toggleTema()">🌙 Tema</button>
@@ -290,6 +291,7 @@
   <div class="dash-filters" style="margin-bottom:16px">
     <input type="date" id="hDe"/>
     <input type="date" id="hAte"/>
+    <input type="text" id="hMatricula" inputmode="numeric" placeholder="Matrícula" style="width:130px"/>
     <select id="hSE"><option value="">Todas as SEs</option></select>
     <select id="hStatus">
       <option value="">Todos os status</option>
@@ -1036,11 +1038,13 @@ async function loadHistorico() {
   const ate = document.getElementById('hAte').value;
   const se  = document.getElementById('hSE').value;
   const st  = document.getElementById('hStatus').value;
+  const mat = document.getElementById('hMatricula').value.trim();
   const params = new URLSearchParams();
   if (de)  params.set('dataDe', de);
   if (ate) params.set('dataAte', ate);
   if (se)  params.set('codigo_se', se);
   if (st)  params.set('status', st);
+  if (mat) params.set('matricula', mat);
   document.getElementById('histTbody').innerHTML = '<tr><td colspan="8"><div class="spinner"></div></td></tr>';
   try {
     const r = await fetch('/api/inspecao/preenchimentos?' + params).then(r=>r.json());
@@ -1067,8 +1071,9 @@ async function loadHistorico() {
 
 function limparFiltrosHist() {
   ['hDe','hAte'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('hSE').value     = '';
-  document.getElementById('hStatus').value = '';
+  document.getElementById('hSE').value        = '';
+  document.getElementById('hStatus').value    = '';
+  document.getElementById('hMatricula').value = '';
 }
 
 async function apagarPreenchimento(id) {
