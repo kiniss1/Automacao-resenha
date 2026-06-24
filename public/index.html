@@ -1099,7 +1099,11 @@
       document.getElementById('indNum').textContent = d.dias;
       document.getElementById('indH1').value = d.horario1 || '07:00';
       document.getElementById('indH2').value = d.horario2 || '';
-      const ultimo = d.ultimo_disparo ? 'Último: ' + d.ultimo_disparo.slice(0,16) : 'Nenhum disparo ainda';
+      const ultimo = d.ultimo_disparo ? (() => {
+        const [data, hora] = d.ultimo_disparo.slice(0,16).split(' ');
+        const [y,m,dd] = data.split('-');
+        return `Último: ${dd}/${m}/${y} às ${hora}`;
+      })() : 'Nenhum disparo ainda';
       document.getElementById('indSub').textContent = ultimo;
     } catch(e) {}
   }
