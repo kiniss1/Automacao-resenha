@@ -63,6 +63,10 @@ async function init() {
   const autoInsp = require('./db_autoinspecao');
   autoInsp.setDb(db);
 
+  // Inicializa contador de dias sem desarme
+  const indicador = require('./db_indicador');
+  indicador.setDb(db);
+
   persist();
   console.log('[DB] Banco iniciado:', DB_PATH);
 }
