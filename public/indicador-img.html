@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:transparent}</style>
+</head>
+<body>
+<canvas id="c" width="600" height="400"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 600, H = 400;
+const DIAS = window._DIAS || 0;
+const DATA = window._DATA || '';
+
+const grad = ctx.createLinearGradient(0, 0, 0, H);
+grad.addColorStop(0, '#0d2e2c');
+grad.addColorStop(1, '#061a19');
+ctx.fillStyle = grad;
+ctx.roundRect(0, 0, W, H, 20);
+ctx.fill();
+
+ctx.strokeStyle = '#EB8C0A';
+ctx.lineWidth = 2;
+ctx.roundRect(4, 4, W-8, H-8, 18);
+ctx.stroke();
+
+ctx.fillStyle = '#EB8C0A';
+ctx.fillRect(40, 44, W-80, 2);
+ctx.fillRect(40, H-46, W-80, 2);
+
+ctx.font = '36px serif';
+ctx.textAlign = 'center';
+ctx.fillText('🏆', W/2, 90);
+
+ctx.fillStyle = '#F5AA41';
+ctx.font = 'bold 13px Segoe UI, sans-serif';
+ctx.fillText('I N D I C A D O R   D E   Q U A L I D A D E', W/2, 120);
+
+ctx.shadowColor = '#F5AA41';
+ctx.shadowBlur = 30;
+ctx.font = 'bold 130px Segoe UI, sans-serif';
+ctx.fillText(DIAS, W/2, 265);
+ctx.shadowBlur = 0;
+
+ctx.fillStyle = '#e8f4f3';
+ctx.shadowBlur = 0;
+ctx.font = 'bold 20px Segoe UI, sans-serif';
+ctx.fillText('DIAS SEM DESARME', W/2, 305);
+
+ctx.fillStyle = '#4a7572';
+ctx.font = '13px Segoe UI, sans-serif';
+ctx.fillText('OOMC — Manutenção Alta Tensão  |  ' + DATA, W/2, 355);
+</script>
+</body>
+</html>
