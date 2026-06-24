@@ -1166,6 +1166,164 @@ function startServer() {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // ── INDICADOR DE QUALIDADE (Dias sem desarme) ──────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  const indicador = require('./db_indicador');
+
+  async function gerarImagemContador(dias, dataHora) {
+    const puppeteer = require('puppeteer-core');
+    const htmlPath  = path.join(__dirname, '..', 'public', 'indicador-img.html');
+    const outPath   = path.join(__dirname, '..', 'data', `indicador_${Date.now()}.png`);
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+
+    const browser = await puppeteer.launch({
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+      args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-gpu'],
+      headless: true,
+    });
+    try {
+      const page = await browser.newPage();
+      await page.setViewport({ width: 600, height: 400 });
+      await page.goto('file://' + htmlPath);
+      await page.evaluate((d, dt) => { window._DIAS = d; window._DATA = dt; }, dias, dataHora);
+      await page.reload();
+      await page.waitForSelector('canvas');
+      const imgData = await page.evaluate(() => document.getElementById('c').toDataURL('image/png').split(',')[1]);
+      fs.writeFileSync(outPath, Buffer.from(imgData, 'base64'));
+    } finally {
+      await browser.close();
+    }
+    return outPath;
+  }
+
+  async function dispararIndicador() {
+    const botState = require('./state');
+    if (!botState.isReady() || !global._waClient) return;
+
+    const ind = indicador.buscar();
+    const agoraBR = new Date(Date.now() - 3*60*60*1000);
+    const dataHora = String(agoraBR.getUTCDate()).padStart(2,'0')+'/'+
+      String(agoraBR.getUTCMonth()+1).padStart(2,'0')+'/'+agoraBR.getUTCFullYear()+
+      ' às '+String(agoraBR.getUTCHours()).padStart(2,'0')+':'+String(agoraBR.getUTCMinutes()).padStart(2,'0');
+
+    const msgTexto =
+      `🤖 *Sistema de Monitoramento Automático*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🏆 *INDICADOR DE QUALIDADE*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `✅ *${ind.dias} DIAS SEM DESARME*\n\n` +
+      `📊 Monitoramento contínuo ativo\n` +
+      `🕐 Atualizado em: ${dataHora}\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `_Gerado automaticamente pelo sistema OOMC_`;
+
+    const grupoNome = process.env.GRUPO_INDICADOR_NOME || process.env.GRUPO_NOME || 'Resenha';
+
+    try {
+      if (!global._grupoIndicadorId) {
+        const chats = await global._waClient.getChats();
+        const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+        if (!grupo) { console.warn('[INDICADOR] Grupo "' + grupoNome + '" não encontrado.'); return; }
+        global._grupoIndicadorId = grupo.id._serialized;
+      }
+      const chat = await global._waClient.getChatById(global._grupoIndicadorId);
+
+      // Tenta gerar e enviar imagem — se falhar, envia só texto
+      try {
+        const imgPath = await gerarImagemContador(ind.dias, dataHora);
+        const { MessageMedia } = require('whatsapp-web.js');
+        const media = MessageMedia.fromFilePath(imgPath);
+        await chat.sendMessage(media, { caption: msgTexto });
+        try { fs.unlinkSync(imgPath); } catch(e) {}
+      } catch(imgErr) {
+        console.warn('[INDICADOR] Falha ao gerar imagem, enviando só texto:', imgErr.message);
+        await chat.sendMessage(msgTexto);
+      }
+
+      indicador.registrarDisparo();
+      console.log(`[INDICADOR] Disparado: ${ind.dias} dias — grupo: ${grupoNome}`);
+    } catch(e) {
+      console.error('[INDICADOR] Erro ao disparar:', e.message);
+      if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoIndicadorId = null;
+    }
+  }
+
+  // Cron: roda a cada minuto pra verificar incremento meia-noite e horários de disparo
+  setInterval(async () => {
+    try {
+      const agoraBR = new Date(Date.now() - 3*60*60*1000);
+      const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
+      const mm = String(agoraBR.getUTCMinutes()).padStart(2,'0');
+      const horaAtual = `${hh}:${mm}`;
+
+      // Incrementa à meia-noite
+      if (horaAtual === '00:00') {
+        indicador.incrementar();
+        console.log('[INDICADOR] +1 dia. Total:', indicador.buscar().dias);
+      }
+
+      // Verifica horários de disparo automático
+      const ind = indicador.buscar();
+      if (ind.horario1 && horaAtual === ind.horario1) await dispararIndicador();
+      if (ind.horario2 && horaAtual === ind.horario2) await dispararIndicador();
+    } catch(e) { console.error('[INDICADOR] Cron error:', e.message); }
+  }, 60_000);
+
+  // Rotas
+  app.get('/api/indicador', requireAuth, (req, res) => {
+    try { res.json({ ok: true, data: indicador.buscar() }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.patch('/api/indicador/horarios', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
+    try { res.json({ ok: true, data: indicador.atualizarHorarios(req.body) }); }
+    catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/indicador/zerar', requireAuth, requirePermissao('gerenciar_usuarios'), async (req, res) => {
+    try {
+      const ind = indicador.zerar();
+      res.json({ ok: true, data: ind });
+      // Notifica o grupo do reset
+      setTimeout(async () => {
+        try {
+          const botState = require('./state');
+          if (!botState.isReady() || !global._waClient) return;
+          const grupoNome = process.env.GRUPO_INDICADOR_NOME || process.env.GRUPO_NOME || 'Resenha';
+          if (!global._grupoIndicadorId) {
+            const chats = await global._waClient.getChats();
+            const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+            if (!grupo) return;
+            global._grupoIndicadorId = grupo.id._serialized;
+          }
+          const chat = await global._waClient.getChatById(global._grupoIndicadorId);
+          const agoraBR = new Date(Date.now() - 3*60*60*1000);
+          const dataHora = String(agoraBR.getUTCDate()).padStart(2,'0')+'/'+
+            String(agoraBR.getUTCMonth()+1).padStart(2,'0')+'/'+agoraBR.getUTCFullYear()+
+            ' às '+String(agoraBR.getUTCHours()).padStart(2,'0')+':'+String(agoraBR.getUTCMinutes()).padStart(2,'0');
+          await chat.sendMessage(
+            `🤖 *Sistema de Monitoramento Automático*\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `🔄 *INDICADOR REINICIADO*\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `⚠️ Contador zerado — ocorrência registrada\n` +
+            `🕐 ${dataHora}\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `_Gerado automaticamente pelo sistema OOMC_`
+          );
+        } catch(e) { console.error('[INDICADOR] Erro ao notificar reset:', e.message); }
+      }, 500);
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/indicador/disparar', requireAuth, requirePermissao('gerenciar_usuarios'), async (req, res) => {
+    try {
+      await dispararIndicador();
+      res.json({ ok: true, msg: 'Disparado!' });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
 
   // ── Relatório de Inspeções WhatsApp (grupo separado) ─────────────────────
   app.post('/api/relatorio/inspecoes/enviar', requireAuth, requirePermissao('enviar_relatorio_operacao'), async (req, res) => {
