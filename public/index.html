@@ -61,6 +61,10 @@
     .menu-item.danger:hover{background:rgba(224,90,78,.08)}
     .menu-divider{height:1px;background:var(--border);margin:4px 0}
     .stats-bar{display:flex;gap:10px;padding:16px 20px;flex-wrap:wrap}
+    .ind-header-badge{background:#2d1f00;border:1px solid #EB8C0A;border-radius:8px;padding:5px 12px;display:flex;align-items:center;gap:7px;cursor:pointer;transition:opacity .15s;flex-shrink:0}
+    .ind-header-badge:hover{opacity:.85}
+    .ind-header-num{font-size:1.2rem;font-weight:900;color:#F5AA41;line-height:1}
+    .ind-header-lbl{font-size:.62rem;font-weight:700;color:#F5AA41;opacity:.75;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
     /* Indicador de Qualidade */
     .indicador-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin:0 20px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
     .ind-display{background:var(--gold-bg,#2d1f00);border:1px solid var(--gold-border,#EB8C0A);border-radius:10px;padding:10px 20px;text-align:center;min-width:100px;flex-shrink:0}
@@ -289,6 +293,11 @@
       <h1>Painel de Ordens de Serviço</h1>
       <span>OOMC — Manutenção Alta Tensão</span>
     </div>
+    <div class="ind-header-badge" id="indHeaderBadge" title="Indicador de Qualidade — clique para gerenciar" onclick="document.getElementById('indicadorCard').scrollIntoView({behavior:'smooth',block:'center'})">
+      <span class="ind-header-num" id="indHeaderNum">–</span>
+      <span class="ind-header-lbl">dias sem desarme</span>
+    </div>
+  </div>
   </div>
   <div class="header-right">
     <div class="bot-badge">
@@ -1102,6 +1111,7 @@
       if (!r.ok) return;
       const d = r.data;
       document.getElementById('indNum').textContent = d.dias;
+      document.getElementById('indHeaderNum').textContent = d.dias;
       document.getElementById('indH1').value = d.horario1 || '07:00';
       document.getElementById('indH2').value = d.horario2 || '';
       const ultimo = d.ultimo_disparo ? 'Último disparo: ' + d.ultimo_disparo.slice(0,16).replace('T',' ') : 'Nenhum disparo ainda';
