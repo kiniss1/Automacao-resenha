@@ -61,6 +61,24 @@
     .menu-item.danger:hover{background:rgba(224,90,78,.08)}
     .menu-divider{height:1px;background:var(--border);margin:4px 0}
     .stats-bar{display:flex;gap:10px;padding:16px 20px;flex-wrap:wrap}
+    /* Indicador de Qualidade */
+    .indicador-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin:0 20px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .ind-display{background:var(--gold-bg,#2d1f00);border:1px solid var(--gold-border,#EB8C0A);border-radius:10px;padding:10px 20px;text-align:center;min-width:100px;flex-shrink:0}
+    .ind-num{font-size:2.2rem;font-weight:900;color:#F5AA41;line-height:1}
+    .ind-lbl{font-size:.62rem;font-weight:700;color:#F5AA41;opacity:.8;text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+    .ind-info{flex:1;min-width:160px}
+    .ind-title{font-size:.82rem;font-weight:700}
+    .ind-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+    .ind-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .ind-input{width:70px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 8px;font-size:.82rem;text-align:center;outline:none}
+    .ind-input:focus{border-color:var(--primary)}
+    .ind-btn{background:var(--primary);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+    .ind-btn:hover{opacity:.88}
+    .ind-btn:disabled{opacity:.4;cursor:default}
+    .ind-btn.red{background:var(--red)}
+    .ind-config{font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .ind-config input[type=time]{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-size:.75rem;outline:none}
+    .ind-config input[type=time]:focus{border-color:var(--primary)}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;min-width:80px;text-align:center;transition:border-color .12s;cursor:default}
     .stat-card:hover{border-color:var(--border2)}
     .stat-card .num{font-size:22px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
@@ -332,6 +350,27 @@
   <input type="date" id="filterDataAte" onchange="load()" title="Data fim"/>
   <button class="btn-limpar" onclick="limparFiltros()">✕</button>
   <button class="btn-refresh" id="btnRefresh" onclick="load()">↻ Atualizar</button>
+</div>
+
+<!-- Indicador de Qualidade -->
+<div class="indicador-card" id="indicadorCard">
+  <div class="ind-display">
+    <div class="ind-num" id="indNum">–</div>
+    <div class="ind-lbl">dias sem desarme</div>
+  </div>
+  <div class="ind-info">
+    <div class="ind-title">🏆 Indicador de Qualidade</div>
+    <div class="ind-sub" id="indSub">Carregando...</div>
+    <div class="ind-config" style="margin-top:8px">
+      ⏰ Disparo:
+      <input type="time" id="indH1" onchange="salvarHorarios()" title="Horário 1"/>
+      <input type="time" id="indH2" onchange="salvarHorarios()" title="Horário 2 (opcional)"/>
+    </div>
+  </div>
+  <div class="ind-actions">
+    <button class="ind-btn" id="btnDispararInd" onclick="dispararIndicador()">📲 Disparar</button>
+    <button class="ind-btn red" onclick="zerarIndicador()">🔄 Zerar</button>
+  </div>
 </div>
 
 <div class="grid" id="grid">
@@ -1053,6 +1092,54 @@
   load(); checkBot();
   setInterval(checkBot,15_000);
   setInterval(load,60_000);
+  carregarIndicador();
+  setInterval(carregarIndicador, 60_000);
+
+  // ── Indicador de Qualidade ────────────────────────────────────────────────
+  async function carregarIndicador() {
+    try {
+      const r = await authFetch('/api/indicador').then(r=>r.json());
+      if (!r.ok) return;
+      const d = r.data;
+      document.getElementById('indNum').textContent = d.dias;
+      document.getElementById('indH1').value = d.horario1 || '07:00';
+      document.getElementById('indH2').value = d.horario2 || '';
+      const ultimo = d.ultimo_disparo ? 'Último disparo: ' + d.ultimo_disparo.slice(0,16).replace('T',' ') : 'Nenhum disparo ainda';
+      document.getElementById('indSub').textContent = ultimo;
+    } catch(e) {}
+  }
+
+  async function salvarHorarios() {
+    const h1 = document.getElementById('indH1').value;
+    const h2 = document.getElementById('indH2').value;
+    try {
+      await authFetch('/api/indicador/horarios', {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ horario1: h1, horario2: h2 || null })
+      });
+    } catch(e) {}
+  }
+
+  async function dispararIndicador() {
+    const btn = document.getElementById('btnDispararInd');
+    btn.disabled = true; btn.textContent = '⏳ Enviando...';
+    try {
+      const r = await authFetch('/api/indicador/disparar', { method:'POST' }).then(r=>r.json());
+      if (r.ok) toast('Indicador disparado no grupo!', 'ok');
+      else toast(r.error || 'Erro ao disparar', 'err');
+    } catch(e) { toast('Erro: ' + e.message, 'err'); }
+    btn.disabled = false; btn.innerHTML = '📲 Disparar';
+    await carregarIndicador();
+  }
+
+  async function zerarIndicador() {
+    if (!confirm('Zerar o contador? Isso registrará uma ocorrência de desarme.')) return;
+    try {
+      const r = await authFetch('/api/indicador/zerar', { method:'POST' }).then(r=>r.json());
+      if (r.ok) { toast('Contador zerado — notificação enviada!', 'ok'); await carregarIndicador(); }
+      else toast(r.error || 'Erro ao zerar', 'err');
+    } catch(e) { toast('Erro: ' + e.message, 'err'); }
+  }
 
   // ── Splash de boas-vindas ──────────────────────────────────────────────
   (function(){
