@@ -48,8 +48,12 @@ function incrementar() {
   return buscar();
 }
 
+function agoraBRT() {
+  return new Date(Date.now() - 3*60*60*1000).toISOString().slice(0,19).replace('T',' ');
+}
+
 function zerar() {
-  run(`UPDATE indicador_qualidade SET dias=0, ultimo_reset=datetime('now','localtime') WHERE id=1`);
+  run(`UPDATE indicador_qualidade SET dias=0, ultimo_reset=? WHERE id=1`, [agoraBRT()]);
   return buscar();
 }
 
@@ -60,7 +64,7 @@ function atualizarHorarios({ horario1, horario2 }) {
 }
 
 function registrarDisparo() {
-  run(`UPDATE indicador_qualidade SET ultimo_disparo=datetime('now','localtime') WHERE id=1`);
+  run(`UPDATE indicador_qualidade SET ultimo_disparo=? WHERE id=1`, [agoraBRT()]);
 }
 
 module.exports = { setDb, buscar, incrementar, zerar, atualizarHorarios, registrarDisparo };
