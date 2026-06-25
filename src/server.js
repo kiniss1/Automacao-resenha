@@ -1170,30 +1170,43 @@ function startServer() {
   // ═══════════════════════════════════════════════════════════════════════════
   const indicador = require('./db_indicador');
 
-  async function gerarImagemContador(dias, dataHora) {
-    const puppeteer = require('puppeteer-core');
-    const htmlPath  = path.join(__dirname, '..', 'public', 'indicador-img.html');
-    const outPath   = path.join(__dirname, '..', 'data', `indicador_${Date.now()}.png`);
+  function gerarImagemContador(dias, dataHora) {
+    const outPath = path.join(__dirname, '..', 'data', `indicador_${Date.now()}.png`);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
-    const browser = await puppeteer.launch({
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-      args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-gpu'],
-      headless: true,
-    });
+    // Gera SVG e converte para PNG usando sharp (ou salva SVG direto se sharp não disponível)
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d2e2c"/>
+      <stop offset="100%" stop-color="#061a19"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" rx="20" fill="url(#bg)"/>
+  <rect x="4" y="4" width="592" height="392" rx="18" fill="none" stroke="#EB8C0A" stroke-width="2"/>
+  <line x1="40" y1="44" x2="560" y2="44" stroke="#EB8C0A" stroke-width="2"/>
+  <line x1="40" y1="354" x2="560" y2="354" stroke="#EB8C0A" stroke-width="2"/>
+  <text x="300" y="92" font-family="serif" font-size="36" text-anchor="middle">🏆</text>
+  <text x="300" y="118" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="#F5AA41" text-anchor="middle" letter-spacing="3">${'I N D I C A D O R   D E   Q U A L I D A D E'}</text>
+  <text x="300" y="268" font-family="Arial Black,Arial,sans-serif" font-size="130" font-weight="900" fill="#F5AA41" text-anchor="middle" opacity="0.15">${dias}</text>
+  <text x="300" y="268" font-family="Arial Black,Arial,sans-serif" font-size="130" font-weight="900" fill="#F5AA41" text-anchor="middle">${dias}</text>
+  <text x="300" y="308" font-family="Arial,sans-serif" font-size="20" font-weight="bold" fill="#e8f4f3" text-anchor="middle">DIAS SEM DESARME</text>
+  <text x="300" y="348" font-family="Arial,sans-serif" font-size="13" fill="#4a7572" text-anchor="middle">OOMC — Manutenção Alta Tensão  |  ${dataHora}</text>
+</svg>`;
+
+    const svgPath = outPath.replace('.png', '.svg');
+    fs.writeFileSync(svgPath, svg);
+
+    // Tenta converter SVG → PNG com sharp se disponível
     try {
-      const page = await browser.newPage();
-      await page.setViewport({ width: 600, height: 400 });
-      await page.goto('file://' + htmlPath);
-      await page.evaluate((d, dt) => { window._DIAS = d; window._DATA = dt; }, dias, dataHora);
-      await page.reload();
-      await page.waitForSelector('canvas');
-      const imgData = await page.evaluate(() => document.getElementById('c').toDataURL('image/png').split(',')[1]);
-      fs.writeFileSync(outPath, Buffer.from(imgData, 'base64'));
-    } finally {
-      await browser.close();
+      const sharp = require('sharp');
+      sharp(Buffer.from(svg)).png().toFileSync(outPath);
+      try { fs.unlinkSync(svgPath); } catch(e) {}
+      return outPath;
+    } catch(e) {
+      // sharp não disponível — envia SVG mesmo (WhatsApp aceita)
+      return svgPath;
     }
-    return outPath;
   }
 
   async function dispararIndicador() {
@@ -1230,7 +1243,7 @@ function startServer() {
 
       // Tenta gerar e enviar imagem — se falhar, envia só texto
       try {
-        const imgPath = await gerarImagemContador(ind.dias, dataHora);
+        const imgPath = gerarImagemContador(ind.dias, dataHora);
         const { MessageMedia } = require('whatsapp-web.js');
         const media = MessageMedia.fromFilePath(imgPath);
         await chat.sendMessage(media, { caption: msgTexto });
