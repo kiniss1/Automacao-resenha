@@ -1208,13 +1208,13 @@ function startServer() {
 
     const msgTexto =
       `🤖 *Sistema de Monitoramento Automático*\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `\n` +
       `🏆 *INDICADOR DE QUALIDADE*\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `\n\n` +
       `✅ *${ind.dias} DIAS SEM DESARME*\n\n` +
       `📊 Monitoramento contínuo ativo\n` +
       `🕐 Atualizado em: ${dataHora}\n\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `\n` +
       `_Gerado automaticamente pelo sistema OOMC_`;
 
     const grupoNome = process.env.GRUPO_INDICADOR_NOME || process.env.GRUPO_NOME || 'Resenha';
@@ -1303,12 +1303,12 @@ function startServer() {
             ' às '+String(agoraBR.getUTCHours()).padStart(2,'0')+':'+String(agoraBR.getUTCMinutes()).padStart(2,'0');
           await chat.sendMessage(
             `🤖 *Sistema de Monitoramento Automático*\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `\n` +
             `🔄 *INDICADOR REINICIADO*\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `\n\n` +
             `⚠️ Contador zerado — ocorrência registrada\n` +
             `🕐 ${dataHora}\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `\n` +
             `_Gerado automaticamente pelo sistema OOMC_`
           );
         } catch(e) { console.error('[INDICADOR] Erro ao notificar reset:', e.message); }
