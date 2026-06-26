@@ -3,45 +3,45 @@ let db;
 
 // Itens-padrão da checklist (semeados na primeira execução)
 const ITENS_SEED = [
-  { label: 'AVE/CNH',                                   tipo: 'status_validade', opcoes: ['EM DIA','VENCIDA'],  tem_validade: 1 },
-  { label: 'ACESSO AO SEP',                              tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO'], tem_validade: 1 },
-  { label: 'AVENTAL',                                    tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'BALACLAVA',                                  tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'BOLSA PARA CAPACETE',                        tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'BOLSA PARA EPI',                             tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'BOTA DE SEGURANÇA',                          tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'CALÇA ANTI CHAMAS',                          tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'CAMISA ANTI CHAMAS',                         tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'CAPACETE',                                   tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'CASACO ANTI CHAMAS',                         tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'CINTA ERGONÔMICA',                           tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'CINTO PARAQUEDISTA RF',                      tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'CONJUNTO CONTRA CHUVA RF',                   tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'CRACHÁ',                                     tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'LUVA SUEDINE',                                tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'LUVA CLASSE 00',                             tipo: 'status_validade', opcoes: ['BOA','RUIM'], tem_validade: 1 },
-  { label: 'LUVA CLASSE 02',                             tipo: 'status_validade', opcoes: ['BOA','RUIM'], tem_validade: 1 },
-  { label: 'LUVA CLASSE 04',                             tipo: 'status_validade', opcoes: ['BOA','RUIM'], tem_validade: 1 },
-  { label: 'LUVA COBERTURA CLASSE 00',                   tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'LUVA COBERTURA CLASSE 02',                   tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'LUVA COBERTURA CLASSE 04',                   tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'LUVA HIFLEX',                                tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'LUVA NITRILICA',                             tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'LUVA VAQUETA',                               tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'MASCARA CONTRA GASES',                       tipo: 'status', opcoes: ['BOA','RUIM'] },
-  { label: 'FILTRO RESPIRADOR PARA MASCARA DE GASES',    tipo: 'status_validade', opcoes: ['BOM','RUIM'], tem_validade: 1 },
-  { label: 'OCULOS DE SEGURANÇA INCOLOR',                tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'OCULOS DE SEGURANÇA ESCURO',                 tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'PROTETOR AURICULAR',                         tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'PROTETOR FACIAL INCOLOR',                    tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'PROTETOR FACIAL ESCURO CLASSE 2',            tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'PROTETOR SOLAR',                             tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO'], tem_validade: 1 },
-  { label: 'REPELENTE',                                  tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO'], tem_validade: 1 },
-  { label: 'TALABARTE DE POSICIONAMENTO COM MOSQUETÃO',  tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'TALABARTE "Y" COM MOSQUETÃO',                tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'TRAVA QUEDAS COM MOSQUETÃO',                 tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'ÓCULOS AMPLA VISÃO',                         tipo: 'status', opcoes: ['BOM','RUIM'] },
-  { label: 'PERNEIRA/COTURNO',                           tipo: 'status', opcoes: ['BOA','RUIM'] },
+  { label: 'AVE/CNH',                                   tipo: 'status_validade', opcoes: ['EM DIA','VENCIDA','N/A'],  tem_validade: 1 },
+  { label: 'ACESSO AO SEP',                              tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO','N/A'], tem_validade: 1 },
+  { label: 'AVENTAL',                                    tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'BALACLAVA',                                  tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'BOLSA PARA CAPACETE',                        tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'BOLSA PARA EPI',                             tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'BOTA DE SEGURANÇA',                          tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'CALÇA ANTI CHAMAS',                          tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'CAMISA ANTI CHAMAS',                         tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'CAPACETE',                                   tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'CASACO ANTI CHAMAS',                         tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'CINTA ERGONÔMICA',                           tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'CINTO PARAQUEDISTA RF',                      tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'CONJUNTO CONTRA CHUVA RF',                   tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'CRACHÁ',                                     tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'LUVA SUEDINE',                                tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'LUVA CLASSE 00',                             tipo: 'status_validade', opcoes: ['BOA','RUIM','N/A'], tem_validade: 1 },
+  { label: 'LUVA CLASSE 02',                             tipo: 'status_validade', opcoes: ['BOA','RUIM','N/A'], tem_validade: 1 },
+  { label: 'LUVA CLASSE 04',                             tipo: 'status_validade', opcoes: ['BOA','RUIM','N/A'], tem_validade: 1 },
+  { label: 'LUVA COBERTURA CLASSE 00',                   tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'LUVA COBERTURA CLASSE 02',                   tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'LUVA COBERTURA CLASSE 04',                   tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'LUVA HIFLEX',                                tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'LUVA NITRILICA',                             tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'LUVA VAQUETA',                               tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'MASCARA CONTRA GASES',                       tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
+  { label: 'FILTRO RESPIRADOR PARA MASCARA DE GASES',    tipo: 'status_validade', opcoes: ['BOM','RUIM','N/A'], tem_validade: 1 },
+  { label: 'OCULOS DE SEGURANÇA INCOLOR',                tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'OCULOS DE SEGURANÇA ESCURO',                 tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'PROTETOR AURICULAR',                         tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'PROTETOR FACIAL INCOLOR',                    tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'PROTETOR FACIAL ESCURO CLASSE 2',            tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'PROTETOR SOLAR',                             tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO','N/A'], tem_validade: 1 },
+  { label: 'REPELENTE',                                  tipo: 'status_validade', opcoes: ['EM DIA','VENCIDO','N/A'], tem_validade: 1 },
+  { label: 'TALABARTE DE POSICIONAMENTO COM MOSQUETÃO',  tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'TALABARTE "Y" COM MOSQUETÃO',                tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'TRAVA QUEDAS COM MOSQUETÃO',                 tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'ÓCULOS AMPLA VISÃO',                         tipo: 'status', opcoes: ['BOM','RUIM','N/A'] },
+  { label: 'PERNEIRA/COTURNO',                           tipo: 'status', opcoes: ['BOA','RUIM','N/A'] },
 ];
 
 // Valores que indicam item irregular (dispara alerta no WhatsApp)
@@ -102,6 +102,21 @@ function setDb(database) {
     });
     persist();
     console.log(`[AUTOINSPECAO] ${ITENS_SEED.length} itens padrão cadastrados.`);
+  } else {
+    // Migração: adiciona N/A em todos os itens que ainda não têm
+    const todos = all(`SELECT id, opcoes FROM autoinspecao_campos`);
+    let migrou = 0;
+    todos.forEach(c => {
+      try {
+        const opcoes = JSON.parse(c.opcoes || '[]');
+        if (!opcoes.includes('N/A')) {
+          opcoes.push('N/A');
+          db.run(`UPDATE autoinspecao_campos SET opcoes=? WHERE id=?`, [JSON.stringify(opcoes), c.id]);
+          migrou++;
+        }
+      } catch(e) {}
+    });
+    if (migrou) { persist(); console.log(`[AUTOINSPECAO] N/A adicionado em ${migrou} item(ns).`); }
   }
 }
 
@@ -256,10 +271,15 @@ function estatisticasDia(data_insp) {
   };
 }
 
+function deletarPreenchimento(id) {
+  run(`DELETE FROM autoinspecao_respostas WHERE preenchimento_id=?`, [id]);
+  run(`DELETE FROM autoinspecao_preenchimentos WHERE id=?`, [id]);
+}
+
 module.exports = {
   setDb, VALORES_ALERTA,
   listarCampos, criarCampo, atualizarCampo, deletarCampo,
-  criarPreenchimento, buscarPreenchimento, listarPreenchimentos,
+  criarPreenchimento, buscarPreenchimento, listarPreenchimentos, deletarPreenchimento,
   salvarResposta, adicionarFoto, listarRespostas, listarIrregularidades,
   estatisticasDia,
 };
