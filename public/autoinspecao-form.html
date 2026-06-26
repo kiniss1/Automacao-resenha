@@ -51,6 +51,7 @@
     .status-btn:hover{border-color:var(--border2)}
     .status-btn.sel-bom{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
     .status-btn.sel-ruim{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+    .status-btn.sel-na{background:var(--surface2);border-color:var(--border2);color:var(--muted)}
     .validade-wrap{margin-top:10px;display:none}
     .validade-wrap label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:5px}
     .validade-wrap input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;outline:none}
@@ -144,14 +145,21 @@
   }
 
   function renderCampo(c) {
-    const [op1, op2] = c.opcoes;
-    const cls1 = op1.toUpperCase() === 'RUIM' || op1.toUpperCase().includes('VENCID') ? 'ruim' : 'bom';
+    const [op1, op2, ...resto] = c.opcoes;
+    const ruimValores = ['RUIM','VENCIDA','VENCIDO'];
+    const btnOpcao = (op) => {
+      const isRuim = ruimValores.includes(op.toUpperCase());
+      const isNA   = op === 'N/A';
+      const clsOk  = isNA ? 'sel-na' : 'sel-bom';
+      return `<button class="status-btn" id="c${c.id}_${op.replace(/[^a-zA-Z0-9]/g,'')}" onclick="selecionar(${c.id},'${op}',this)" data-ok="${clsOk}" data-ruim="${isRuim}">${op}</button>`;
+    };
     return `
       <div class="campo-wrap" id="cw_${c.id}">
         <span class="campo-label">${c.label}</span>
         <div class="status-row">
-          <button class="status-btn" id="c${c.id}_op1" onclick="selecionar(${c.id},'${op1}',this)">${op1}</button>
-          <button class="status-btn" id="c${c.id}_op2" onclick="selecionar(${c.id},'${op2}',this)">${op2}</button>
+          ${btnOpcao(op1)}
+          ${btnOpcao(op2)}
+          ${resto.map(op => btnOpcao(op)).join('')}
         </div>
         ${c.tem_validade ? `
           <div class="validade-wrap" id="vw_${c.id}">
@@ -166,18 +174,18 @@
 
   function selecionar(campoId, valor, btn) {
     const wrap = btn.closest('.campo-wrap');
-    const op1 = document.getElementById('c'+campoId+'_op1');
-    const op2 = document.getElementById('c'+campoId+'_op2');
+    wrap.querySelectorAll('.status-btn').forEach(b => b.classList.remove('sel-bom','sel-ruim','sel-na'));
     const ruimValores = ['RUIM','VENCIDA','VENCIDO'];
-    [op1, op2].forEach(b => { b.classList.remove('sel-bom','sel-ruim'); });
     const isRuim = ruimValores.includes(valor.toUpperCase());
-    btn.classList.add(isRuim ? 'sel-ruim' : 'sel-bom');
+    const isNA   = valor === 'N/A';
+    btn.classList.add(isNA ? 'sel-na' : isRuim ? 'sel-ruim' : 'sel-bom');
 
     if (!_respostas[campoId]) _respostas[campoId] = {};
     _respostas[campoId].opcao = valor;
 
     const vw = document.getElementById('vw_'+campoId);
-    if (vw) vw.style.display = 'block';
+    if (vw && !isNA) vw.style.display = 'block';
+    else if (vw) vw.style.display = 'none';
 
     atualizarProgress();
   }
