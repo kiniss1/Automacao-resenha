@@ -1097,20 +1097,20 @@ function startServer() {
             `📄 ${link}\n\n` +
             `_Gerado automaticamente pelo sistema OOMC_`;
 
-          const grupoRetornoNome = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
-          if (global._grupoRelId) {
-            const chat = await global._waClient.getChatById(global._grupoRelId);
+          const grupoRetornoNome = process.env.GRUPO_AUTOINSP_NOME || process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+          if (global._grupoAutoInspId) {
+            const chat = await global._waClient.getChatById(global._grupoAutoInspId);
             await chat.sendMessage(msgRetorno);
           } else {
             const chats = await global._waClient.getChats();
             const grupo = chats.find(c => c.isGroup && c.name === grupoRetornoNome);
-            if (grupo) { global._grupoRelId = grupo.id._serialized; await grupo.sendMessage(msgRetorno); }
-            else console.warn('[AUTOINSPECAO] Grupo "' + grupoRetornoNome + '" não encontrado. Verifique GRUPO_RELATORIO_NOME no .env');
+            if (grupo) { global._grupoAutoInspId = grupo.id._serialized; await grupo.sendMessage(msgRetorno); }
+            else console.warn('[AUTOINSPECAO] Grupo "' + grupoRetornoNome + '" não encontrado. Verifique GRUPO_AUTOINSP_NOME no .env');
           }
         }
       } catch(e) {
         console.error('[AUTOINSPECAO] Erro ao notificar grupo de retorno:', e.message);
-        if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoRetornoId = null;
+        if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoAutoInspId = null;
       }
 
       if (irregularidades.length) {
@@ -1145,6 +1145,14 @@ function startServer() {
           if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoInspId = null;
         }
       }
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/api/autoinspecao/preenchimentos/:id', requireAuth, requirePermissao('gerenciar_inspecao'), (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      autoInsp.deletarPreenchimento(id);
+      res.json({ ok: true });
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
