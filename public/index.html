@@ -303,6 +303,13 @@
           <div class="ind-drop-sub" id="indSub">Carregando...</div>
         </div>
         <div class="ind-drop-section">
+          <div class="ind-drop-label">✏️ Editar dias manualmente</div>
+          <div class="ind-drop-times">
+            <input type="number" id="indEditDias" min="0" style="flex:1;background:#0d0800;border:1px solid #EB8C0A55;color:#F5AA41;border-radius:6px;padding:6px 8px;font-size:.78rem;outline:none" placeholder="Nº de dias"/>
+            <button class="ind-btn" onclick="editarDias()" style="flex:none;padding:6px 10px">✓ Salvar</button>
+          </div>
+        </div>
+        <div class="ind-drop-section">
           <div class="ind-drop-label">⏰ Disparos automáticos</div>
           <div class="ind-drop-times">
             <input type="time" id="indH1" onchange="salvarHorarios()" title="Horário 1"/>
@@ -1130,6 +1137,19 @@
       })() : 'Nenhum disparo ainda';
       document.getElementById('indSub').textContent = ultimo;
     } catch(e) {}
+  }
+
+  async function editarDias() {
+    const dias = parseInt(document.getElementById('indEditDias').value);
+    if (isNaN(dias) || dias < 0) { toast('Valor inválido', 'err'); return; }
+    try {
+      const r = await authFetch('/api/indicador/dias', {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ dias })
+      }).then(r=>r.json());
+      if (r.ok) { toast('Contador atualizado!', 'ok'); await carregarIndicador(); document.getElementById('indEditDias').value = ''; }
+      else toast(r.error || 'Erro', 'err');
+    } catch(e) { toast('Erro: ' + e.message, 'err'); }
   }
 
   async function salvarHorarios() {
