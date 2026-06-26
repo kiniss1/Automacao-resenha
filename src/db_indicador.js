@@ -67,4 +67,9 @@ function registrarDisparo() {
   run(`UPDATE indicador_qualidade SET ultimo_disparo=? WHERE id=1`, [agoraBRT()]);
 }
 
-module.exports = { setDb, buscar, incrementar, zerar, atualizarHorarios, registrarDisparo };
+function setDias(dias) {
+  run(`UPDATE indicador_qualidade SET dias=? WHERE id=1`, [dias]);
+  return buscar();
+}
+
+module.exports = { setDb, buscar, incrementar, zerar, setDias, atualizarHorarios, registrarDisparo };
