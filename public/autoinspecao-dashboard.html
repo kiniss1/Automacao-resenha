@@ -14,6 +14,14 @@
     --red:#e05a4e;--red-bg:#2d0f0d;--red-border:#7a2020;
     --orange:#F5AA41;--orange-bg:#2d1f00;--orange-border:#EB8C0A;
   }
+  body.light{
+    --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
+    --text:#414141;--muted:#7F7F7F;
+    --primary:#009B91;--primary-bg:#e0f5f4;--primary-dark:#005852;
+    --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
+    --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
+    --orange:#c07000;--orange-bg:#fff8e1;--orange-border:#EB8C0A;
+  }
   body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px}
   .wrap{max-width:920px;margin:0 auto}
   header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
@@ -23,6 +31,7 @@
   .nav-link{font-size:.8rem;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;background:none}
   .nav-link:hover{border-color:var(--primary);color:var(--primary)}
   .nav-link.active{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
+  .btn-tema{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:5px 10px;font-size:.75rem;cursor:pointer}
 
   .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
   @media(max-width:600px){.stats-grid{grid-template-columns:1fr}}
@@ -80,6 +89,7 @@
     <div class="nav-links">
       <a href="/" class="nav-link">🔧 Painel</a>
       <a href="/inspecao.html" class="nav-link">🔍 Inspeção SE</a>
+      <button class="btn-tema" onclick="toggleTema()">🌙 Tema</button>
     </div>
   </header>
 
@@ -207,7 +217,10 @@
                 <div class="colab-nome">${p.nome_tecnico || p.matricula}</div>
                 <div class="colab-meta">Mat. ${p.matricula} · ${p.hora_insp || ''}</div>
               </div>
-              <span class="${temIrr ? 'badge-alerta' : 'badge-ok'}">${temIrr ? '⚠️ Com pendência' : '✅ Tudo OK'}</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="${temIrr ? 'badge-alerta' : 'badge-ok'}">${temIrr ? '⚠️ Com pendência' : '✅ Tudo OK'}</span>
+                <button class="btn-icon danger" onclick="excluirPreenchimento(${p.id},'${(p.nome_tecnico||p.matricula).replace(/'/g,"\\'")}')">🗑️</button>
+              </div>
             </div>
           `;
         }).join('')
@@ -291,6 +304,21 @@
   }
 
   document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) fecharModal(); });
+
+  async function excluirPreenchimento(id, nome) {
+    if (!confirm(`Excluir a autoinspeção de "${nome}"?\nTodos os registros e irregularidades serão removidos.`)) return;
+    try {
+      const r = await authFetch('/api/autoinspecao/preenchimentos/'+id, { method:'DELETE' }).then(r=>r.json());
+      if (!r.ok) throw new Error(r.error);
+      await carregarDashboard();
+    } catch(e) { alert('Erro: ' + e.message); }
+  }
+
+  function toggleTema() {
+    const isLight = document.body.classList.toggle('light');
+    localStorage.setItem('autoinsp_dash_tema', isLight ? 'light' : 'dark');
+  }
+  if (localStorage.getItem('autoinsp_dash_tema') === 'light') document.body.classList.add('light');
 
   init();
 </script>
