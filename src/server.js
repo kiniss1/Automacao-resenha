@@ -1293,6 +1293,15 @@ function startServer() {
     catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
+  app.patch('/api/indicador/dias', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
+    try {
+      const dias = parseInt(req.body.dias);
+      if (isNaN(dias) || dias < 0) return res.status(400).json({ ok: false, error: 'Valor inválido' });
+      indicador.setDias(dias);
+      res.json({ ok: true, data: indicador.buscar() });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
   app.post('/api/indicador/zerar', requireAuth, requirePermissao('gerenciar_usuarios'), async (req, res) => {
     try {
       const ind = indicador.zerar();
