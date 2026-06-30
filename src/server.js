@@ -1182,13 +1182,30 @@ function startServer() {
   const COR_VERDE2  = '#0a4f47';
   const COR_LARANJA = '#e8923a';
 
+  // Quebra uma string em várias linhas (~maxChars por linha) sem cortar palavras
+  function quebrarLinhas(txt, maxChars) {
+    const palavras = (txt || '').split(' ');
+    const linhas = [];
+    let atual = '';
+    for (const p of palavras) {
+      if ((atual + ' ' + p).trim().length > maxChars) { linhas.push(atual.trim()); atual = p; }
+      else { atual = (atual + ' ' + p).trim(); }
+    }
+    if (atual) linhas.push(atual);
+    return linhas;
+  }
+
   function cardSVG(x, sigla, dias, recorde) {
     const recordeTxt = recorde.recorde_dias > 0 ? `${recorde.recorde_dias} dias` : '—';
     const periodo = (recorde.recorde_inicio && recorde.recorde_fim)
       ? `de ${recorde.recorde_inicio} até ${recorde.recorde_fim}` : '';
-    const ultimo = recorde.ultimo_data
+    const ultimoBruto = recorde.ultimo_data
       ? `${recorde.ultimo_data} | ${recorde.ultimo_id || '—'} | ${recorde.ultimo_tipo || '—'} | SE: ${recorde.ultimo_se || '—'}`
       : 'Sem registros';
+    const ultimoLinhas = quebrarLinhas(ultimoBruto, 38);
+    const ultimoTspans = ultimoLinhas.map((l, i) =>
+      `<tspan x="30" dy="${i === 0 ? 0 : 16}">${l}</tspan>`
+    ).join('');
 
     return `
     <g transform="translate(${x},0)">
@@ -1202,9 +1219,7 @@ function startServer() {
       <text x="190" y="270" font-family="Arial,sans-serif" font-size="11" fill="#8a9794" text-anchor="middle">${periodo}</text>
       <line x1="30" y1="296" x2="350" y2="296" stroke="#eef2f1" stroke-width="1.5"/>
       <text x="30" y="320" font-family="Arial,sans-serif" font-size="12" font-weight="800" fill="${COR_VERDE}">ÚLTIMO DESARME</text>
-      <foreignObject x="30" y="328" width="320" height="90">
-        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial,sans-serif;font-size:12px;color:#52615e;line-height:1.5;">${ultimo}</div>
-      </foreignObject>
+      <text x="30" y="340" font-family="Arial,sans-serif" font-size="12" fill="#52615e">${ultimoTspans}</text>
     </g>`;
   }
 
