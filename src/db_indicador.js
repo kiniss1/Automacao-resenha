@@ -164,8 +164,20 @@ function estaMutado() {
   return !!(g && g.alertas_mutados);
 }
 
+// Preenche só o "último desarme" (histórico), sem zerar dias nem mexer no recorde —
+// usado pra sincronizar o painel com o histórico real do SharePoint na primeira vez
+function setUltimoDesarme(gerencia, info = {}) {
+  const atual = buscar(gerencia);
+  if (!atual) return null;
+  db.run(
+    `UPDATE indicador_gerencias SET ultimo_id=?, ultimo_titulo=?, ultimo_tipo=?, ultimo_se=?, ultimo_data=? WHERE gerencia=?`,
+    [info.id || null, info.titulo || null, info.tipo || null, info.se || null, info.data || null, gerencia]
+  );
+  return buscar(gerencia);
+}
+
 module.exports = {
   GERENCIAS, setDb, buscar, buscarTodas, incrementarTodas,
   zerar, registrarDesarme, setDias, setRecorde, atualizarHorarios,
-  setMute, estaMutado,
+  setMute, estaMutado, setUltimoDesarme,
 };
