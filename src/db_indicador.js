@@ -19,9 +19,11 @@ function setDb(database) {
       ultimo_se         TEXT,
       ultimo_data       TEXT,
       horario1          TEXT,
-      horario2          TEXT
+      horario2          TEXT,
+      alertas_mutados   INTEGER NOT NULL DEFAULT 0
     )
   `);
+  try { db.run(`ALTER TABLE indicador_gerencias ADD COLUMN alertas_mutados INTEGER NOT NULL DEFAULT 0`); } catch(e) {}
 
   const hoje = dataHojeBR();
   for (const g of GERENCIAS) {
@@ -152,7 +154,18 @@ function atualizarHorarios(gerencia, { horario1, horario2 }) {
   return buscar(gerencia);
 }
 
+function setMute(mutado) {
+  db.run(`UPDATE indicador_gerencias SET alertas_mutados=? WHERE gerencia='GERAL'`, [mutado ? 1 : 0]);
+  return buscar('GERAL');
+}
+
+function estaMutado() {
+  const g = buscar('GERAL');
+  return !!(g && g.alertas_mutados);
+}
+
 module.exports = {
   GERENCIAS, setDb, buscar, buscarTodas, incrementarTodas,
   zerar, registrarDesarme, setDias, setRecorde, atualizarHorarios,
+  setMute, estaMutado,
 };
