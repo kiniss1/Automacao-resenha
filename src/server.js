@@ -1174,45 +1174,82 @@ function startServer() {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ── INDICADOR DE QUALIDADE (Dias sem desarme) ──────────────────────────────
+  // ── INDICADOR DE QUALIDADE — por Gerência (OOMC/OOMM/OOMT) + Geral ────────
   // ═══════════════════════════════════════════════════════════════════════════
   const indicador = require('./db_indicador');
 
-  function gerarImagemContador(dias, dataHora) {
+  const COR_VERDE   = '#0d6b5f';
+  const COR_VERDE2  = '#0a4f47';
+  const COR_LARANJA = '#e8923a';
+
+  function cardSVG(x, sigla, dias, recorde) {
+    const recordeTxt = recorde.recorde_dias > 0 ? `${recorde.recorde_dias} dias` : '—';
+    const periodo = (recorde.recorde_inicio && recorde.recorde_fim)
+      ? `de ${recorde.recorde_inicio} até ${recorde.recorde_fim}` : '';
+    const ultimo = recorde.ultimo_data
+      ? `${recorde.ultimo_data} | ${recorde.ultimo_id || '—'} | ${recorde.ultimo_tipo || '—'} | SE: ${recorde.ultimo_se || '—'}`
+      : 'Sem registros';
+
+    return `
+    <g transform="translate(${x},0)">
+      <rect width="380" height="430" rx="16" fill="#ffffff" stroke="#e2e8e6" stroke-width="1.5"/>
+      <rect x="120" y="22" width="140" height="34" rx="17" fill="#e3f3ef"/>
+      <text x="190" y="44" font-family="Arial,sans-serif" font-size="15" font-weight="800" fill="${COR_VERDE}" text-anchor="middle" letter-spacing="1">${sigla}</text>
+      <text x="190" y="160" font-family="Arial Black,Arial,sans-serif" font-size="92" font-weight="900" fill="${COR_VERDE}" text-anchor="middle">${dias}</text>
+      <text x="190" y="195" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#52615e" text-anchor="middle" letter-spacing="1">DIAS SEM DESARMES</text>
+      <line x1="30" y1="222" x2="350" y2="222" stroke="#eef2f1" stroke-width="1.5"/>
+      <text x="190" y="252" font-family="Arial,sans-serif" font-size="14" fill="#52615e" text-anchor="middle">Recorde: <tspan font-weight="800" fill="${COR_LARANJA}">${recordeTxt}</tspan></text>
+      <text x="190" y="270" font-family="Arial,sans-serif" font-size="11" fill="#8a9794" text-anchor="middle">${periodo}</text>
+      <line x1="30" y1="296" x2="350" y2="296" stroke="#eef2f1" stroke-width="1.5"/>
+      <text x="30" y="320" font-family="Arial,sans-serif" font-size="12" font-weight="800" fill="${COR_VERDE}">ÚLTIMO DESARME</text>
+      <foreignObject x="30" y="328" width="320" height="90">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial,sans-serif;font-size:12px;color:#52615e;line-height:1.5;">${ultimo}</div>
+      </foreignObject>
+    </g>`;
+  }
+
+  function gerarImagemIndicador(dados, dataHora) {
     const outPath = path.join(__dirname, '..', 'data', `indicador_${Date.now()}.png`);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
-    // Gera SVG e converte para PNG usando sharp (ou salva SVG direto se sharp não disponível)
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0d2e2c"/>
-      <stop offset="100%" stop-color="#061a19"/>
-    </linearGradient>
-  </defs>
-  <rect width="600" height="400" rx="20" fill="url(#bg)"/>
-  <rect x="4" y="4" width="592" height="392" rx="18" fill="none" stroke="#EB8C0A" stroke-width="2"/>
-  <line x1="40" y1="44" x2="560" y2="44" stroke="#EB8C0A" stroke-width="2"/>
-  <line x1="40" y1="354" x2="560" y2="354" stroke="#EB8C0A" stroke-width="2"/>
-  <text x="300" y="92" font-family="serif" font-size="36" text-anchor="middle">🏆</text>
-  <text x="300" y="118" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="#F5AA41" text-anchor="middle" letter-spacing="3">${'I N D I C A D O R   D E   Q U A L I D A D E'}</text>
-  <text x="300" y="268" font-family="Arial Black,Arial,sans-serif" font-size="130" font-weight="900" fill="#F5AA41" text-anchor="middle" opacity="0.15">${dias}</text>
-  <text x="300" y="268" font-family="Arial Black,Arial,sans-serif" font-size="130" font-weight="900" fill="#F5AA41" text-anchor="middle">${dias}</text>
-  <text x="300" y="308" font-family="Arial,sans-serif" font-size="20" font-weight="bold" fill="#e8f4f3" text-anchor="middle">DIAS SEM DESARME</text>
-  <text x="300" y="348" font-family="Arial,sans-serif" font-size="13" fill="#4a7572" text-anchor="middle">OOMC — Manutenção Alta Tensão  |  ${dataHora}</text>
+    const geral = dados.GERAL;
+    const ultimoGeral = geral.ultimo_data
+      ? `${geral.ultimo_data} | ${geral.ultimo_id || '—'} | ${geral.ultimo_tipo || '—'} | SE: ${geral.ultimo_se || '—'}`
+      : 'Sem registros';
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="700">
+  <rect width="1240" height="700" fill="#f4f7f6"/>
+  <rect width="1240" height="10" fill="${COR_VERDE}"/>
+  <text x="40" y="55" font-family="Arial,sans-serif" font-size="13" font-weight="800" fill="${COR_VERDE}" letter-spacing="3">SEGURANÇA OPERACIONAL</text>
+  <text x="40" y="100" font-family="Arial Black,Arial,sans-serif" font-size="38" font-weight="900" fill="${COR_VERDE2}">GERÊNCIA MANUTENÇÃO ALTA TENSÃO</text>
+  <text x="40" y="128" font-family="Arial,sans-serif" font-size="15" fill="#52615e">Status consolidado de desarmes com interrupção</text>
+  <line x1="40" y1="155" x2="1200" y2="155" stroke="#dde5e3" stroke-width="1.5"/>
+
+  ${cardSVG(40,  'OOMC', dados.OOMC.dias, dados.OOMC)}
+  ${cardSVG(430, 'OOMM', dados.OOMM.dias, dados.OOMM)}
+  ${cardSVG(820, 'OOMT', dados.OOMT.dias, dados.OOMT)}
+
+  <rect x="40" y="610" width="1160" height="70" rx="14" fill="#fdf3e7" stroke="${COR_LARANJA}" stroke-width="2"/>
+  <text x="65" y="640" font-family="Arial,sans-serif" font-size="13" font-weight="800" fill="${COR_VERDE2}">CONSOLIDADO GERAL</text>
+  <text x="65" y="660" font-family="Arial,sans-serif" font-size="11" fill="#7a685a">${ultimoGeral}</text>
+  <text x="980" y="650" font-family="Arial Black,Arial,sans-serif" font-size="40" font-weight="900" fill="${COR_VERDE2}" text-anchor="middle">${geral.dias}</text>
+  <text x="980" y="668" font-family="Arial,sans-serif" font-size="10" fill="#52615e" text-anchor="middle">DIAS SEM DESARME</text>
+  <text x="1150" y="650" font-family="Arial Black,Arial,sans-serif" font-size="30" font-weight="900" fill="${COR_LARANJA}" text-anchor="end">${geral.recorde_dias}</text>
+  <text x="1150" y="668" font-family="Arial,sans-serif" font-size="10" fill="#52615e" text-anchor="end">RECORDE GERAL</text>
+
+  <text x="40" y="697" font-family="Arial,sans-serif" font-size="10" fill="#8a9794">GESTÃO DE ATIVOS E OCORRÊNCIAS</text>
+  <text x="1200" y="697" font-family="Arial,sans-serif" font-size="10" fill="#8a9794" text-anchor="end">GERADO EM ${dataHora}</text>
 </svg>`;
 
     const svgPath = outPath.replace('.png', '.svg');
     fs.writeFileSync(svgPath, svg);
 
-    // Tenta converter SVG → PNG com sharp se disponível
     try {
       const sharp = require('sharp');
       sharp(Buffer.from(svg)).png().toFileSync(outPath);
       try { fs.unlinkSync(svgPath); } catch(e) {}
       return outPath;
     } catch(e) {
-      // sharp não disponível — envia SVG mesmo (WhatsApp aceita)
       return svgPath;
     }
   }
@@ -1221,21 +1258,18 @@ function startServer() {
     const botState = require('./state');
     if (!botState.isReady() || !global._waClient) return;
 
-    const ind = indicador.buscar();
+    const dados = indicador.buscarTodas();
     const agoraBR = new Date(Date.now() - 3*60*60*1000);
     const dataHora = String(agoraBR.getUTCDate()).padStart(2,'0')+'/'+
       String(agoraBR.getUTCMonth()+1).padStart(2,'0')+'/'+agoraBR.getUTCFullYear()+
       ' às '+String(agoraBR.getUTCHours()).padStart(2,'0')+':'+String(agoraBR.getUTCMinutes()).padStart(2,'0');
 
     const msgTexto =
-      `🤖 *Sistema de Monitoramento Automático*\n` +
-      `\n` +
-      `🏆 *INDICADOR DE QUALIDADE*\n` +
-      `\n\n` +
-      `✅ *${ind.dias} DIAS SEM DESARME*\n\n` +
-      `📊 Monitoramento contínuo ativo\n` +
+      `🤖 *Sistema de Monitoramento Automático*\n\n` +
+      `🏆 *INDICADOR DE QUALIDADE — GERÊNCIA MAT*\n\n` +
+      `OOMC: ${dados.OOMC.dias} dias | OOMM: ${dados.OOMM.dias} dias | OOMT: ${dados.OOMT.dias} dias\n` +
+      `✅ *Geral: ${dados.GERAL.dias} dias sem desarme*\n\n` +
       `🕐 Atualizado em: ${dataHora}\n\n` +
-      `\n` +
       `_Gerado automaticamente pelo sistema OOMC_`;
 
     const grupoNome = process.env.GRUPO_INDICADOR_NOME || process.env.GRUPO_NOME || 'Resenha';
@@ -1249,9 +1283,8 @@ function startServer() {
       }
       const chat = await global._waClient.getChatById(global._grupoIndicadorId);
 
-      // Tenta gerar e enviar imagem — se falhar, envia só texto
       try {
-        const imgPath = gerarImagemContador(ind.dias, dataHora);
+        const imgPath = gerarImagemIndicador(dados, dataHora);
         const { MessageMedia } = require('whatsapp-web.js');
         const media = MessageMedia.fromFilePath(imgPath);
         await chat.sendMessage(media, { caption: msgTexto });
@@ -1261,8 +1294,7 @@ function startServer() {
         await chat.sendMessage(msgTexto);
       }
 
-      indicador.registrarDisparo();
-      console.log(`[INDICADOR] Disparado: ${ind.dias} dias — grupo: ${grupoNome}`);
+      console.log(`[INDICADOR] Disparado — grupo: ${grupoNome}`);
     } catch(e) {
       console.error('[INDICADOR] Erro ao disparar:', e.message);
       if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoIndicadorId = null;
@@ -1277,72 +1309,55 @@ function startServer() {
       const mm = String(agoraBR.getUTCMinutes()).padStart(2,'0');
       const horaAtual = `${hh}:${mm}`;
 
-      // Incrementa à meia-noite
       if (horaAtual === '00:00') {
-        indicador.incrementar();
-        console.log('[INDICADOR] +1 dia. Total:', indicador.buscar().dias);
+        indicador.incrementarTodas();
+        console.log('[INDICADOR] +1 dia em todas as gerências.');
       }
 
-      // Verifica horários de disparo automático
-      const ind = indicador.buscar();
-      if (ind.horario1 && horaAtual === ind.horario1) await dispararIndicador();
-      if (ind.horario2 && horaAtual === ind.horario2) await dispararIndicador();
+      const geral = indicador.buscar('GERAL');
+      if (geral?.horario1 && horaAtual === geral.horario1) await dispararIndicador();
+      if (geral?.horario2 && horaAtual === geral.horario2) await dispararIndicador();
     } catch(e) { console.error('[INDICADOR] Cron error:', e.message); }
   }, 60_000);
 
   // Rotas
   app.get('/api/indicador', requireAuth, (req, res) => {
-    try { res.json({ ok: true, data: indicador.buscar() }); }
+    try { res.json({ ok: true, data: indicador.buscarTodas() }); }
     catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
   app.patch('/api/indicador/horarios', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
-    try { res.json({ ok: true, data: indicador.atualizarHorarios(req.body) }); }
+    try { res.json({ ok: true, data: indicador.atualizarHorarios('GERAL', req.body) }); }
     catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
-  app.patch('/api/indicador/dias', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
+  app.patch('/api/indicador/:gerencia/dias', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
     try {
+      const gerencia = req.params.gerencia.toUpperCase();
+      if (!indicador.GERENCIAS.includes(gerencia)) return res.status(400).json({ ok: false, error: 'Gerência inválida' });
       const dias = parseInt(req.body.dias);
       if (isNaN(dias) || dias < 0) return res.status(400).json({ ok: false, error: 'Valor inválido' });
-      indicador.setDias(dias);
-      res.json({ ok: true, data: indicador.buscar() });
+      indicador.setDias(gerencia, dias);
+      res.json({ ok: true, data: indicador.buscar(gerencia) });
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
-  app.post('/api/indicador/zerar', requireAuth, requirePermissao('gerenciar_usuarios'), async (req, res) => {
+  app.patch('/api/indicador/:gerencia/recorde', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
     try {
-      const ind = indicador.zerar();
-      res.json({ ok: true, data: ind });
-      // Notifica o grupo do reset
-      setTimeout(async () => {
-        try {
-          const botState = require('./state');
-          if (!botState.isReady() || !global._waClient) return;
-          const grupoNome = process.env.GRUPO_INDICADOR_NOME || process.env.GRUPO_NOME || 'Resenha';
-          if (!global._grupoIndicadorId) {
-            const chats = await global._waClient.getChats();
-            const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
-            if (!grupo) return;
-            global._grupoIndicadorId = grupo.id._serialized;
-          }
-          const chat = await global._waClient.getChatById(global._grupoIndicadorId);
-          const agoraBR = new Date(Date.now() - 3*60*60*1000);
-          const dataHora = String(agoraBR.getUTCDate()).padStart(2,'0')+'/'+
-            String(agoraBR.getUTCMonth()+1).padStart(2,'0')+'/'+agoraBR.getUTCFullYear()+
-            ' às '+String(agoraBR.getUTCHours()).padStart(2,'0')+':'+String(agoraBR.getUTCMinutes()).padStart(2,'0');
-          await chat.sendMessage(
-            `🤖 *Sistema de Monitoramento Automático*\n` +
-            `\n` +
-            `🔄 *INDICADOR REINICIADO*\n` +
-            `\n\n` +
-            `⚠️ Contador zerado — ocorrência registrada\n` +
-            `🕐 ${dataHora}\n\n` +
-            `\n` +
-            `_Gerado automaticamente pelo sistema OOMC_`
-          );
-        } catch(e) { console.error('[INDICADOR] Erro ao notificar reset:', e.message); }
-      }, 500);
+      const gerencia = req.params.gerencia.toUpperCase();
+      if (!indicador.GERENCIAS.includes(gerencia)) return res.status(400).json({ ok: false, error: 'Gerência inválida' });
+      const { recorde_dias, recorde_inicio, recorde_fim } = req.body;
+      indicador.setRecorde(gerencia, parseInt(recorde_dias) || 0, recorde_inicio, recorde_fim);
+      res.json({ ok: true, data: indicador.buscar(gerencia) });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/indicador/:gerencia/zerar', requireAuth, requirePermissao('gerenciar_usuarios'), async (req, res) => {
+    try {
+      const gerencia = req.params.gerencia.toUpperCase();
+      if (!indicador.GERENCIAS.includes(gerencia)) return res.status(400).json({ ok: false, error: 'Gerência inválida' });
+      const dados = indicador.registrarDesarme(gerencia, {});
+      res.json({ ok: true, data: dados });
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
@@ -1354,6 +1369,7 @@ function startServer() {
   });
 
   // ── Detecção automática de Desarme via SharePoint (Ocorrencias AT) ───────
+  // Recebe a gerência já resolvida pelo desarme-monitor.js (via mapa SE→Gerência)
   app.post('/api/indicador/desarme-detectado', express.json(), async (req, res) => {
     try {
       const chave = req.headers['x-desarme-key'];
@@ -1361,9 +1377,15 @@ function startServer() {
         return res.status(403).json({ ok: false, error: 'Chave inválida' });
       }
 
-      const { sharepoint_id, titulo } = req.body || {};
-      const ind = indicador.zerar();
-      res.json({ ok: true, data: ind });
+      const { sharepoint_id, titulo, tipo, se, gerencia } = req.body || {};
+      if (!indicador.GERENCIAS.includes(gerencia) || gerencia === 'GERAL') {
+        console.warn('[DESARME] Gerência inválida ou ausente:', gerencia, '— SE:', se);
+        return res.status(400).json({ ok: false, error: 'Gerência inválida/ausente' });
+      }
+
+      const info = { id: sharepoint_id, titulo, tipo, se };
+      const dados = indicador.registrarDesarme(gerencia, info);
+      res.json({ ok: true, data: dados });
 
       const botState = require('./state');
       if (!botState.isReady() || !global._waClient) return;
@@ -1376,10 +1398,12 @@ function startServer() {
 
       const msg =
         `🤖 *Sistema de Monitoramento Automático*\n\n` +
-        `🚨 *DESARME REGISTRADO*\n\n` +
+        `🚨 *DESARME REGISTRADO — ${gerencia}*\n\n` +
         (titulo ? `📋 ${titulo}\n` : '') +
+        (tipo   ? `🔧 Tipo: ${tipo}\n` : '') +
+        (se     ? `📍 SE: ${se}\n` : '') +
         (sharepoint_id ? `🆔 Ocorrência: ${sharepoint_id}\n` : '') +
-        `🔄 Indicador de qualidade zerado\n` +
+        `🔄 Indicador ${gerencia} e Geral zerados\n` +
         `🕐 ${dataHora}\n\n` +
         `_Gerado automaticamente pelo sistema OOMC_`;
 
@@ -1391,8 +1415,20 @@ function startServer() {
           global._grupoCiaoId = grupo.id._serialized;
         }
         const chat = await global._waClient.getChatById(global._grupoCiaoId);
-        await chat.sendMessage(msg);
-        console.log('[DESARME] Notificado grupo:', grupoNome);
+
+        try {
+          const dadosTodos = indicador.buscarTodas();
+          const imgPath = gerarImagemIndicador(dadosTodos, dataHora);
+          const { MessageMedia } = require('whatsapp-web.js');
+          const media = MessageMedia.fromFilePath(imgPath);
+          await chat.sendMessage(media, { caption: msg });
+          try { fs.unlinkSync(imgPath); } catch(e) {}
+        } catch(imgErr) {
+          console.warn('[DESARME] Falha ao gerar imagem, enviando só texto:', imgErr.message);
+          await chat.sendMessage(msg);
+        }
+
+        console.log('[DESARME] Notificado grupo:', grupoNome, '— gerência:', gerencia);
       } catch(e) {
         console.error('[DESARME] Erro ao notificar:', e.message);
         if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoCiaoId = null;
