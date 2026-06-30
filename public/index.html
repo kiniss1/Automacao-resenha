@@ -66,22 +66,26 @@
     .ind-badge{display:flex;align-items:center;gap:6px;background:#2d1f00;border:1px solid #EB8C0A;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.9rem;font-weight:800;color:#F5AA41;transition:all .15s;user-select:none;white-space:nowrap}
     .ind-badge:hover{background:#3d2a00;box-shadow:0 4px 16px rgba(235,140,10,.25);transform:translateY(-1px)}
     .ind-badge.open{background:#3d2a00;box-shadow:0 4px 16px rgba(235,140,10,.3)}
-    .ind-dropdown{position:absolute;top:calc(100% + 8px);left:0;background:#1a1200;border:1px solid #EB8C0A;border-radius:12px;min-width:240px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:200;display:none;overflow:hidden}
+    .ind-badge.muted{border-color:var(--muted2);color:var(--muted)}
+    .ind-dropdown{position:absolute;top:calc(100% + 8px);left:0;background:#1a1200;border:1px solid #EB8C0A;border-radius:12px;min-width:300px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:200;display:none;overflow:hidden}
     .ind-dropdown.show{display:block;animation:menuIn .15s ease}
-    .ind-drop-header{background:#2d1f00;padding:16px;text-align:center;border-bottom:1px solid #EB8C0A44}
-    .ind-drop-num{font-size:3rem;font-weight:900;color:#F5AA41;line-height:1;text-shadow:0 0 20px rgba(245,170,65,.4)}
-    .ind-drop-lbl{font-size:.65rem;font-weight:700;color:#F5AA41;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
-    .ind-drop-sub{font-size:.65rem;color:#a07830;margin-top:6px}
+    .ind-drop-header{background:#2d1f00;padding:14px 16px;border-bottom:1px solid #EB8C0A44}
+    .ind-ger-row{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:#F5AA41;padding:3px 0}
+    .ind-ger-row b{font-size:1rem}
+    .ind-drop-num{font-size:2.4rem;font-weight:900;color:#F5AA41;line-height:1;text-shadow:0 0 20px rgba(245,170,65,.4);text-align:center}
+    .ind-drop-lbl{font-size:.62rem;font-weight:700;color:#F5AA41;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;text-align:center}
+    .ind-drop-sub{font-size:.65rem;color:#a07830;margin-top:6px;text-align:center}
     .ind-drop-section{padding:12px 14px;border-bottom:1px solid #EB8C0A22}
     .ind-drop-label{font-size:.65rem;font-weight:700;color:#a07830;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
     .ind-drop-times{display:flex;gap:6px}
-    .ind-drop-times input[type=time]{flex:1;background:#0d0800;border:1px solid #EB8C0A55;color:#F5AA41;border-radius:6px;padding:6px 8px;font-size:.78rem;outline:none}
-    .ind-drop-times input[type=time]:focus{border-color:#EB8C0A}
-    .ind-drop-actions{padding:10px 14px;display:flex;gap:6px}
-    .ind-btn{flex:1;background:var(--primary);color:#fff;border:none;border-radius:7px;padding:8px 10px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s;text-align:center}
+    .ind-drop-times input[type=time],.ind-drop-times select{flex:1;background:#0d0800;border:1px solid #EB8C0A55;color:#F5AA41;border-radius:6px;padding:6px 8px;font-size:.78rem;outline:none}
+    .ind-drop-times input[type=time]:focus,.ind-drop-times select:focus{border-color:#EB8C0A}
+    .ind-drop-actions{padding:10px 14px;display:flex;gap:6px;flex-wrap:wrap}
+    .ind-btn{flex:1;background:var(--primary);color:#fff;border:none;border-radius:7px;padding:8px 10px;font-size:.73rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s;text-align:center;min-width:120px}
     .ind-btn:hover{opacity:.88}
     .ind-btn:disabled{opacity:.4;cursor:default}
     .ind-btn.red{background:var(--red)}
+    .ind-btn.gray{background:var(--gray)}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;min-width:80px;text-align:center;transition:border-color .12s;cursor:default}
     .stat-card:hover{border-color:var(--border2)}
     .stat-card .num{font-size:22px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
@@ -293,19 +297,22 @@
       <span>OOMC — Manutenção Alta Tensão</span>
     </div>
     <div class="ind-wrap" id="indWrap">
-      <div class="ind-badge" onclick="toggleIndicador()" title="Indicador de Qualidade">
+      <div class="ind-badge" onclick="toggleIndicador()" title="Indicador de Qualidade" id="indBadge">
         🏆 <span id="indNum">–</span>
       </div>
       <div class="ind-dropdown" id="indDropdown">
         <div class="ind-drop-header">
           <div class="ind-drop-num" id="indDropNum">–</div>
-          <div class="ind-drop-lbl">dias sem desarme</div>
+          <div class="ind-drop-lbl">dias sem desarme (geral)</div>
+          <div class="ind-ger-row"><span>OOMC</span><b id="indOomc">–</b></div>
+          <div class="ind-ger-row"><span>OOMM</span><b id="indOomm">–</b></div>
+          <div class="ind-ger-row"><span>OOMT</span><b id="indOomt">–</b></div>
           <div class="ind-drop-sub" id="indSub">Carregando...</div>
         </div>
         <div class="ind-drop-section">
-          <div class="ind-drop-label">✏️ Editar dias manualmente</div>
+          <div class="ind-drop-label">✏️ Editar dias (Geral)</div>
           <div class="ind-drop-times">
-            <input type="number" id="indEditDias" min="0" style="flex:1;background:#0d0800;border:1px solid #EB8C0A55;color:#F5AA41;border-radius:6px;padding:6px 8px;font-size:.78rem;outline:none" placeholder="Nº de dias"/>
+            <input type="number" id="indEditDias" min="0" placeholder="Nº de dias"/>
             <button class="ind-btn" onclick="editarDias()" style="flex:none;padding:6px 10px">✓ Salvar</button>
           </div>
         </div>
@@ -317,8 +324,9 @@
           </div>
         </div>
         <div class="ind-drop-actions">
-          <button class="ind-btn" id="btnDispararInd" onclick="dispararIndicador()">📲 Disparar agora</button>
-          <button class="ind-btn red" onclick="zerarIndicador()">🔄 Zerar contador</button>
+          <button class="ind-btn" id="btnDispararInd" onclick="dispararIndicador()">📲 Re-sinalizar status real</button>
+          <button class="ind-btn gray" id="btnMuteInd" onclick="toggleMuteAlertas()">🔕 Não alertar no grupo</button>
+          <button class="ind-btn red" onclick="zerarIndicador()">🔄 Zerar (OOMC)</button>
         </div>
       </div>
     </div>
@@ -1108,34 +1116,45 @@
   setInterval(carregarIndicador, 60_000);
 
   function toggleIndicador() {
-    const badge = document.querySelector('.ind-badge');
+    const badge = document.getElementById('indBadge');
     const dd    = document.getElementById('indDropdown');
     badge.classList.toggle('open');
     dd.classList.toggle('show');
   }
   document.addEventListener('click', e => {
     if (!e.target.closest('.ind-wrap')) {
-      document.querySelector('.ind-badge')?.classList.remove('open');
+      document.getElementById('indBadge')?.classList.remove('open');
       document.getElementById('indDropdown')?.classList.remove('show');
     }
   });
 
-  // ── Indicador de Qualidade ────────────────────────────────────────────────
+  // ── Indicador de Qualidade — OOMC/OOMM/OOMT + Geral ────────────────────────
+  let _indMutado = false;
+
   async function carregarIndicador() {
     try {
       const r = await authFetch('/api/indicador').then(r=>r.json());
       if (!r.ok) return;
-      const d = r.data;
-      document.getElementById('indNum').textContent = d.dias;
-      document.getElementById('indDropNum').textContent = d.dias;
-      document.getElementById('indH1').value = d.horario1 || '07:00';
-      document.getElementById('indH2').value = d.horario2 || '';
-      const ultimo = d.ultimo_disparo ? (() => {
-        const [data, hora] = d.ultimo_disparo.slice(0,16).split(' ');
-        const [y,m,dd] = data.split('-');
-        return `Último: ${dd}/${m}/${y} às ${hora}`;
-      })() : 'Nenhum disparo ainda';
-      document.getElementById('indSub').textContent = ultimo;
+      const d = r.data; // { OOMC, OOMM, OOMT, GERAL }
+      document.getElementById('indNum').textContent     = d.GERAL.dias;
+      document.getElementById('indDropNum').textContent = d.GERAL.dias;
+      document.getElementById('indOomc').textContent = d.OOMC.dias;
+      document.getElementById('indOomm').textContent = d.OOMM.dias;
+      document.getElementById('indOomt').textContent = d.OOMT.dias;
+      document.getElementById('indH1').value = d.GERAL.horario1 || '07:00';
+      document.getElementById('indH2').value = d.GERAL.horario2 || '';
+
+      _indMutado = !!d.GERAL.alertas_mutados;
+      const badge   = document.getElementById('indBadge');
+      const btnMute = document.getElementById('btnMuteInd');
+      badge.classList.toggle('muted', _indMutado);
+      btnMute.textContent = _indMutado ? '🔔 Reativar alertas' : '🔕 Não alertar no grupo';
+      btnMute.classList.toggle('red', _indMutado);
+      btnMute.classList.toggle('gray', !_indMutado);
+
+      document.getElementById('indSub').textContent = _indMutado
+        ? '⚠️ Alertas automáticos DESATIVADOS'
+        : (d.GERAL.ultimo_data ? `Último desarme: ${d.GERAL.ultimo_data}` : 'Nenhum desarme registrado');
     } catch(e) {}
   }
 
@@ -1143,7 +1162,7 @@
     const dias = parseInt(document.getElementById('indEditDias').value);
     if (isNaN(dias) || dias < 0) { toast('Valor inválido', 'err'); return; }
     try {
-      const r = await authFetch('/api/indicador/dias', {
+      const r = await authFetch('/api/indicador/GERAL/dias', {
         method:'PATCH', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ dias })
       }).then(r=>r.json());
@@ -1163,23 +1182,42 @@
     } catch(e) {}
   }
 
+  // Re-sinaliza no grupo o status real (atual) de todas as gerências, independente de estar mutado
   async function dispararIndicador() {
     const btn = document.getElementById('btnDispararInd');
     btn.disabled = true; btn.textContent = '⏳ Enviando...';
     try {
       const r = await authFetch('/api/indicador/disparar', { method:'POST' }).then(r=>r.json());
-      if (r.ok) toast('Indicador disparado no grupo!', 'ok');
+      if (r.ok) toast('Status real re-sinalizado no grupo!', 'ok');
       else toast(r.error || 'Erro ao disparar', 'err');
     } catch(e) { toast('Erro: ' + e.message, 'err'); }
-    btn.disabled = false; btn.innerHTML = '📲 Disparar';
+    btn.disabled = false; btn.textContent = '📲 Re-sinalizar status real';
     await carregarIndicador();
   }
 
-  async function zerarIndicador() {
-    if (!confirm('Zerar o contador? Isso registrará uma ocorrência de desarme.')) return;
+  // Liga/desliga alertas automáticos de desarme (continua registrando/zerando, só não manda WhatsApp sozinho)
+  async function toggleMuteAlertas() {
+    const novoEstado = !_indMutado;
+    const btn = document.getElementById('btnMuteInd');
+    btn.disabled = true;
     try {
-      const r = await authFetch('/api/indicador/zerar', { method:'POST' }).then(r=>r.json());
-      if (r.ok) { toast('Contador zerado — notificação enviada!', 'ok'); await carregarIndicador(); }
+      const r = await authFetch('/api/indicador/mute', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ mute: novoEstado })
+      }).then(r=>r.json());
+      if (r.ok) {
+        toast(novoEstado ? '🔕 Alertas automáticos desativados' : '🔔 Alertas automáticos reativados', 'ok');
+        await carregarIndicador();
+      } else toast(r.error || 'Erro', 'err');
+    } catch(e) { toast('Erro: ' + e.message, 'err'); }
+    btn.disabled = false;
+  }
+
+  async function zerarIndicador() {
+    if (!confirm('Zerar o contador da OOMC manualmente? Isso registrará uma ocorrência de desarme.')) return;
+    try {
+      const r = await authFetch('/api/indicador/OOMC/zerar', { method:'POST' }).then(r=>r.json());
+      if (r.ok) { toast('Contador OOMC zerado!', 'ok'); await carregarIndicador(); }
       else toast(r.error || 'Erro ao zerar', 'err');
     } catch(e) { toast('Erro: ' + e.message, 'err'); }
   }
