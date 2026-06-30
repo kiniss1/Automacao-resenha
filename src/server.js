@@ -1383,6 +1383,15 @@ function startServer() {
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
+  // Liga/desliga alertas automáticos de desarme no grupo (o registro/zerar continua acontecendo)
+  app.post('/api/indicador/mute', requireAuth, requirePermissao('gerenciar_usuarios'), express.json(), (req, res) => {
+    try {
+      const mutado = !!req.body.mute;
+      const dados = indicador.setMute(mutado);
+      res.json({ ok: true, data: dados });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
   // ── Detecção automática de Desarme via SharePoint (Ocorrencias AT) ───────
   // Recebe a gerência já resolvida pelo desarme-monitor.js (via mapa SE→Gerência)
   app.post('/api/indicador/desarme-detectado', express.json(), async (req, res) => {
@@ -1404,6 +1413,10 @@ function startServer() {
 
       const botState = require('./state');
       if (!botState.isReady() || !global._waClient) return;
+      if (indicador.estaMutado()) {
+        console.log('[DESARME] Alertas automáticos mutados — não enviado ao grupo (dados já registrados).');
+        return;
+      }
 
       const grupoNome = process.env.GRUPO_CIAO_NOME || process.env.GRUPO_NOME || 'Resenha';
       const agoraBR = new Date(Date.now() - 3*60*60*1000);
