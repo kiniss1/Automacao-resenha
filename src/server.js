@@ -1353,6 +1353,56 @@ function startServer() {
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
+  // ── Detecção automática de Desarme via SharePoint (Ocorrencias AT) ───────
+  app.post('/api/indicador/desarme-detectado', express.json(), async (req, res) => {
+    try {
+      const chave = req.headers['x-desarme-key'];
+      if (chave !== process.env.DESARME_SECRET) {
+        return res.status(403).json({ ok: false, error: 'Chave inválida' });
+      }
+
+      const { sharepoint_id, titulo } = req.body || {};
+      const ind = indicador.zerar();
+      res.json({ ok: true, data: ind });
+
+      const botState = require('./state');
+      if (!botState.isReady() || !global._waClient) return;
+
+      const grupoNome = process.env.GRUPO_CIAO_NOME || process.env.GRUPO_NOME || 'Resenha';
+      const agoraBR = new Date(Date.now() - 3*60*60*1000);
+      const dataHora = String(agoraBR.getUTCDate()).padStart(2,'0')+'/'+
+        String(agoraBR.getUTCMonth()+1).padStart(2,'0')+'/'+agoraBR.getUTCFullYear()+
+        ' às '+String(agoraBR.getUTCHours()).padStart(2,'0')+':'+String(agoraBR.getUTCMinutes()).padStart(2,'0');
+
+      const msg =
+        `🤖 *Sistema de Monitoramento Automático*\n\n` +
+        `🚨 *DESARME REGISTRADO*\n\n` +
+        (titulo ? `📋 ${titulo}\n` : '') +
+        (sharepoint_id ? `🆔 Ocorrência: ${sharepoint_id}\n` : '') +
+        `🔄 Indicador de qualidade zerado\n` +
+        `🕐 ${dataHora}\n\n` +
+        `_Gerado automaticamente pelo sistema OOMC_`;
+
+      try {
+        if (!global._grupoCiaoId) {
+          const chats = await global._waClient.getChats();
+          const grupo = chats.find(c => c.isGroup && c.name === grupoNome);
+          if (!grupo) { console.warn('[DESARME] Grupo "' + grupoNome + '" não encontrado.'); return; }
+          global._grupoCiaoId = grupo.id._serialized;
+        }
+        const chat = await global._waClient.getChatById(global._grupoCiaoId);
+        await chat.sendMessage(msg);
+        console.log('[DESARME] Notificado grupo:', grupoNome);
+      } catch(e) {
+        console.error('[DESARME] Erro ao notificar:', e.message);
+        if (e.message?.includes('not found') || e.message?.includes('404')) global._grupoCiaoId = null;
+      }
+    } catch(e) {
+      console.error('[DESARME] Erro:', e.message);
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════
 
   // ── Relatório de Inspeções WhatsApp (grupo separado) ─────────────────────
