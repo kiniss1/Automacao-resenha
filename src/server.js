@@ -1199,8 +1199,8 @@ function startServer() {
     const recordeTxt = recorde.recorde_dias > 0 ? `${recorde.recorde_dias} dias` : '—';
     const periodo = (recorde.recorde_inicio && recorde.recorde_fim)
       ? `de ${recorde.recorde_inicio} até ${recorde.recorde_fim}` : '';
-    const ultimoBruto = recorde.ultimo_data
-      ? `${recorde.ultimo_data} | ${recorde.ultimo_id || '—'} | ${recorde.ultimo_tipo || '—'} | SE: ${recorde.ultimo_se || '—'}`
+    const ultimoBruto = recorde.ultimo_id
+      ? `${recorde.ultimo_data || 'data n/d'} | ${recorde.ultimo_id} | ${recorde.ultimo_tipo || '—'} | SE: ${recorde.ultimo_se || '—'}`
       : 'Sem registros';
     const ultimoLinhas = quebrarLinhas(ultimoBruto, 38);
     const ultimoTspans = ultimoLinhas.map((l, i) =>
@@ -1228,8 +1228,8 @@ function startServer() {
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
     const geral = dados.GERAL;
-    const ultimoGeral = geral.ultimo_data
-      ? `${geral.ultimo_data} | ${geral.ultimo_id || '—'} | ${geral.ultimo_tipo || '—'} | SE: ${geral.ultimo_se || '—'}`
+    const ultimoGeral = geral.ultimo_id
+      ? `${geral.ultimo_data || 'data n/d'} | ${geral.ultimo_id} | ${geral.ultimo_tipo || '—'} | SE: ${geral.ultimo_se || '—'}`
       : 'Sem registros';
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="700">
