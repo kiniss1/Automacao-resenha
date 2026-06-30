@@ -1392,6 +1392,29 @@ function startServer() {
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
+  // Sincroniza o "último desarme" de cada gerência com o histórico real do SharePoint
+  // (NÃO zera dias nem mexe no recorde — só preenche o card de "último desarme")
+  // Chamada pelo desarme-monitor.js (modo --sync), sem disparar mensagem no WhatsApp
+  app.post('/api/indicador/sincronizar-historico', express.json(), (req, res) => {
+    try {
+      const chave = req.headers['x-desarme-key'];
+      if (chave !== process.env.DESARME_SECRET) {
+        return res.status(403).json({ ok: false, error: 'Chave inválida' });
+      }
+      const itens = Array.isArray(req.body.itens) ? req.body.itens : [];
+      const resultado = {};
+      for (const item of itens) {
+        const { gerencia, sharepoint_id, titulo, tipo, se, data } = item;
+        if (!indicador.GERENCIAS.includes(gerencia) || gerencia === 'GERAL') continue;
+        resultado[gerencia] = indicador.setUltimoDesarme(gerencia, { id: sharepoint_id, titulo, tipo, se, data });
+      }
+      res.json({ ok: true, data: resultado });
+    } catch(e) {
+      console.error('[SYNC-HIST] Erro:', e.message);
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // ── Detecção automática de Desarme via SharePoint (Ocorrencias AT) ───────
   // Recebe a gerência já resolvida pelo desarme-monitor.js (via mapa SE→Gerência)
   app.post('/api/indicador/desarme-detectado', express.json(), async (req, res) => {
