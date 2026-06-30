@@ -1281,7 +1281,7 @@ function startServer() {
 
     const msgTexto =
       `🤖 *Sistema de Monitoramento Automático*\n\n` +
-      `🏆 *INDICADOR DE QUALIDADE — GERÊNCIA MAT*\n\n` +
+      `🏆 *INDICADOR DE QUALIDADE*\n\n` +
       `OOMC: ${dados.OOMC.dias} dias | OOMM: ${dados.OOMM.dias} dias | OOMT: ${dados.OOMT.dias} dias\n` +
       `✅ *Geral: ${dados.GERAL.dias} dias sem desarme*\n\n` +
       `🕐 Atualizado em: ${dataHora}\n\n` +
