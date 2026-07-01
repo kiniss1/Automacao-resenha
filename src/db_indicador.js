@@ -25,6 +25,7 @@ function setDb(database) {
     )
   `);
   try { db.run(`ALTER TABLE indicador_gerencias ADD COLUMN alertas_mutados INTEGER NOT NULL DEFAULT 0`); } catch(e) {}
+  try { db.run(`ALTER TABLE indicador_gerencias ADD COLUMN ultimo_equipamento TEXT`); } catch(e) {}
 
   const hoje = dataHojeBR();
   for (const g of GERENCIAS) {
