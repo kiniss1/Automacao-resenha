@@ -1637,10 +1637,16 @@ function startServer() {
       page.setViewport({ width: 1280, height: 900 });
       
       const urlLocal = `http://localhost:${PORT}/index.html`;
-      await page.goto(urlLocal, { waitUntil: 'networkidle2', timeout: 30000 });
+      await page.goto(urlLocal, { waitUntil: 'networkidle0', timeout: 30000 });
       
-      // Aguarda carregar os dados (elemento .card ou similar)
-      await page.waitForSelector('[data-testid="painel"], body', { timeout: 10000 }).catch(() => {});
+      // Aguarda o painel carregar (elemento com a tabela de OS ou badge de indicador)
+      await page.waitForFunction(
+        () => document.querySelectorAll('table tr, [class*="card"], .badge, h2').length > 0,
+        { timeout: 15000 }
+      ).catch(() => {});
+      
+      // Aguarda mais 2s pra garantir que animações terminaram
+      await page.waitForTimeout(2000);
       
       const screenshotPath = path.join(__dirname, '..', 'data', `painel_screenshot_${Date.now()}.png`);
       fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
