@@ -1661,7 +1661,7 @@ function startServer() {
       ).catch(() => {});
       
       // Aguarda mais 2s pra garantir que animações terminaram
-      await page.waitForTimeout(2000);
+      await page.evaluate(() => new Promise(r => setTimeout(r, 2000)));
       
       const screenshotPath = path.join(__dirname, '..', 'data', `painel_screenshot_${Date.now()}.png`);
       fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
