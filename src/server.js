@@ -1639,6 +1639,21 @@ function startServer() {
       const urlLocal = `http://localhost:${PORT}/index.html`;
       await page.goto(urlLocal, { waitUntil: 'networkidle0', timeout: 30000 });
       
+      // Verifica se está pedindo login
+      const temLogin = await page.$('input[type="password"], [placeholder*="senha"], form');
+      if (temLogin) {
+        const USER = process.env.ADMIN_USER || 'admin';
+        const PASS = process.env.ADMIN_PASS || 'admin';
+        
+        // Preenche e submete login
+        await page.type('input[type="text"], input[name="username"]', USER).catch(() => {});
+        await page.type('input[type="password"]', PASS).catch(() => {});
+        await page.click('button[type="submit"], button').catch(() => {});
+        
+        // Aguarda redirecionamento pra dashboard
+        await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 15000 }).catch(() => {});
+      }
+      
       // Aguarda o painel carregar (elemento com a tabela de OS ou badge de indicador)
       await page.waitForFunction(
         () => document.querySelectorAll('table tr, [class*="card"], .badge, h2').length > 0,
