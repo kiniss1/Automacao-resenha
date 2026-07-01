@@ -1645,10 +1645,16 @@ function startServer() {
         const USER = process.env.ADMIN_USER || 'admin';
         const PASS = process.env.ADMIN_PASS || 'admin';
         
-        // Preenche e submete login
-        await page.type('input[type="text"], input[name="username"]', USER).catch(() => {});
-        await page.type('input[type="password"]', PASS).catch(() => {});
-        await page.click('button[type="submit"], button').catch(() => {});
+        // Preenche login — espera pelos inputs certos
+        const inputUsuario = await page.$('input[type="text"][placeholder*="usu"], input[name="username"], input[autocomplete="username"]');
+        const inputSenha = await page.$('input[type="password"], input[autocomplete="password"]');
+        
+        if (inputUsuario) await inputUsuario.type(USER, { delay: 50 });
+        if (inputSenha) await inputSenha.type(PASS, { delay: 50 });
+        
+        // Clica no botão de login
+        const botao = await page.$('button[type="submit"], button');
+        if (botao) await botao.click();
         
         // Aguarda redirecionamento pra dashboard
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 15000 }).catch(() => {});
@@ -1665,8 +1671,8 @@ function startServer() {
         { timeout: 20000 }
       ).catch(() => {});
       
-      // Aguarda mais 3s pra garantir que animações terminaram e dados estão renderizados
-      await page.evaluate(() => new Promise(r => setTimeout(r, 3000)));
+      // Aguarda mais 6s pra garantir que animações terminaram e dados estão renderizados
+      await page.evaluate(() => new Promise(r => setTimeout(r, 6000)));
       
       const screenshotPath = path.join(__dirname, '..', 'data', `painel_screenshot_${Date.now()}.png`);
       fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
