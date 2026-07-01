@@ -1656,12 +1656,17 @@ function startServer() {
       
       // Aguarda o painel carregar (elemento com a tabela de OS ou badge de indicador)
       await page.waitForFunction(
-        () => document.querySelectorAll('table tr, [class*="card"], .badge, h2').length > 0,
-        { timeout: 15000 }
+        () => {
+          const table = document.querySelector('table');
+          const badge = document.querySelector('[class*="badge"]');
+          const loaded = (table && table.querySelectorAll('tr').length > 1) || (badge && badge.textContent.trim());
+          return loaded;
+        },
+        { timeout: 20000 }
       ).catch(() => {});
       
-      // Aguarda mais 2s pra garantir que animações terminaram
-      await page.evaluate(() => new Promise(r => setTimeout(r, 2000)));
+      // Aguarda mais 3s pra garantir que animações terminaram e dados estão renderizados
+      await page.evaluate(() => new Promise(r => setTimeout(r, 3000)));
       
       const screenshotPath = path.join(__dirname, '..', 'data', `painel_screenshot_${Date.now()}.png`);
       fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
