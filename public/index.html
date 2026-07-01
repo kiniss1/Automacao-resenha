@@ -61,7 +61,6 @@
     .menu-item.danger:hover{background:rgba(224,90,78,.08)}
     .menu-divider{height:1px;background:var(--border);margin:4px 0}
     .stats-bar{display:flex;gap:10px;padding:16px 20px;flex-wrap:wrap}
-    /* Indicador de Qualidade — badge minimizado com dropdown */
     .ind-wrap{position:relative;margin-left:10px}
     .ind-badge{display:flex;align-items:center;gap:6px;background:#2d1f00;border:1px solid #EB8C0A;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.9rem;font-weight:800;color:#F5AA41;transition:all .15s;user-select:none;white-space:nowrap}
     .ind-badge:hover{background:#3d2a00;box-shadow:0 4px 16px rgba(235,140,10,.25);transform:translateY(-1px)}
@@ -211,7 +210,6 @@
     .btn-sp{background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;transition:opacity .15s;white-space:nowrap}
     .btn-sp:hover{opacity:.85}
     .btn-sp:disabled{opacity:.4;cursor:default}
-    /* ── Toggle hoje/geral ── */
     .stats-toggle{display:flex;align-items:center;gap:8px;padding:0 20px 10px;margin-top:-6px}
     .toggle-label{font-size:.75rem;color:var(--muted);font-weight:600;transition:color .2s}
     .toggle-label.active{color:var(--text)}
@@ -219,7 +217,6 @@
     .toggle-track.on{background:var(--primary)}
     .toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
     .toggle-track.on .toggle-thumb{transform:translateX(20px)}
-    /* ── Modal relatório ── */
     #relModal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px)}
     #relModal.hidden{display:none}
     .rel-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:400px;max-width:92vw;display:flex;flex-direction:column;gap:14px}
@@ -234,8 +231,6 @@
     #toast.show{transform:translateY(0);opacity:1}
     #toast.ok{border-color:var(--green-border);color:var(--green)}
     #toast.err{border-color:var(--red-border);color:var(--red)}
-
-    /* ── Modal exclusão com senha ── */
     #delOsModal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:600;backdrop-filter:blur(3px)}
     #delOsModal.hidden{display:none}
     .del-os-box{background:var(--surface);border:1px solid var(--red-border);border-radius:14px;padding:28px;width:340px;max-width:92vw}
@@ -250,8 +245,6 @@
     .del-os-box .btn-del-os{flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s}
     .del-os-box .btn-del-os:hover{opacity:.85}
     .del-os-box .btn-del-os:disabled{opacity:.4;cursor:default}
-
-    /* ── Splash de boas-vindas ── */
     #splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease}
     #splash.fade-out{opacity:0;pointer-events:none}
     .splash-logo{width:64px;height:64px;background:var(--primary);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:22px;opacity:0;transform:translateY(10px);animation:splashIn .6s ease forwards}
@@ -269,7 +262,7 @@
     @keyframes splashPulse{0%,100%{opacity:.25}50%{opacity:1}}
   </style>
 </head>
-<body>
+<body class="light">
 
 <div id="splash">
   <div class="splash-logo">
@@ -352,7 +345,7 @@
         <a href="/colaboradores.html" class="menu-item" id="linkColabs" style="display:none"><span class="ico">👷</span> Colaboradores</a>
         <div class="menu-divider"></div>
         <button class="menu-item" id="btnRelatorio" onclick="fecharMenu();abrirRelatorio()" style="display:none"><span class="ico" style="color:#25d366">📤</span> Relatório</button>
-        <button class="menu-item" onclick="toggleTema()"><span class="ico">🌙</span> <span id="temaLabel">Tema: Escuro</span></button>
+        <button class="menu-item" onclick="toggleTema()"><span class="ico">🌙</span> <span id="temaLabel">Tema: Claro</span></button>
         <div class="menu-divider"></div>
         <button class="menu-item danger" onclick="logout()"><span class="ico">🚪</span> Sair</button>
       </div>
@@ -397,7 +390,6 @@
   <div class="empty"><div class="spinner"></div><br>Carregando...</div>
 </div>
 
-<!-- Modal exclusão com senha supervisor -->
 <div id="delOsModal" class="hidden">
   <div class="del-os-box">
     <h3>🗑️ Excluir Ordem de Serviço</h3>
@@ -413,7 +405,6 @@
   </div>
 </div>
 
-<!-- Modal Relatório -->
 <div id="relModal" class="hidden">
   <div class="rel-box">
     <h3>📤 Enviar Relatório ao WhatsApp</h3>
@@ -426,7 +417,6 @@
   </div>
 </div>
 
-<!-- Modal OS -->
 <div class="modal-bg hidden" id="modalBg" onclick="closeModal(event)">
   <div class="modal">
     <div class="modal-top-bar" id="modalTopBar"></div>
@@ -492,7 +482,7 @@
                 onkeydown="if(event.key==='Enter')enviarSP()"/>
               <button class="btn-sp" id="btnSpModal" onclick="enviarSP()">📤 Enviar ao SharePoint</button>
             </div>
-            <p style="font-size:.72rem;color:var(--muted)">Informe o peso antes de enviar. Este valor será gravado no SharePoint.</p>
+            <p style="font-size:.72rem;color:var(--muted)">Informe o peso antes de enviar.</p>
           </div>
         </div>
       </div>
@@ -500,7 +490,6 @@
   </div>
 </div>
 
-<!-- Edit Modal -->
 <div class="edit-modal-bg hidden" id="editModalBg" onclick="fecharEditor(event)">
   <div class="edit-modal">
     <h2>✏️ Editar Atividade</h2>
@@ -528,7 +517,6 @@
   </div>
 </div>
 
-<!-- Lightbox -->
 <div class="lightbox hidden" id="lightbox" onclick="this.classList.add('hidden')">
   <img id="lightboxImg" src="" alt="APR"/>
 </div>
@@ -536,6 +524,27 @@
 <div id="toast"></div>
 
 <script>
+  // ── Tema — padrão CLARO ───────────────────────────────────────────────────
+  (function(){
+    const tema = localStorage.getItem('tema');
+    const lbl  = document.getElementById('temaLabel');
+    if (tema === 'dark') {
+      document.body.classList.remove('light');
+      if (lbl) lbl.textContent = 'Tema: Escuro';
+    } else {
+      document.body.classList.add('light');
+      if (lbl) lbl.textContent = 'Tema: Claro';
+    }
+  })();
+
+  function toggleTema(){
+    const isLight = document.body.classList.toggle('light');
+    const lbl = document.getElementById('temaLabel');
+    if (lbl) lbl.textContent = isLight ? 'Tema: Claro' : 'Tema: Escuro';
+    localStorage.setItem('tema', isLight ? 'light' : 'dark');
+    fecharMenu();
+  }
+
   // ── Autenticação ──────────────────────────────────────────────────────────
   const TOKEN = localStorage.getItem('oomc_token');
   let USUARIO = {};
@@ -592,13 +601,11 @@
   }
 
   function e(s){ return String(s||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
-
   function toast(msg, type='ok'){
     const el=document.getElementById('toast');
     el.textContent=msg; el.className='show '+type;
     clearTimeout(el._t); el._t=setTimeout(()=>{el.className='';},3000);
   }
-
   function debounceLoad(){ clearTimeout(_debounce); _debounce=setTimeout(load,400); }
 
   function toggleCollapse(id, btn) {
@@ -620,15 +627,12 @@
   }
 
   let _statsGeral = false;
-
   function toggleStats() {
     _statsGeral = !_statsGeral;
     const track = document.getElementById('statsToggle');
-    const lblH  = document.getElementById('lblHoje');
-    const lblG  = document.getElementById('lblGeral');
-    track.classList.toggle('on', _statsGeral);
-    lblH.classList.toggle('active', !_statsGeral);
-    lblG.classList.toggle('active', _statsGeral);
+    document.getElementById('statsToggle').classList.toggle('on', _statsGeral);
+    document.getElementById('lblHoje').classList.toggle('active', !_statsGeral);
+    document.getElementById('lblGeral').classList.toggle('active', _statsGeral);
     loadStats();
   }
 
@@ -638,8 +642,7 @@
       if (!_statsGeral) {
         const d = new Date();
         const hoje = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-        p.set('dataDe', hoje);
-        p.set('dataAte', hoje);
+        p.set('dataDe', hoje); p.set('dataAte', hoje);
       }
       const {data}=await fetch('/api/stats?' + p).then(r=>r.json());
       document.getElementById('sTotal').textContent    =data.total    ||0;
@@ -832,11 +835,9 @@
   function closeModal(e){if(e.target===document.getElementById('modalBg'))closeModalDirect();}
   function closeModalDirect(){document.getElementById('modalBg').classList.add('hidden');_currentId=null;}
 
-  // ── Exclusão com senha supervisor ─────────────────────────────────────────
   function pedirSenhaExclusaoOS() {
     if (!_currentId) return;
-    document.getElementById('delOsMsg').innerHTML =
-      'Excluir a OS <strong>' + (_currentOs || _currentId) + '</strong>?<br>Esta ação não pode ser desfeita.';
+    document.getElementById('delOsMsg').innerHTML='Excluir a OS <strong>' + (_currentOs || _currentId) + '</strong>?<br>Esta ação não pode ser desfeita.';
     document.getElementById('delOsSenha').value = '';
     document.getElementById('delOsErr').textContent = '';
     document.getElementById('btnConfirmarDelOs').disabled = false;
@@ -844,10 +845,7 @@
     document.getElementById('delOsModal').classList.remove('hidden');
     setTimeout(() => document.getElementById('delOsSenha').focus(), 80);
   }
-
-  function fecharDelOsModal() {
-    document.getElementById('delOsModal').classList.add('hidden');
-  }
+  function fecharDelOsModal() { document.getElementById('delOsModal').classList.add('hidden'); }
 
   async function confirmarDelOS() {
     const senha = document.getElementById('delOsSenha').value;
@@ -856,34 +854,16 @@
     btn.disabled = true; btn.textContent = '⏳ Verificando...';
     document.getElementById('delOsErr').textContent = '';
     try {
-      const auth = await fetch('/api/inspecao/login', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ usuario: 'supervisor', senha })
-      }).then(r => r.json());
-      if (!auth.ok) {
-        document.getElementById('delOsErr').textContent = 'Senha incorreta.';
-        btn.disabled = false; btn.textContent = 'Excluir';
-        document.getElementById('delOsSenha').select();
-        return;
-      }
-      const res = await authFetch('/api/os/' + _currentId, {method:'DELETE'}).then(r => r.json());
+      const auth = await fetch('/api/inspecao/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:'supervisor',senha})}).then(r=>r.json());
+      if (!auth.ok) { document.getElementById('delOsErr').textContent='Senha incorreta.'; btn.disabled=false; btn.textContent='Excluir'; document.getElementById('delOsSenha').select(); return; }
+      const res = await authFetch('/api/os/'+_currentId,{method:'DELETE'}).then(r=>r.json());
       if (!res.ok) throw new Error(res.error);
-      fecharDelOsModal();
-      closeModalDirect();
-      const card = document.getElementById('card-' + _currentId);
-      if (card) card.remove();
-      toast('🗑️ OS excluída');
-      loadStats();
-    } catch(err) {
-      document.getElementById('delOsErr').textContent = 'Erro: ' + err.message;
-      btn.disabled = false; btn.textContent = 'Excluir';
-    }
+      fecharDelOsModal(); closeModalDirect();
+      const card=document.getElementById('card-'+_currentId); if(card) card.remove();
+      toast('🗑️ OS excluída'); loadStats();
+    } catch(err) { document.getElementById('delOsErr').textContent='Erro: '+err.message; btn.disabled=false; btn.textContent='Excluir'; }
   }
-
-  document.getElementById('delOsModal').addEventListener('click', function(e) {
-    if (e.target === this) fecharDelOsModal();
-  });
+  document.getElementById('delOsModal').addEventListener('click', function(e){ if(e.target===this) fecharDelOsModal(); });
 
   async function updateStatus(id,status){
     const card=document.getElementById('card-'+id);
@@ -894,8 +874,7 @@
       if(!res.ok) throw new Error(res.error);
       if(card) card.outerHTML=renderCard(res.data);
       if(_currentId===id) fillModal(res.data);
-      toast('✅ '+status);
-      loadStats();
+      toast('✅ '+status); loadStats();
     }catch(err){
       toast('❌ '+err.message,'err');
       if(card) card.querySelectorAll('.btn-status').forEach(b=>b.disabled=false);
@@ -913,10 +892,7 @@
       if(!res.ok) throw new Error(res.error);
       fb.style.color='var(--green)'; fb.textContent='✅ '+res.msg;
       toast('✅ Resumo enviado ao WhatsApp!');
-    }catch(e){
-      fb.style.color='var(--red)'; fb.textContent='❌ '+e.message;
-      toast('❌ '+e.message,'err');
-    }
+    }catch(e){ fb.style.color='var(--red)'; fb.textContent='❌ '+e.message; toast('❌ '+e.message,'err'); }
     btn.disabled=false; btn.textContent='📤 Enviar Resumo';
   }
 
@@ -961,7 +937,6 @@
       document.getElementById('editModalBg').classList.remove('hidden');
     });
   }
-
   function fecharEditor(e){if(e.target===document.getElementById('editModalBg'))fecharEditorDireto();}
   function fecharEditorDireto(){document.getElementById('editModalBg').classList.add('hidden');}
 
@@ -974,18 +949,18 @@
     const dp=dataVal?dataVal.split('-'):[];
     const dataFmt=dp.length===3?dp[2]+'/'+dp[1]+'/'+dp[0]:'';
     const payload={
-      os:               document.getElementById('editOs').value.trim(),
-      unidade:          document.getElementById('editUnidade').value.trim(),
-      guarda:           document.getElementById('editGuarda').value,
-      horario:          document.getElementById('editHorario').value.trim(),
-      equipe:           document.getElementById('editEquipe').value.trim(),
-      telefone:         document.getElementById('editTelefone').value.trim(),
-      veiculo:          document.getElementById('editVeiculo').value.trim(),
+      os:document.getElementById('editOs').value.trim(),
+      unidade:document.getElementById('editUnidade').value.trim(),
+      guarda:document.getElementById('editGuarda').value,
+      horario:document.getElementById('editHorario').value.trim(),
+      equipe:document.getElementById('editEquipe').value.trim(),
+      telefone:document.getElementById('editTelefone').value.trim(),
+      veiculo:document.getElementById('editVeiculo').value.trim(),
       descricao_inicial:document.getElementById('editDescInicial').value.trim(),
-      descricao_final:  document.getElementById('editDescFinal').value.trim(),
-      status:           document.getElementById('editStatus').value,
-      trajeto:          document.getElementById('editTrajeto').value.trim(),
-      data:             dataFmt,
+      descricao_final:document.getElementById('editDescFinal').value.trim(),
+      status:document.getElementById('editStatus').value,
+      trajeto:document.getElementById('editTrajeto').value.trim(),
+      data:dataFmt,
     };
     try{
       const res=await authFetch('/api/os/'+_currentId+'/edit',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
@@ -993,112 +968,149 @@
       msg.style.color='var(--green)'; msg.textContent='✅ Salvo!';
       const card=document.getElementById('card-'+_currentId);
       if(card) card.outerHTML=renderCard(res.data);
-      fillModal(res.data);
-      loadStats();
+      fillModal(res.data); loadStats();
       setTimeout(()=>fecharEditorDireto(),800);
     }catch(e){msg.style.color='var(--red)';msg.textContent='❌ '+e.message;}
     btn.disabled=false; btn.textContent='💾 Salvar';
   }
 
-  // ── Relatório WhatsApp ────────────────────────────────────────────────────
+  // ── Relatório ─────────────────────────────────────────────────────────────
   async function abrirRelatorio() {
     document.getElementById('relPreview').textContent = '⏳ Gerando prévia...';
     document.getElementById('relFeedback').textContent = '';
     document.getElementById('btnRelSend').disabled = false;
     document.getElementById('btnRelSend').textContent = '📲 Enviar ao grupo';
     document.getElementById('relModal').classList.remove('hidden');
-
     try {
       const agoraBR = new Date(Date.now() - 3*60*60*1000);
-      const d  = String(agoraBR.getUTCDate()).padStart(2,'0');
-      const m  = String(agoraBR.getUTCMonth()+1).padStart(2,'0');
-      const y  = agoraBR.getUTCFullYear();
-      const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
-      const mm = String(agoraBR.getUTCMinutes()).padStart(2,'0');
-      const dataHoje = `${y}-${m}-${d}`;
-
-      // Buscar OS do dia pelo mesmo filtro do stats (dataDe/dataAte = hoje ISO)
-      const osR = await fetch(`/api/os?dataDe=${dataHoje}&dataAte=${dataHoje}`).then(r=>r.json());
-
-      const osHoje  = osR.data || [];
-      const osAnd   = osHoje.filter(o => o.status === 'Andamento');
-      const osConc  = osHoje.filter(o => o.status === 'Concluído');
-      const osEtapa = osHoje.filter(o => o.status === 'Etapa Concluída');
-      const osCanc  = osHoje.filter(o => o.status === 'Cancelado');
-
-      // Colaboradores em campo agora — baseado apenas na equipe das OS em andamento HOJE
-      const colabSet = new Set();
-      osAnd.forEach(os => { (os.equipe||'').split(',').forEach(n=>{ const t=n.trim(); if(t) colabSet.add(t); }); });
-      const ativos = Array.from(colabSet);
-
-      const L = [];
+      const d=String(agoraBR.getUTCDate()).padStart(2,'0'),m=String(agoraBR.getUTCMonth()+1).padStart(2,'0'),y=agoraBR.getUTCFullYear();
+      const hh=String(agoraBR.getUTCHours()).padStart(2,'0'),mm=String(agoraBR.getUTCMinutes()).padStart(2,'0');
+      const dataHoje=`${y}-${m}-${d}`;
+      const osR=await fetch(`/api/os?dataDe=${dataHoje}&dataAte=${dataHoje}`).then(r=>r.json());
+      const osHoje=osR.data||[];
+      const osAnd=osHoje.filter(o=>o.status==='Andamento');
+      const osConc=osHoje.filter(o=>o.status==='Concluído');
+      const osEtapa=osHoje.filter(o=>o.status==='Etapa Concluída');
+      const osCanc=osHoje.filter(o=>o.status==='Cancelado');
+      const colabSet=new Set();
+      osAnd.forEach(os=>{(os.equipe||'').split(',').forEach(n=>{const t=n.trim();if(t)colabSet.add(t);});});
+      const L=[];
       L.push('🤖 *Sistema de Monitoramento Automático*');
       L.push(`📊 Relatório diário gerado — ${d}/${m}/${y} às ${hh}:${mm}`);
       L.push('');
       L.push(`⚡ *Em andamento: ${osAnd.length}*`);
-      osAnd.forEach(os => {
-        const se    = (os.subestacoes||os.unidade||'—').trim();
-        const nomes = (os.equipe||'—').split(',').map(n=>{
-          const p=n.trim().split(' '); return p[0]+(p[1]?' '+p[1]:'');
-        }).join(' / ');
+      osAnd.forEach(os=>{
+        const se=(os.subestacoes||os.unidade||'—').trim();
+        const nomes=(os.equipe||'—').split(',').map(n=>{const p=n.trim().split(' ');return p[0]+(p[1]?' '+p[1]:'');}).join(' / ');
         L.push(`📍 SE ${se} | ${nomes}`);
       });
       L.push('');
       L.push(`✅ *Concluídas hoje: ${osConc.length}*`);
-      if (osEtapa.length>0) L.push(`🔄 *Etapa concluída: ${osEtapa.length}*`);
-      if (osCanc.length>0)  L.push(`❌ *Canceladas: ${osCanc.length}*`);
+      if(osEtapa.length>0)L.push(`🔄 *Etapa concluída: ${osEtapa.length}*`);
+      if(osCanc.length>0)L.push(`❌ *Canceladas: ${osCanc.length}*`);
       L.push('');
-      L.push(ativos.length>0 ? `👷 *${ativos.length} colaborador(es) em campo no momento*` : '👷 *Nenhum colaborador em campo no momento*');
+      L.push(colabSet.size>0?`👷 *${colabSet.size} colaborador(es) em campo no momento*`:'👷 *Nenhum colaborador em campo no momento*');
       L.push('');
       L.push('_Gerado automaticamente pelo sistema OOMC_');
-
-      document.getElementById('relPreview').textContent = L.join('\n');
-    } catch(e) {
-      document.getElementById('relPreview').textContent = 'Erro ao gerar prévia: ' + e.message;
-    }
-  
+      document.getElementById('relPreview').textContent=L.join('\n');
+    } catch(e) { document.getElementById('relPreview').textContent='Erro ao gerar prévia: '+e.message; }
   }
-
-  function fecharRelModal() {
-    document.getElementById('relModal').classList.add('hidden');
-  }
-
-  async function enviarRelatorio() {
-    const btn = document.getElementById('btnRelSend');
-    const fb  = document.getElementById('relFeedback');
-    btn.disabled = true; btn.textContent = '⏳ Enviando...';
-    fb.textContent = '';
-    try {
-      const res = await authFetch('/api/relatorio/enviar', { method: 'POST' }).then(r=>r.json());
-      if (!res.ok) throw new Error(res.error);
-      fb.style.color = 'var(--green)'; fb.textContent = '✅ Relatório enviado ao grupo!';
-      btn.textContent = '✅ Enviado!';
-      setTimeout(() => fecharRelModal(), 2000);
+  function fecharRelModal(){ document.getElementById('relModal').classList.add('hidden'); }
+  async function enviarRelatorio(){
+    const btn=document.getElementById('btnRelSend');
+    const fb=document.getElementById('relFeedback');
+    btn.disabled=true; btn.textContent='⏳ Enviando...'; fb.textContent='';
+    try{
+      const res=await authFetch('/api/relatorio/enviar',{method:'POST'}).then(r=>r.json());
+      if(!res.ok) throw new Error(res.error);
+      fb.style.color='var(--green)'; fb.textContent='✅ Relatório enviado ao grupo!';
+      btn.textContent='✅ Enviado!';
+      setTimeout(()=>fecharRelModal(),2000);
       toast('📊 Relatório enviado ao WhatsApp!');
-    } catch(e) {
-      fb.style.color = 'var(--red)'; fb.textContent = '❌ ' + e.message;
-      btn.disabled = false; btn.textContent = '📲 Tentar novamente';
+    }catch(e){ fb.style.color='var(--red)'; fb.textContent='❌ '+e.message; btn.disabled=false; btn.textContent='📲 Tentar novamente'; }
+  }
+  document.getElementById('relModal').addEventListener('click',function(e){if(e.target===this)fecharRelModal();});
+
+  // ── Indicador de Qualidade ────────────────────────────────────────────────
+  let _indMutado = false;
+  async function carregarIndicador(){
+    try{
+      const r=await authFetch('/api/indicador').then(r=>r.json());
+      if(!r.ok) return;
+      const d=r.data;
+      document.getElementById('indNum').textContent=d.GERAL.dias;
+      document.getElementById('indDropNum').textContent=d.GERAL.dias;
+      document.getElementById('indOomc').textContent=d.OOMC.dias;
+      document.getElementById('indOomm').textContent=d.OOMM.dias;
+      document.getElementById('indOomt').textContent=d.OOMT.dias;
+      document.getElementById('indH1').value=d.GERAL.horario1||'07:00';
+      document.getElementById('indH2').value=d.GERAL.horario2||'';
+      _indMutado=!!d.GERAL.alertas_mutados;
+      const badge=document.getElementById('indBadge');
+      const btnMute=document.getElementById('btnMuteInd');
+      badge.classList.toggle('muted',_indMutado);
+      btnMute.textContent=_indMutado?'🔔 Reativar alertas':'🔕 Não alertar no grupo';
+      btnMute.classList.toggle('red',_indMutado);
+      btnMute.classList.toggle('gray',!_indMutado);
+      document.getElementById('indSub').textContent=_indMutado?'⚠️ Alertas automáticos DESATIVADOS':(d.GERAL.ultimo_data?`Último desarme: ${d.GERAL.ultimo_data}`:'Nenhum desarme registrado');
+    }catch(e){}
+  }
+  function toggleIndicador(){
+    document.getElementById('indBadge').classList.toggle('open');
+    document.getElementById('indDropdown').classList.toggle('show');
+  }
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.ind-wrap')){
+      document.getElementById('indBadge')?.classList.remove('open');
+      document.getElementById('indDropdown')?.classList.remove('show');
     }
-  }
-
-  document.getElementById('relModal').addEventListener('click', function(e) {
-    if (e.target === this) fecharRelModal();
   });
-
-  function toggleTema(){
-    const isLight=document.body.classList.toggle('light');
-    const lbl = document.getElementById('temaLabel');
-    if (lbl) lbl.textContent = isLight ? 'Tema: Claro' : 'Tema: Escuro';
-    localStorage.setItem('tema',isLight?'light':'dark');
-    fecharMenu();
+  async function editarDias(){
+    const dias=parseInt(document.getElementById('indEditDias').value);
+    if(isNaN(dias)||dias<0){toast('Valor inválido','err');return;}
+    try{
+      const r=await authFetch('/api/indicador/GERAL/dias',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({dias})}).then(r=>r.json());
+      if(r.ok){toast('Contador atualizado!','ok');await carregarIndicador();document.getElementById('indEditDias').value='';}
+      else toast(r.error||'Erro','err');
+    }catch(e){toast('Erro: '+e.message,'err');}
   }
-  if(localStorage.getItem('tema')==='light'){
-    document.body.classList.add('light');
-    document.addEventListener('DOMContentLoaded',()=>{
-      const lbl=document.getElementById('temaLabel'); if(lbl) lbl.textContent='Tema: Claro';
-    });
+  async function salvarHorarios(){
+    const h1=document.getElementById('indH1').value;
+    const h2=document.getElementById('indH2').value;
+    try{await authFetch('/api/indicador/horarios',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({horario1:h1,horario2:h2||null})});}catch(e){}
+  }
+  async function dispararIndicador(){
+    const btn=document.getElementById('btnDispararInd');
+    btn.disabled=true; btn.textContent='⏳ Enviando...';
+    try{
+      const r=await authFetch('/api/indicador/disparar',{method:'POST'}).then(r=>r.json());
+      if(r.ok) toast('Status real re-sinalizado no grupo!','ok');
+      else toast(r.error||'Erro ao disparar','err');
+    }catch(e){toast('Erro: '+e.message,'err');}
+    btn.disabled=false; btn.textContent='📲 Re-sinalizar status real';
+    await carregarIndicador();
+  }
+  async function toggleMuteAlertas(){
+    const novoEstado=!_indMutado;
+    const btn=document.getElementById('btnMuteInd');
+    btn.disabled=true;
+    try{
+      const r=await authFetch('/api/indicador/mute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mute:novoEstado})}).then(r=>r.json());
+      if(r.ok){toast(novoEstado?'🔕 Alertas automáticos desativados':'🔔 Alertas automáticos reativados','ok');await carregarIndicador();}
+      else toast(r.error||'Erro','err');
+    }catch(e){toast('Erro: '+e.message,'err');}
+    btn.disabled=false;
+  }
+  async function zerarIndicador(){
+    if(!confirm('Zerar o contador da OOMC manualmente?')) return;
+    try{
+      const r=await authFetch('/api/indicador/OOMC/zerar',{method:'POST'}).then(r=>r.json());
+      if(r.ok){toast('Contador OOMC zerado!','ok');await carregarIndicador();}
+      else toast(r.error||'Erro ao zerar','err');
+    }catch(e){toast('Erro: '+e.message,'err');}
   }
 
+  // ── Filtros de data padrão e inicialização ────────────────────────────────
   (function(){
     const d=new Date();
     const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
@@ -1113,153 +1125,29 @@
   setInterval(checkBot,15_000);
   setInterval(load,60_000);
   carregarIndicador();
-  setInterval(carregarIndicador, 60_000);
+  setInterval(carregarIndicador,60_000);
 
-  function toggleIndicador() {
-    const badge = document.getElementById('indBadge');
-    const dd    = document.getElementById('indDropdown');
-    badge.classList.toggle('open');
-    dd.classList.toggle('show');
-  }
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.ind-wrap')) {
-      document.getElementById('indBadge')?.classList.remove('open');
-      document.getElementById('indDropdown')?.classList.remove('show');
-    }
-  });
-
-  // ── Indicador de Qualidade — OOMC/OOMM/OOMT + Geral ────────────────────────
-  let _indMutado = false;
-
-  async function carregarIndicador() {
-    try {
-      const r = await authFetch('/api/indicador').then(r=>r.json());
-      if (!r.ok) return;
-      const d = r.data; // { OOMC, OOMM, OOMT, GERAL }
-      document.getElementById('indNum').textContent     = d.GERAL.dias;
-      document.getElementById('indDropNum').textContent = d.GERAL.dias;
-      document.getElementById('indOomc').textContent = d.OOMC.dias;
-      document.getElementById('indOomm').textContent = d.OOMM.dias;
-      document.getElementById('indOomt').textContent = d.OOMT.dias;
-      document.getElementById('indH1').value = d.GERAL.horario1 || '07:00';
-      document.getElementById('indH2').value = d.GERAL.horario2 || '';
-
-      _indMutado = !!d.GERAL.alertas_mutados;
-      const badge   = document.getElementById('indBadge');
-      const btnMute = document.getElementById('btnMuteInd');
-      badge.classList.toggle('muted', _indMutado);
-      btnMute.textContent = _indMutado ? '🔔 Reativar alertas' : '🔕 Não alertar no grupo';
-      btnMute.classList.toggle('red', _indMutado);
-      btnMute.classList.toggle('gray', !_indMutado);
-
-      document.getElementById('indSub').textContent = _indMutado
-        ? '⚠️ Alertas automáticos DESATIVADOS'
-        : (d.GERAL.ultimo_data ? `Último desarme: ${d.GERAL.ultimo_data}` : 'Nenhum desarme registrado');
-    } catch(e) {}
-  }
-
-  async function editarDias() {
-    const dias = parseInt(document.getElementById('indEditDias').value);
-    if (isNaN(dias) || dias < 0) { toast('Valor inválido', 'err'); return; }
-    try {
-      const r = await authFetch('/api/indicador/GERAL/dias', {
-        method:'PATCH', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ dias })
-      }).then(r=>r.json());
-      if (r.ok) { toast('Contador atualizado!', 'ok'); await carregarIndicador(); document.getElementById('indEditDias').value = ''; }
-      else toast(r.error || 'Erro', 'err');
-    } catch(e) { toast('Erro: ' + e.message, 'err'); }
-  }
-
-  async function salvarHorarios() {
-    const h1 = document.getElementById('indH1').value;
-    const h2 = document.getElementById('indH2').value;
-    try {
-      await authFetch('/api/indicador/horarios', {
-        method:'PATCH', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ horario1: h1, horario2: h2 || null })
-      });
-    } catch(e) {}
-  }
-
-  // Re-sinaliza no grupo o status real (atual) de todas as gerências, independente de estar mutado
-  async function dispararIndicador() {
-    const btn = document.getElementById('btnDispararInd');
-    btn.disabled = true; btn.textContent = '⏳ Enviando...';
-    try {
-      const r = await authFetch('/api/indicador/disparar', { method:'POST' }).then(r=>r.json());
-      if (r.ok) toast('Status real re-sinalizado no grupo!', 'ok');
-      else toast(r.error || 'Erro ao disparar', 'err');
-    } catch(e) { toast('Erro: ' + e.message, 'err'); }
-    btn.disabled = false; btn.textContent = '📲 Re-sinalizar status real';
-    await carregarIndicador();
-  }
-
-  // Liga/desliga alertas automáticos de desarme (continua registrando/zerando, só não manda WhatsApp sozinho)
-  async function toggleMuteAlertas() {
-    const novoEstado = !_indMutado;
-    const btn = document.getElementById('btnMuteInd');
-    btn.disabled = true;
-    try {
-      const r = await authFetch('/api/indicador/mute', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ mute: novoEstado })
-      }).then(r=>r.json());
-      if (r.ok) {
-        toast(novoEstado ? '🔕 Alertas automáticos desativados' : '🔔 Alertas automáticos reativados', 'ok');
-        await carregarIndicador();
-      } else toast(r.error || 'Erro', 'err');
-    } catch(e) { toast('Erro: ' + e.message, 'err'); }
-    btn.disabled = false;
-  }
-
-  async function zerarIndicador() {
-    if (!confirm('Zerar o contador da OOMC manualmente? Isso registrará uma ocorrência de desarme.')) return;
-    try {
-      const r = await authFetch('/api/indicador/OOMC/zerar', { method:'POST' }).then(r=>r.json());
-      if (r.ok) { toast('Contador OOMC zerado!', 'ok'); await carregarIndicador(); }
-      else toast(r.error || 'Erro ao zerar', 'err');
-    } catch(e) { toast('Erro: ' + e.message, 'err'); }
-  }
-
-  // ── Splash de boas-vindas ──────────────────────────────────────────────
+  // ── Splash ────────────────────────────────────────────────────────────────
   (function(){
-    const frases = [
-      'Carregando banco de dados...',
-      'Carregando ordens de serviço...',
-      'Carregando inspeções...',
-      'Carregando atividades diárias...',
-      'Finalizando...'
-    ];
-    const totalMs = 4200;
-    const stepMs  = totalMs / frases.length;
-    let i = 0;
-    const txt  = document.getElementById('splashTxt');
-    const fill = document.getElementById('splashFill');
-    const pct  = document.getElementById('splashPct');
-
-    const frasesTimer = setInterval(() => {
-      i++;
-      if (txt && i < frases.length) txt.textContent = frases[i];
-    }, stepMs);
-
-    const start = Date.now();
-    const progTimer = setInterval(() => {
-      const p = Math.min(100, Math.round((Date.now() - start) / totalMs * 100));
-      if (fill) fill.style.width = p + '%';
-      if (pct)  pct.textContent  = p + '%';
-      if (p >= 100) clearInterval(progTimer);
-    }, 60);
-
-    setTimeout(() => {
-      clearInterval(frasesTimer);
-      clearInterval(progTimer);
-      const splash = document.getElementById('splash');
-      if (splash) {
-        splash.classList.add('fade-out');
-        setTimeout(() => splash.remove(), 650);
-      }
-    }, totalMs);
+    const frases=['Carregando banco de dados...','Carregando ordens de serviço...','Carregando inspeções...','Carregando atividades diárias...','Finalizando...'];
+    const totalMs=4200,stepMs=totalMs/frases.length;
+    let i=0;
+    const txt=document.getElementById('splashTxt');
+    const fill=document.getElementById('splashFill');
+    const pct=document.getElementById('splashPct');
+    const frasesTimer=setInterval(()=>{i++;if(txt&&i<frases.length)txt.textContent=frases[i];},stepMs);
+    const start=Date.now();
+    const progTimer=setInterval(()=>{
+      const p=Math.min(100,Math.round((Date.now()-start)/totalMs*100));
+      if(fill)fill.style.width=p+'%';
+      if(pct)pct.textContent=p+'%';
+      if(p>=100)clearInterval(progTimer);
+    },60);
+    setTimeout(()=>{
+      clearInterval(frasesTimer);clearInterval(progTimer);
+      const splash=document.getElementById('splash');
+      if(splash){splash.classList.add('fade-out');setTimeout(()=>splash.remove(),650);}
+    },totalMs);
   })();
 </script>
 </body>
