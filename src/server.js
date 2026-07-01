@@ -1202,24 +1202,24 @@ function startServer() {
     const ultimoBruto = recorde.ultimo_id
       ? `${recorde.ultimo_data || 'data n/d'} | ${recorde.ultimo_id} | ${recorde.ultimo_tipo || '—'} | SE: ${recorde.ultimo_se || '—'}`
       : 'Sem registros';
-    const ultimoLinhas = quebrarLinhas(ultimoBruto, 38);
+    const ultimoLinhas = quebrarLinhas(ultimoBruto, 35);
     const ultimoTspans = ultimoLinhas.map((l, i) =>
-      `<tspan x="30" dy="${i === 0 ? 0 : 16}">${l}</tspan>`
+      `<tspan x="35" dy="${i === 0 ? 0 : 14}">${l}</tspan>`
     ).join('');
 
     return `
     <g transform="translate(${x},0)">
-      <rect width="380" height="430" rx="16" fill="#ffffff" stroke="#e2e8e6" stroke-width="1.5"/>
-      <rect x="120" y="22" width="140" height="34" rx="17" fill="#e3f3ef"/>
-      <text x="190" y="44" font-family="Arial,sans-serif" font-size="15" font-weight="800" fill="${COR_VERDE}" text-anchor="middle" letter-spacing="1">${sigla}</text>
-      <text x="190" y="160" font-family="Arial Black,Arial,sans-serif" font-size="92" font-weight="900" fill="${COR_VERDE}" text-anchor="middle">${dias}</text>
-      <text x="190" y="195" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#52615e" text-anchor="middle" letter-spacing="1">DIAS SEM DESARMES</text>
-      <line x1="30" y1="222" x2="350" y2="222" stroke="#eef2f1" stroke-width="1.5"/>
-      <text x="190" y="252" font-family="Arial,sans-serif" font-size="14" fill="#52615e" text-anchor="middle">Recorde: <tspan font-weight="800" fill="${COR_LARANJA}">${recordeTxt}</tspan></text>
-      <text x="190" y="270" font-family="Arial,sans-serif" font-size="11" fill="#8a9794" text-anchor="middle">${periodo}</text>
-      <line x1="30" y1="296" x2="350" y2="296" stroke="#eef2f1" stroke-width="1.5"/>
-      <text x="30" y="320" font-family="Arial,sans-serif" font-size="12" font-weight="800" fill="${COR_VERDE}">ÚLTIMO DESARME</text>
-      <text x="30" y="340" font-family="Arial,sans-serif" font-size="12" fill="#52615e">${ultimoTspans}</text>
+      <rect width="380" height="480" rx="16" fill="#ffffff" stroke="#d0dcd9" stroke-width="2"/>
+      <rect x="110" y="18" width="160" height="40" rx="20" fill="#e3f3ef"/>
+      <text x="190" y="47" font-family="Arial,sans-serif" font-size="18" font-weight="900" fill="${COR_VERDE}" text-anchor="middle" letter-spacing="2">${sigla}</text>
+      <text x="190" y="155" font-family="Arial Black,Arial,sans-serif" font-size="100" font-weight="900" fill="${COR_VERDE}" text-anchor="middle">${dias}</text>
+      <text x="190" y="195" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#52615e" text-anchor="middle" letter-spacing="0.5">DIAS SEM DESARMES</text>
+      <line x1="30" y1="220" x2="350" y2="220" stroke="#e0e8e5" stroke-width="2"/>
+      <text x="190" y="255" font-family="Arial,sans-serif" font-size="15" fill="#52615e" text-anchor="middle">Recorde: <tspan font-weight="800" fill="${COR_LARANJA}">${recordeTxt}</tspan></text>
+      <text x="190" y="275" font-family="Arial,sans-serif" font-size="12" fill="#8a9794" text-anchor="middle">${periodo}</text>
+      <line x1="30" y1="300" x2="350" y2="300" stroke="#e0e8e5" stroke-width="2"/>
+      <text x="35" y="325" font-family="Arial,sans-serif" font-size="13" font-weight="900" fill="${COR_VERDE}">ÚLTIMO DESARME</text>
+      <text x="35" y="345" font-family="Arial,sans-serif" font-size="11" fill="#52615e">${ultimoTspans}</text>
     </g>`;
   }
 
@@ -1228,32 +1228,44 @@ function startServer() {
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
     const geral = dados.GERAL;
-    const ultimoGeral = geral.ultimo_id
-      ? `${geral.ultimo_data || 'data n/d'} | ${geral.ultimo_id} | ${geral.ultimo_tipo || '—'} | SE: ${geral.ultimo_se || '—'}`
-      : 'Sem registros';
+    const ultimoGeralLinhas = geral.ultimo_id
+      ? quebrarLinhas(`${geral.ultimo_data || 'data n/d'} | ${geral.ultimo_id} | ${geral.ultimo_tipo || '—'} | SE: ${geral.ultimo_se || '—'}`, 55)
+      : ['Sem registros'];
+    const ultimoGeralTspans = ultimoGeralLinhas.map((l, i) =>
+      `<tspan x="65" dy="${i === 0 ? 0 : 16}">${l}</tspan>`
+    ).join('');
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="700">
-  <rect width="1240" height="700" fill="#f4f7f6"/>
-  <rect width="1240" height="10" fill="${COR_VERDE}"/>
-  <text x="40" y="55" font-family="Arial,sans-serif" font-size="13" font-weight="800" fill="${COR_VERDE}" letter-spacing="3">SEGURANÇA OPERACIONAL</text>
-  <text x="40" y="100" font-family="Arial Black,Arial,sans-serif" font-size="38" font-weight="900" fill="${COR_VERDE2}">GERÊNCIA MANUTENÇÃO ALTA TENSÃO</text>
-  <text x="40" y="128" font-family="Arial,sans-serif" font-size="15" fill="#52615e">Status consolidado de desarmes com interrupção</text>
-  <line x1="40" y1="155" x2="1200" y2="155" stroke="#dde5e3" stroke-width="1.5"/>
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="900">
+  <rect width="1280" height="900" fill="#f4f7f6"/>
+  <rect width="1280" height="12" fill="${COR_VERDE}"/>
+  <text x="50" y="65" font-family="Arial,sans-serif" font-size="14" font-weight="900" fill="${COR_VERDE}" letter-spacing="3">SEGURANÇA OPERACIONAL</text>
+  <text x="50" y="115" font-family="Arial Black,Arial,sans-serif" font-size="42" font-weight="900" fill="${COR_VERDE2}">GERÊNCIA MANUTENÇÃO ALTA TENSÃO</text>
+  <text x="50" y="150" font-family="Arial,sans-serif" font-size="16" fill="#52615e" font-weight="600">Status consolidado de desarmes com interrupção</text>
+  <line x1="50" y1="170" x2="1230" y2="170" stroke="#dde5e3" stroke-width="2"/>
 
   ${cardSVG(40,  'OOMC', dados.OOMC.dias, dados.OOMC)}
-  ${cardSVG(430, 'OOMM', dados.OOMM.dias, dados.OOMM)}
-  ${cardSVG(820, 'OOMT', dados.OOMT.dias, dados.OOMT)}
+  ${cardSVG(440, 'OOMM', dados.OOMM.dias, dados.OOMM)}
+  ${cardSVG(840, 'OOMT', dados.OOMT.dias, dados.OOMT)}
 
-  <rect x="40" y="610" width="1160" height="70" rx="14" fill="#fdf3e7" stroke="${COR_LARANJA}" stroke-width="2"/>
-  <text x="65" y="640" font-family="Arial,sans-serif" font-size="13" font-weight="800" fill="${COR_VERDE2}">CONSOLIDADO GERAL</text>
-  <text x="65" y="660" font-family="Arial,sans-serif" font-size="11" fill="#7a685a">${ultimoGeral}</text>
-  <text x="980" y="650" font-family="Arial Black,Arial,sans-serif" font-size="40" font-weight="900" fill="${COR_VERDE2}" text-anchor="middle">${geral.dias}</text>
-  <text x="980" y="668" font-family="Arial,sans-serif" font-size="10" fill="#52615e" text-anchor="middle">DIAS SEM DESARME</text>
-  <text x="1150" y="650" font-family="Arial Black,Arial,sans-serif" font-size="30" font-weight="900" fill="${COR_LARANJA}" text-anchor="end">${geral.recorde_dias}</text>
-  <text x="1150" y="668" font-family="Arial,sans-serif" font-size="10" fill="#52615e" text-anchor="end">RECORDE GERAL</text>
+  <rect x="50" y="700" width="1180" height="130" rx="16" fill="#fdf3e7" stroke="${COR_LARANJA}" stroke-width="3"/>
+  <text x="75" y="735" font-family="Arial,sans-serif" font-size="17" font-weight="900" fill="${COR_VERDE2}" letter-spacing="1">CONSOLIDADO GERAL</text>
+  <text x="75" y="755" font-family="Arial,sans-serif" font-size="13" fill="#7a685a">${ultimoGeralTspans}</text>
 
-  <text x="40" y="697" font-family="Arial,sans-serif" font-size="10" fill="#8a9794">GESTÃO DE ATIVOS E OCORRÊNCIAS</text>
-  <text x="1200" y="697" font-family="Arial,sans-serif" font-size="10" fill="#8a9794" text-anchor="end">GERADO EM ${dataHora}</text>
+  <line x1="800" y1="700" x2="800" y2="830" stroke="#dde5e3" stroke-width="2"/>
+
+  <g>
+    <text x="1000" y="740" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#52615e" text-anchor="middle">DIAS SEM DESARME</text>
+    <text x="1000" y="800" font-family="Arial Black,Arial,sans-serif" font-size="72" font-weight="900" fill="${COR_VERDE}" text-anchor="middle">${geral.dias}</text>
+  </g>
+
+  <g>
+    <text x="1150" y="740" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#52615e" text-anchor="middle">RECORDE</text>
+    <text x="1150" y="800" font-family="Arial Black,Arial,sans-serif" font-size="60" font-weight="900" fill="${COR_LARANJA}" text-anchor="middle">${geral.recorde_dias}</text>
+    <text x="1150" y="820" font-family="Arial,sans-serif" font-size="12" fill="#8a9794" text-anchor="middle">dias</text>
+  </g>
+
+  <text x="50" y="880" font-family="Arial,sans-serif" font-size="11" fill="#8a9794" font-weight="600">GESTÃO DE ATIVOS E OCORRÊNCIAS</text>
+  <text x="1230" y="880" font-family="Arial,sans-serif" font-size="11" fill="#8a9794" text-anchor="end" font-weight="600">GERADO EM ${dataHora}</text>
 </svg>`;
 
     const svgPath = outPath.replace('.png', '.svg');
