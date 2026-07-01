@@ -369,7 +369,10 @@
 </div>
 
 <div class="filters">
-  <input type="text" id="search" placeholder="🔍  Buscar OS, equipe, serviço..." oninput="debounceLoad()" autocomplete="off"/>
+  <!-- inputs ocultos para enganar o autopreenchimento do navegador -->
+  <input type="text" name="fake_user" style="display:none" autocomplete="username" tabindex="-1"/>
+  <input type="password" name="fake_pass" style="display:none" autocomplete="current-password" tabindex="-1"/>
+  <input type="text" id="search" placeholder="🔍  Buscar OS, equipe, serviço..." oninput="debounceLoad()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
   <select id="filterStatus" onchange="load()">
     <option value="">Todos os status</option>
     <option value="Andamento">Andamento</option>
