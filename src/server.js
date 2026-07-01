@@ -1204,7 +1204,13 @@ function startServer() {
     const periodo = (recorde.recorde_inicio && recorde.recorde_fim)
       ? `de ${recorde.recorde_inicio} até ${recorde.recorde_fim}` : '';
     const ultimoBruto = recorde.ultimo_id
-      ? `${escXml(recorde.ultimo_data || 'data n/d')} | ${escXml(String(recorde.ultimo_id))} | ${escXml(recorde.ultimo_tipo || '—')} | SE: ${escXml(recorde.ultimo_se || '—')}`
+      ? [
+          recorde.ultimo_data ? escXml(recorde.ultimo_data) : null,
+          `ID: ${escXml(String(recorde.ultimo_id))}`,
+          recorde.ultimo_tipo ? `Tipo: ${escXml(recorde.ultimo_tipo)}` : null,
+          recorde.ultimo_se   ? `SE: ${escXml(recorde.ultimo_se)}`   : null,
+          recorde.ultimo_equipamento ? `Equipamento: ${escXml(recorde.ultimo_equipamento)}` : null,
+        ].filter(Boolean).join(' | ')
       : 'Sem registros';
     const ultimoLinhas = quebrarLinhas(ultimoBruto, 38);
     const ultimoTspans = ultimoLinhas.map((l, i) =>
@@ -1233,7 +1239,13 @@ function startServer() {
 
     const geral = dados.GERAL;
     const ultimoGeral = geral.ultimo_id
-      ? `${escXml(geral.ultimo_data || 'data n/d')} | ${escXml(String(geral.ultimo_id))} | ${escXml(geral.ultimo_tipo || '—')} | SE: ${escXml(geral.ultimo_se || '—')}`
+      ? [
+          geral.ultimo_data ? escXml(geral.ultimo_data) : null,
+          `ID: ${escXml(String(geral.ultimo_id))}`,
+          geral.ultimo_tipo ? `Tipo: ${escXml(geral.ultimo_tipo)}` : null,
+          geral.ultimo_se   ? `SE: ${escXml(geral.ultimo_se)}`     : null,
+          geral.ultimo_equipamento ? `Equipamento: ${escXml(geral.ultimo_equipamento)}` : null,
+        ].filter(Boolean).join(' | ')
       : 'Sem registros';
 
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
@@ -1412,15 +1424,15 @@ function startServer() {
       const resultado = {};
       let maisRecente = null;
       for (const item of itens) {
-        const { gerencia, sharepoint_id, titulo, tipo, se, data } = item;
+        const { gerencia, sharepoint_id, titulo, tipo, se, data, equipamento } = item;
         if (!indicador.GERENCIAS.includes(gerencia) || gerencia === 'GERAL') continue;
-        resultado[gerencia] = indicador.setUltimoDesarme(gerencia, { id: sharepoint_id, titulo, tipo, se, data });
+        resultado[gerencia] = indicador.setUltimoDesarme(gerencia, { id: sharepoint_id, titulo, tipo, se, data, equipamento });
         if (!maisRecente || parseInt(sharepoint_id) > parseInt(maisRecente.sharepoint_id)) {
           maisRecente = { sharepoint_id, titulo, tipo, se, data };
         }
       }
       if (maisRecente) {
-        resultado['GERAL'] = indicador.setUltimoDesarme('GERAL', { id: maisRecente.sharepoint_id, titulo: maisRecente.titulo, tipo: maisRecente.tipo, se: maisRecente.se, data: maisRecente.data });
+        resultado['GERAL'] = indicador.setUltimoDesarme('GERAL', { id: maisRecente.sharepoint_id, titulo: maisRecente.titulo, tipo: maisRecente.tipo, se: maisRecente.se, data: maisRecente.data, equipamento: maisRecente.equipamento });
       }
       res.json({ ok: true, data: resultado });
     } catch(e) {
@@ -1438,13 +1450,13 @@ function startServer() {
         return res.status(403).json({ ok: false, error: 'Chave inválida' });
       }
 
-      const { sharepoint_id, titulo, tipo, se, gerencia } = req.body || {};
+      const { sharepoint_id, titulo, tipo, se, gerencia, equipamento, data } = req.body || {};
       if (!indicador.GERENCIAS.includes(gerencia) || gerencia === 'GERAL') {
         console.warn('[DESARME] Gerência inválida ou ausente:', gerencia, '— SE:', se);
         return res.status(400).json({ ok: false, error: 'Gerência inválida/ausente' });
       }
 
-      const info = { id: sharepoint_id, titulo, tipo, se };
+      const info = { id: sharepoint_id, titulo, tipo, se, equipamento, data };
       const dados = indicador.registrarDesarme(gerencia, info);
       res.json({ ok: true, data: dados });
 
