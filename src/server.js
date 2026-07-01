@@ -1236,7 +1236,8 @@ function startServer() {
       ? `${escXml(geral.ultimo_data || 'data n/d')} | ${escXml(String(geral.ultimo_id))} | ${escXml(geral.ultimo_tipo || '—')} | SE: ${escXml(geral.ultimo_se || '—')}`
       : 'Sem registros';
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="870">
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="870">
   <rect width="1240" height="870" fill="#f4f7f6"/>
   <rect width="1240" height="10" fill="${COR_VERDE}"/>
   <text x="40" y="55" font-family="Arial,sans-serif" font-size="13" font-weight="800" fill="${COR_VERDE}" letter-spacing="3">SEGURANÇA OPERACIONAL</text>
@@ -1265,7 +1266,7 @@ function startServer() {
 
     try {
       const sharp = require('sharp');
-      sharp(Buffer.from(svg)).png().toFileSync(outPath);
+      sharp(Buffer.from(svg, 'utf8')).png().toFileSync(outPath);
       try { fs.unlinkSync(svgPath); } catch(e) {}
       return outPath;
     } catch(e) {
@@ -1409,10 +1410,17 @@ function startServer() {
       }
       const itens = Array.isArray(req.body.itens) ? req.body.itens : [];
       const resultado = {};
+      let maisRecente = null;
       for (const item of itens) {
         const { gerencia, sharepoint_id, titulo, tipo, se, data } = item;
         if (!indicador.GERENCIAS.includes(gerencia) || gerencia === 'GERAL') continue;
         resultado[gerencia] = indicador.setUltimoDesarme(gerencia, { id: sharepoint_id, titulo, tipo, se, data });
+        if (!maisRecente || parseInt(sharepoint_id) > parseInt(maisRecente.sharepoint_id)) {
+          maisRecente = { sharepoint_id, titulo, tipo, se, data };
+        }
+      }
+      if (maisRecente) {
+        resultado['GERAL'] = indicador.setUltimoDesarme('GERAL', { id: maisRecente.sharepoint_id, titulo: maisRecente.titulo, tipo: maisRecente.tipo, se: maisRecente.se, data: maisRecente.data });
       }
       res.json({ ok: true, data: resultado });
     } catch(e) {
