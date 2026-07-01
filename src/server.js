@@ -1667,6 +1667,7 @@ function startServer() {
       fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
       
       await page.screenshot({ path: screenshotPath, fullPage: false });
+      console.log('[SCREENSHOT] Captura salva em:', screenshotPath);
       
       return screenshotPath;
     } catch(e) {
@@ -1775,9 +1776,11 @@ function startServer() {
       // Captura screenshot do painel no momento do disparo
       let screenshotPath = null;
       try {
+        console.log('[RELATORIO] Capturando screenshot...');
         screenshotPath = await capturarTelaDosPainel();
+        console.log('[RELATORIO] Screenshot capturado:', screenshotPath, '| Existe:', screenshotPath ? fs.existsSync(screenshotPath) : 'N/A');
       } catch(screenshotErr) {
-        console.warn('[RELATORIO] Erro ao capturar screenshot:', screenshotErr.message);
+        console.error('[RELATORIO] Erro ao capturar screenshot:', screenshotErr.message);
       }
 
       // Envia ao grupo de relatórios (separado do grupo de monitoramento de resenha)
