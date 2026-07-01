@@ -1649,16 +1649,15 @@ function startServer() {
         const USER = process.env.ADMIN_USER || 'admin';
         const PASS = process.env.ADMIN_PASS || 'admin';
         
-        // Preenche inputs de login — muito específico pra não pegar barra de busca
-        await page.evaluate(() => {
-          document.querySelectorAll('input').forEach(inp => inp.value = '');
-        });
-        
-        const inputs = await page.$$('input');
-        if (inputs.length >= 2) {
-          await inputs[0].type(USER, { delay: 30 });
-          await inputs[1].type(PASS, { delay: 30 });
-        }
+        // Define valores via JavaScript (não digita — evita barra de busca)
+        await page.evaluate((user, pass) => {
+          const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
+          if (inputs[0]) inputs[0].value = user;
+          if (inputs[1]) inputs[1].value = pass;
+          // Dispara eventos de mudança
+          inputs.forEach(inp => inp.dispatchEvent(new Event('input')));
+          inputs.forEach(inp => inp.dispatchEvent(new Event('change')));
+        }, USER, PASS);
         
         // Clica no botão de login
         const botao = await page.$('button');
@@ -1695,8 +1694,7 @@ function startServer() {
       await page.screenshot({ 
         path: screenshotPath, 
         fullPage: false,
-        type: 'png',
-        quality: 100
+        type: 'png'
       });
       console.log('[SCREENSHOT] Captura salva em:', screenshotPath);
       
