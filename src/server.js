@@ -783,21 +783,37 @@ function startServer() {
   const INSP_DIR  = process.env.INSP_IMG_DIR || path.join(__dirname, '..', 'data', 'insp_imgs');
   fs.mkdirSync(INSP_DIR, { recursive: true });
 
-  const insp_storage = multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, INSP_DIR),
-    filename:    (_req, file,  cb) => {
-      const ext = path.extname(file.originalname) || '.jpg';
-      cb(null, 'insp_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + ext);
-    }
-  });
+  const insp_storage = multer.memoryStorage(); // armazena em memória pra processar com sharp
   const insp_upload = multer({
     storage: insp_storage,
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 20 * 1024 * 1024 }, // aumenta limite pra aceitar fotos grandes antes de comprimir
     fileFilter: (_req, file, cb) => {
-      const ok = /^image\/(jpeg|png|gif|webp)$/i.test(file.mimetype);
+      const ok = /^image\/(jpeg|png|gif|webp|heic|heif)$/i.test(file.mimetype)
+               || /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.originalname);
       cb(null, ok);
     }
   });
+
+  // Middleware que converte qualquer imagem recebida para JPEG via sharp
+  async function processarFotoInsp(req, res, next) {
+    if (!req.file) return next();
+    try {
+      const sharp = require('sharp');
+      const nomeBase = 'insp_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + '.jpg';
+      const destPath = path.join(INSP_DIR, nomeBase);
+      await sharp(req.file.buffer)
+        .rotate() // corrige orientação EXIF automaticamente
+        .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 82, progressive: true })
+        .toFile(destPath);
+      req.file.filename = nomeBase;
+      req.file.path = destPath;
+      next();
+    } catch(e) {
+      console.error('[FOTO] Erro ao processar imagem:', e.message);
+      res.status(400).json({ ok: false, error: 'Imagem inválida ou corrompida: ' + e.message });
+    }
+  }
 
   app.get('/api/inspecao/foto/:filename', (req, res) => {
     try {
@@ -988,7 +1004,7 @@ function startServer() {
   });
 
   app.post('/api/inspecao/preenchimentos/:preId/campo/:campoId/foto',
-    insp_upload.single('foto'), (req, res) => {
+    insp_upload.single('foto'), processarFotoInsp, (req, res) => {
       try {
         if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
         const preenchimento_id = parseInt(req.params.preId);
@@ -1054,7 +1070,7 @@ function startServer() {
   });
 
   app.post('/api/autoinspecao/preenchimentos/:preId/campo/:campoId/foto',
-    insp_upload.single('foto'), (req, res) => {
+    insp_upload.single('foto'), processarFotoInsp, (req, res) => {
       try {
         if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
         const r = autoInsp.adicionarFoto({
