@@ -1183,6 +1183,10 @@ function startServer() {
   const COR_LARANJA = '#e8923a';
 
   // Quebra uma string em várias linhas (~maxChars por linha) sem cortar palavras
+  function escXml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+  }
+
   function quebrarLinhas(txt, maxChars) {
     const palavras = (txt || '').split(' ');
     const linhas = [];
@@ -1200,7 +1204,7 @@ function startServer() {
     const periodo = (recorde.recorde_inicio && recorde.recorde_fim)
       ? `de ${recorde.recorde_inicio} até ${recorde.recorde_fim}` : '';
     const ultimoBruto = recorde.ultimo_id
-      ? `${recorde.ultimo_data || 'data n/d'} | ${recorde.ultimo_id} | ${recorde.ultimo_tipo || '—'} | SE: ${recorde.ultimo_se || '—'}`
+      ? `${escXml(recorde.ultimo_data || 'data n/d')} | ${escXml(String(recorde.ultimo_id))} | ${escXml(recorde.ultimo_tipo || '—')} | SE: ${escXml(recorde.ultimo_se || '—')}`
       : 'Sem registros';
     const ultimoLinhas = quebrarLinhas(ultimoBruto, 38);
     const ultimoTspans = ultimoLinhas.map((l, i) =>
@@ -1229,7 +1233,7 @@ function startServer() {
 
     const geral = dados.GERAL;
     const ultimoGeral = geral.ultimo_id
-      ? `${geral.ultimo_data || 'data n/d'} | ${geral.ultimo_id} | ${geral.ultimo_tipo || '—'} | SE: ${geral.ultimo_se || '—'}`
+      ? `${escXml(geral.ultimo_data || 'data n/d')} | ${escXml(String(geral.ultimo_id))} | ${escXml(geral.ultimo_tipo || '—')} | SE: ${escXml(geral.ultimo_se || '—')}`
       : 'Sem registros';
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="870">
@@ -1282,7 +1286,9 @@ function startServer() {
     const msgTexto =
       `🤖 *Sistema de Monitoramento Automático*\n\n` +
       `🏆 *INDICADOR DE QUALIDADE*\n\n` +
-      `OOMC: ${dados.OOMC.dias} dias | OOMM: ${dados.OOMM.dias} dias | OOMT: ${dados.OOMT.dias} dias\n` +
+      `🏆 *OOMC: ${dados.OOMC.dias} dias sem desarme*\n` +
+      `🏆 *OOMM: ${dados.OOMM.dias} dias sem desarme*\n` +
+      `🏆 *OOMT: ${dados.OOMT.dias} dias sem desarme*\n` +
       `✅ *Geral: ${dados.GERAL.dias} dias sem desarme*\n\n` +
       `🕐 Atualizado em: ${dataHora}\n\n` +
       `_Gerado automaticamente pelo sistema OOMC_`;
