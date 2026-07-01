@@ -1624,6 +1624,38 @@ function startServer() {
     }
   });
 
+  // ── Screenshot do painel (para anexar ao relatório) ─────────────────────
+  async function capturarTelaDosPainel() {
+    let browser;
+    try {
+      const puppeteer = require('puppeteer');
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+      const page = await browser.newPage();
+      page.setViewport({ width: 1280, height: 900 });
+      
+      const urlLocal = `http://localhost:${PORT}/index.html`;
+      await page.goto(urlLocal, { waitUntil: 'networkidle2', timeout: 30000 });
+      
+      // Aguarda carregar os dados (elemento .card ou similar)
+      await page.waitForSelector('[data-testid="painel"], body', { timeout: 10000 }).catch(() => {});
+      
+      const screenshotPath = path.join(__dirname, '..', 'data', `painel_screenshot_${Date.now()}.png`);
+      fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
+      
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+      
+      return screenshotPath;
+    } catch(e) {
+      console.error('[SCREENSHOT] Erro ao capturar tela:', e.message);
+      return null;
+    } finally {
+      if (browser) await browser.close();
+    }
+  }
+
   // ── Relatório diário WhatsApp ─────────────────────────────────────────────
   app.post('/api/relatorio/enviar', requireAuth, requirePermissao('enviar_relatorio_painel'), async (req, res) => {
     try {
@@ -1719,17 +1751,52 @@ function startServer() {
 
       const msg = linhas.join('\n').trim();
 
+      // Captura screenshot do painel no momento do disparo
+      let screenshotPath = null;
+      try {
+        screenshotPath = await capturarTelaDosPainel();
+      } catch(screenshotErr) {
+        console.warn('[RELATORIO] Erro ao capturar screenshot:', screenshotErr.message);
+      }
+
       // Envia ao grupo de relatórios (separado do grupo de monitoramento de resenha)
       const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
       if (global._grupoRelId) {
         const chat = await global._waClient.getChatById(global._grupoRelId);
-        await chat.sendMessage(msg);
+        if (screenshotPath && fs.existsSync(screenshotPath)) {
+          try {
+            const { MessageMedia } = require('whatsapp-web.js');
+            const media = MessageMedia.fromFilePath(screenshotPath);
+            await chat.sendMessage(media, { caption: msg });
+          } catch(mediaErr) {
+            console.warn('[RELATORIO] Erro ao enviar imagem, tentando só texto:', mediaErr.message);
+            await chat.sendMessage(msg);
+          }
+        } else {
+          await chat.sendMessage(msg);
+        }
       } else {
         const chats = await global._waClient.getChats();
         const grupo  = chats.find(c => c.isGroup && c.name === GRUPO_REL);
         if (!grupo) return res.status(404).json({ ok: false, error: `Grupo "${GRUPO_REL}" não encontrado. Verifique GRUPO_RELATORIO_NOME.` });
         global._grupoRelId = grupo.id._serialized;
-        await grupo.sendMessage(msg);
+        if (screenshotPath && fs.existsSync(screenshotPath)) {
+          try {
+            const { MessageMedia } = require('whatsapp-web.js');
+            const media = MessageMedia.fromFilePath(screenshotPath);
+            await grupo.sendMessage(media, { caption: msg });
+          } catch(mediaErr) {
+            console.warn('[RELATORIO] Erro ao enviar imagem, tentando só texto:', mediaErr.message);
+            await grupo.sendMessage(msg);
+          }
+        } else {
+          await grupo.sendMessage(msg);
+        }
+      }
+
+      // Limpa arquivo de screenshot
+      if (screenshotPath) {
+        try { fs.unlinkSync(screenshotPath); } catch(e) {}
       }
 
       res.json({ ok: true, msg: 'Relatório enviado!', preview: msg });
