@@ -18,6 +18,7 @@ function setDb(database) {
       ultimo_tipo       TEXT,
       ultimo_se         TEXT,
       ultimo_data       TEXT,
+      ultimo_equipamento TEXT,
       horario1          TEXT,
       horario2          TEXT,
       alertas_mutados   INTEGER NOT NULL DEFAULT 0
@@ -112,10 +113,10 @@ function zerar(gerencia, info = {}) {
     `UPDATE indicador_gerencias SET
        dias=0, data_inicio=?,
        recorde_dias=?, recorde_inicio=?, recorde_fim=?,
-       ultimo_id=?, ultimo_titulo=?, ultimo_tipo=?, ultimo_se=?, ultimo_data=?
+       ultimo_id=?, ultimo_titulo=?, ultimo_tipo=?, ultimo_se=?, ultimo_data=?, ultimo_equipamento=?
      WHERE gerencia=?`,
     [hoje, recorde_dias, recorde_inicio, recorde_fim,
-     info.id || null, info.titulo || null, info.tipo || null, info.se || null, hoje,
+     info.id || null, info.titulo || null, info.tipo || null, info.se || null, hoje, info.equipamento || null,
      gerencia]
   );
 
@@ -170,8 +171,8 @@ function setUltimoDesarme(gerencia, info = {}) {
   const atual = buscar(gerencia);
   if (!atual) return null;
   db.run(
-    `UPDATE indicador_gerencias SET ultimo_id=?, ultimo_titulo=?, ultimo_tipo=?, ultimo_se=?, ultimo_data=? WHERE gerencia=?`,
-    [info.id || null, info.titulo || null, info.tipo || null, info.se || null, info.data || null, gerencia]
+    `UPDATE indicador_gerencias SET ultimo_id=?, ultimo_titulo=?, ultimo_tipo=?, ultimo_se=?, ultimo_data=?, ultimo_equipamento=? WHERE gerencia=?`,
+    [info.id || null, info.titulo || null, info.tipo || null, info.se || null, info.data || null, info.equipamento || null, gerencia]
   );
   return buscar(gerencia);
 }
