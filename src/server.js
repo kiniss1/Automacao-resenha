@@ -1631,73 +1631,53 @@ function startServer() {
       const puppeteer = require('puppeteer');
       browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--window-size=1400,900'],
       });
       const page = await browser.newPage();
-      page.setViewport({ width: 1400, height: 1000, deviceScaleFactor: 2 }); // 2x pra qualidade
-      
-      const urlLocal = `http://localhost:${PORT}/index.html`;
-      await page.goto(urlLocal, { waitUntil: 'networkidle0', timeout: 30000 });
-      
-      // Limpa localStorage pra forçar logout (garante que pede login)
-      await page.evaluate(() => localStorage.clear());
-      await page.goto(urlLocal, { waitUntil: 'networkidle0', timeout: 30000 });
-      
-      // Verifica se está pedindo login
-      const temLogin = await page.$('input[type="password"]');
-      if (temLogin) {
-        const USER = process.env.ADMIN_USER || 'admin';
-        const PASS = process.env.ADMIN_PASS || 'admin';
-        
-        // Define valores via JavaScript (não digita — evita barra de busca)
-        await page.evaluate((user, pass) => {
-          const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
-          if (inputs[0]) inputs[0].value = user;
-          if (inputs[1]) inputs[1].value = pass;
-          // Dispara eventos de mudança
-          inputs.forEach(inp => inp.dispatchEvent(new Event('input')));
-          inputs.forEach(inp => inp.dispatchEvent(new Event('change')));
-        }, USER, PASS);
-        
-        // Clica no botão de login
-        const botao = await page.$('button');
-        if (botao) await botao.click();
-        
-        // Aguarda redirecionamento
-        await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 15000 }).catch(() => {});
+      await page.setViewport({ width: 1400, height: 900, deviceScaleFactor: 2 });
+
+      const urlLocal = `http://localhost:${PORT}`;
+
+      // Passo 1: abre a página pra criar o contexto do localStorage
+      await page.goto(urlLocal + '/login.html', { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+
+      // Passo 2: injeta token e usuário direto no localStorage — sem digitar nada
+      const auth = require('./db_auth');
+      const usuario = auth.login(process.env.ADMIN_USER || 'admin', process.env.ADMIN_PASS || 'admin');
+      if (usuario?.token) {
+        await page.evaluate((token, user) => {
+          localStorage.setItem('oomc_token', token);
+          localStorage.setItem('oomc_usuario', JSON.stringify(user));
+          localStorage.setItem('tema', 'light');
+        }, usuario.token, usuario.usuario || {});
       }
-      
-      // Aguarda o painel carregar
+
+      // Passo 3: navega pro painel já autenticado
+      await page.goto(urlLocal + '/index.html', { waitUntil: 'networkidle0', timeout: 30000 });
+
+      // Aguarda splash sumir e tabela carregar
       await page.waitForFunction(
         () => {
+          const splash = document.getElementById('splash');
+          const splashGone = !splash || splash.style.display === 'none' || splash.classList.contains('fade-out');
           const table = document.querySelector('table');
-          const badge = document.querySelector('[class*="badge"]');
-          const loaded = (table && table.querySelectorAll('tr').length > 1) || (badge && badge.textContent.trim());
-          return loaded;
+          const grid = document.getElementById('grid');
+          const loaded = (table && table.querySelectorAll('tr').length > 1) ||
+                         (grid && !grid.querySelector('.spinner'));
+          return splashGone && loaded;
         },
         { timeout: 20000 }
       ).catch(() => {});
-      
+
       // Aguarda 6s pra animações terminarem
       await page.evaluate(() => new Promise(r => setTimeout(r, 6000)));
-      
-      // Força tema claro
-      await page.evaluate(() => {
-        document.documentElement.style.colorScheme = 'light';
-        document.body.style.background = '#ffffff';
-      });
-      
+
       const screenshotPath = path.join(__dirname, '..', 'data', `painel_screenshot_${Date.now()}.png`);
       fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
-      
-      // Screenshot com qualidade alta
-      await page.screenshot({ 
-        path: screenshotPath, 
-        fullPage: false,
-        type: 'png'
-      });
+
+      await page.screenshot({ path: screenshotPath, fullPage: false, type: 'png' });
       console.log('[SCREENSHOT] Captura salva em:', screenshotPath);
-      
+
       return screenshotPath;
     } catch(e) {
       console.error('[SCREENSHOT] Erro ao capturar tela:', e.message);
