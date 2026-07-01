@@ -1631,36 +1631,44 @@ function startServer() {
       const puppeteer = require('puppeteer');
       browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
       });
       const page = await browser.newPage();
-      page.setViewport({ width: 1280, height: 900 });
+      page.setViewport({ width: 1400, height: 1000, deviceScaleFactor: 2 }); // 2x pra qualidade
       
       const urlLocal = `http://localhost:${PORT}/index.html`;
       await page.goto(urlLocal, { waitUntil: 'networkidle0', timeout: 30000 });
       
+      // Limpa localStorage pra forçar logout (garante que pede login)
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(urlLocal, { waitUntil: 'networkidle0', timeout: 30000 });
+      
       // Verifica se está pedindo login
-      const temLogin = await page.$('input[type="password"], [placeholder*="senha"], form');
+      const temLogin = await page.$('input[type="password"]');
       if (temLogin) {
         const USER = process.env.ADMIN_USER || 'admin';
         const PASS = process.env.ADMIN_PASS || 'admin';
         
-        // Preenche login — espera pelos inputs certos
-        const inputUsuario = await page.$('input[type="text"][placeholder*="usu"], input[name="username"], input[autocomplete="username"]');
-        const inputSenha = await page.$('input[type="password"], input[autocomplete="password"]');
+        // Preenche inputs de login — muito específico pra não pegar barra de busca
+        await page.evaluate(() => {
+          document.querySelectorAll('input').forEach(inp => inp.value = '');
+        });
         
-        if (inputUsuario) await inputUsuario.type(USER, { delay: 50 });
-        if (inputSenha) await inputSenha.type(PASS, { delay: 50 });
+        const inputs = await page.$$('input');
+        if (inputs.length >= 2) {
+          await inputs[0].type(USER, { delay: 30 });
+          await inputs[1].type(PASS, { delay: 30 });
+        }
         
         // Clica no botão de login
-        const botao = await page.$('button[type="submit"], button');
+        const botao = await page.$('button');
         if (botao) await botao.click();
         
-        // Aguarda redirecionamento pra dashboard
+        // Aguarda redirecionamento
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 15000 }).catch(() => {});
       }
       
-      // Aguarda o painel carregar (elemento com a tabela de OS ou badge de indicador)
+      // Aguarda o painel carregar
       await page.waitForFunction(
         () => {
           const table = document.querySelector('table');
@@ -1671,13 +1679,25 @@ function startServer() {
         { timeout: 20000 }
       ).catch(() => {});
       
-      // Aguarda mais 6s pra garantir que animações terminaram e dados estão renderizados
+      // Aguarda 6s pra animações terminarem
       await page.evaluate(() => new Promise(r => setTimeout(r, 6000)));
+      
+      // Força tema claro
+      await page.evaluate(() => {
+        document.documentElement.style.colorScheme = 'light';
+        document.body.style.background = '#ffffff';
+      });
       
       const screenshotPath = path.join(__dirname, '..', 'data', `painel_screenshot_${Date.now()}.png`);
       fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
       
-      await page.screenshot({ path: screenshotPath, fullPage: false });
+      // Screenshot com qualidade alta
+      await page.screenshot({ 
+        path: screenshotPath, 
+        fullPage: false,
+        type: 'png',
+        quality: 100
+      });
       console.log('[SCREENSHOT] Captura salva em:', screenshotPath);
       
       return screenshotPath;
