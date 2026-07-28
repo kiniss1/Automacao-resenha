@@ -1798,57 +1798,33 @@ function startServer() {
 
       const msg = linhas.join('\n').trim();
 
-      // Captura screenshot do painel no momento do disparo
-      let screenshotPath = null;
-      try {
-        console.log('[RELATORIO] Capturando screenshot...');
-        screenshotPath = await capturarTelaDosPainel();
-        console.log('[RELATORIO] Screenshot capturado:', screenshotPath, '| Existe:', screenshotPath ? fs.existsSync(screenshotPath) : 'N/A');
-      } catch(screenshotErr) {
-        console.error('[RELATORIO] Erro ao capturar screenshot:', screenshotErr.message);
-      }
-
-      // Envia ao grupo de relatórios (separado do grupo de monitoramento de resenha)
+      // Resolve grupo primeiro
       const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
-      if (global._grupoRelId) {
-        const chat = await global._waClient.getChatById(global._grupoRelId);
-        if (screenshotPath && fs.existsSync(screenshotPath)) {
-          try {
-            const { MessageMedia } = require('whatsapp-web.js');
-            const media = MessageMedia.fromFilePath(screenshotPath);
-            await chat.sendMessage(media, { caption: msg });
-          } catch(mediaErr) {
-            console.warn('[RELATORIO] Erro ao enviar imagem, tentando só texto:', mediaErr.message);
-            await chat.sendMessage(msg);
-          }
-        } else {
-          await chat.sendMessage(msg);
-        }
-      } else {
+      if (!global._grupoRelId) {
         const chats = await global._waClient.getChats();
-        const grupo  = chats.find(c => c.isGroup && c.name === GRUPO_REL);
+        const grupo = chats.find(c => c.isGroup && c.name === GRUPO_REL);
         if (!grupo) return res.status(404).json({ ok: false, error: `Grupo "${GRUPO_REL}" não encontrado. Verifique GRUPO_RELATORIO_NOME.` });
         global._grupoRelId = grupo.id._serialized;
-        if (screenshotPath && fs.existsSync(screenshotPath)) {
-          try {
-            const { MessageMedia } = require('whatsapp-web.js');
-            const media = MessageMedia.fromFilePath(screenshotPath);
-            await grupo.sendMessage(media, { caption: msg });
-          } catch(mediaErr) {
-            console.warn('[RELATORIO] Erro ao enviar imagem, tentando só texto:', mediaErr.message);
-            await grupo.sendMessage(msg);
-          }
-        } else {
-          await grupo.sendMessage(msg);
-        }
       }
+      const chat = await global._waClient.getChatById(global._grupoRelId);
 
-      // Limpa arquivo de screenshot
-      if (screenshotPath) {
-        try { fs.unlinkSync(screenshotPath); } catch(e) {}
-      }
-
+      // 1) Envia texto imediatamente — não espera screenshot
+      await chat.sendMessage(msg);
       res.json({ ok: true, msg: 'Relatório enviado!', preview: msg });
+
+      // 2) Screenshot em background — envia a foto depois, sem bloquear a resposta
+      capturarTelaDosPainel().then(async (screenshotPath) => {
+        if (!screenshotPath || !fs.existsSync(screenshotPath)) return;
+        try {
+          const { MessageMedia } = require('whatsapp-web.js');
+          const media = MessageMedia.fromFilePath(screenshotPath);
+          await chat.sendMessage(media, { caption: '📸 Painel OS — captura do momento do envio' });
+        } catch(e) {
+          console.warn('[RELATORIO] Erro ao enviar screenshot:', e.message);
+        } finally {
+          try { fs.unlinkSync(screenshotPath); } catch(e) {}
+        }
+      }).catch(e => console.warn('[RELATORIO] Screenshot falhou:', e.message));
     } catch(e) {
       console.error('[RELATORIO]', e.message);
       res.status(500).json({ ok: false, error: e.message });
