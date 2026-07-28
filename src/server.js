@@ -10,6 +10,19 @@ const PORT = process.env.PORT || 3000;
 const STATUS_VALIDOS = ['Andamento', 'Concluído', 'Etapa Concluída', 'Cancelado'];
 
 function startServer() {
+
+  // Helper: resolve chat de um grupo pelo nome, com cache e retry automático
+  async function resolverGrupo(cacheKey, nomeGrupo) {
+    if (global[cacheKey]) {
+      try { return await global._waClient.getChatById(global[cacheKey]); }
+      catch(e) { global[cacheKey] = null; } // ID inválido após reconexão — busca de novo
+    }
+    const chats = await global._waClient.getChats();
+    const grupo = chats.find(c => c.isGroup && c.name === nomeGrupo);
+    if (!grupo) throw new Error(`Grupo "${nomeGrupo}" não encontrado`);
+    global[cacheKey] = grupo.id._serialized;
+    return grupo;
+  }
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -395,9 +408,17 @@ function startServer() {
           const msgWA = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: ordensComLink });
 
           if (global._grupoRetornoId) {
-            const chat = await global._waClient.getChatById(global._grupoRetornoId);
-            await chat.sendMessage(msgWA);
-            console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo.');
+            try {
+              const chat = await global._waClient.getChatById(global._grupoRetornoId);
+              await chat.sendMessage(msgWA);
+              console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo.');
+            } catch(e) {
+              global._grupoRetornoId = null;
+              const grupoNome = process.env.GRUPO_RETORNO_NOME || process.env.GRUPO_NOME || 'Resenha';
+              const chat = await resolverGrupo('_grupoRetornoId', grupoNome);
+              await chat.sendMessage(msgWA);
+              console.log('[ATIVIDADE] ✅ Mensagem enviada ao grupo (retry).');
+            }
           } else {
             const grupoNome = process.env.GRUPO_RETORNO_NOME || process.env.GRUPO_NOME || 'Resenha';
             const chats = await global._waClient.getChats();
@@ -1798,15 +1819,20 @@ function startServer() {
 
       const msg = linhas.join('\n').trim();
 
-      // Resolve grupo primeiro
+      // Resolve grupo — com retry se o ID em cache não existir mais
       const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
-      if (!global._grupoRelId) {
+      async function resolverGrupoRel() {
+        if (global._grupoRelId) {
+          try { return await global._waClient.getChatById(global._grupoRelId); }
+          catch(e) { global._grupoRelId = null; } // ID inválido, busca de novo
+        }
         const chats = await global._waClient.getChats();
         const grupo = chats.find(c => c.isGroup && c.name === GRUPO_REL);
-        if (!grupo) return res.status(404).json({ ok: false, error: `Grupo "${GRUPO_REL}" não encontrado. Verifique GRUPO_RELATORIO_NOME.` });
+        if (!grupo) throw new Error(`Grupo "${GRUPO_REL}" não encontrado. Verifique GRUPO_RELATORIO_NOME.`);
         global._grupoRelId = grupo.id._serialized;
+        return grupo;
       }
-      const chat = await global._waClient.getChatById(global._grupoRelId);
+      const chat = await resolverGrupoRel();
 
       // 1) Envia texto imediatamente — não espera screenshot
       await chat.sendMessage(msg);
