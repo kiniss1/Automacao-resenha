@@ -1748,31 +1748,31 @@ function startServer() {
       const d  = String(agoraBR.getUTCDate()).padStart(2,'0');
       const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
       const mi = String(agoraBR.getUTCMinutes()).padStart(2,'0');
-      // Campo `data` no banco é DD/MM/YYYY
       const dataFmt  = `${d}/${m}/${y}`;
       const horaFmt  = `${hh}:${mi}`;
+      console.log('[RELATORIO] step1 - data:', dataFmt);
 
-      // OS do dia
       const osHoje = db.all(
         `SELECT status, subestacoes, unidade, equipe FROM ordens_servico WHERE data = ? ORDER BY criado_em DESC`,
         [dataFmt]
       ) || [];
+      console.log('[RELATORIO] step2 - osHoje:', osHoje.length);
 
       const osAndamento  = osHoje.filter(o => o.status === 'Andamento');
       const osConcluidas = osHoje.filter(o => o.status === 'Concluído');
       const osEtapa      = osHoje.filter(o => o.status === 'Etapa Concluída');
       const osCanceladas = osHoje.filter(o => o.status === 'Cancelado');
 
-      // Colaboradores em campo agora — baseado apenas na equipe das OS em andamento HOJE
       const colabSet = new Set();
       osAndamento.forEach(os => {
         (os.equipe || '').split(',').forEach(n => { const t = n.trim(); if (t) colabSet.add(t); });
       });
       const ativos = Array.from(colabSet);
 
-      // Inspeções do dia
-      const dataISO   = `${y}-${m}-${d}`;
+      const dataISO = `${y}-${m}-${d}`;
+      console.log('[RELATORIO] step3 - dataISO:', dataISO);
       const inspStats = insp.statsDashboard(dataISO, dataISO);
+      console.log('[RELATORIO] step4 - inspStats:', JSON.stringify(inspStats));
 
       // ── Monta mensagem ──
       const linhas = [];
@@ -1850,7 +1850,7 @@ function startServer() {
         }
       }).catch(e => console.warn('[RELATORIO] Screenshot falhou:', e.message));
     } catch(e) {
-      console.error('[RELATORIO]', e.message);
+      console.error('[RELATORIO] ERRO COMPLETO:', e.stack || e.message);
       res.status(500).json({ ok: false, error: e.message });
     }
   });
