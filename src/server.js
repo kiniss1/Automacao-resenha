@@ -1617,11 +1617,11 @@ function startServer() {
       }
 
       // Colaboradores em campo agora — combina check-ins ativos + equipe das OS em andamento hoje
-      const checkinsAtivosInsp = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`);
+      const checkinsAtivosInsp = db.all(`SELECT nome, matricula, subestacao FROM checkins WHERE status='Ativo' ORDER BY entrada DESC`) || [];
       const osAndamentoHoje = db.all(
         `SELECT equipe, subestacoes, unidade FROM ordens_servico
          WHERE status='Andamento' AND date(criado_em) = date('now','localtime')`
-      );
+      ) || [];
       const colabInspMap = new Map(); // nome -> SE
       checkinsAtivosInsp.forEach(c => {
         const n = (c.nome || c.matricula || '').trim();
@@ -1752,13 +1752,11 @@ function startServer() {
       const dataFmt  = `${d}/${m}/${y}`;
       const horaFmt  = `${hh}:${mi}`;
 
-      // OS do dia — usa o campo `data` (mesmo critério da prévia e do painel de stats)
+      // OS do dia
       const osHoje = db.all(
-        `SELECT status, subestacoes, unidade, equipe FROM ordens_servico
-         WHERE data = ?
-         ORDER BY criado_em DESC`,
+        `SELECT status, subestacoes, unidade, equipe FROM ordens_servico WHERE data = ? ORDER BY criado_em DESC`,
         [dataFmt]
-      );
+      ) || [];
 
       const osAndamento  = osHoje.filter(o => o.status === 'Andamento');
       const osConcluidas = osHoje.filter(o => o.status === 'Concluído');
