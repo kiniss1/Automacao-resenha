@@ -1661,69 +1661,6 @@ function startServer() {
     }
   });
 
-  // ── Screenshot do painel (para anexar ao relatório) ─────────────────────
-  async function capturarTelaDosPainel() {
-    let browser;
-    try {
-      const puppeteer = require('puppeteer');
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--window-size=1400,900'],
-      });
-      const page = await browser.newPage();
-      await page.setViewport({ width: 1400, height: 900, deviceScaleFactor: 2 });
-
-      const urlLocal = `http://localhost:${PORT}`;
-
-      // Passo 1: abre a página pra criar o contexto do localStorage
-      await page.goto(urlLocal + '/login.html', { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
-
-      // Passo 2: injeta token e usuário direto no localStorage — sem digitar nada
-      const auth = require('./db_auth');
-      const usuario = auth.login(process.env.ADMIN_USER || 'admin', process.env.ADMIN_PASS || 'admin');
-      if (usuario?.token) {
-        await page.evaluate((token, user) => {
-          localStorage.setItem('oomc_token', token);
-          localStorage.setItem('oomc_usuario', JSON.stringify(user));
-          localStorage.setItem('tema', 'light');
-        }, usuario.token, usuario.usuario || {});
-      }
-
-      // Passo 3: navega pro painel já autenticado
-      await page.goto(urlLocal + '/index.html', { waitUntil: 'networkidle0', timeout: 30000 });
-
-      // Aguarda splash sumir e tabela carregar
-      await page.waitForFunction(
-        () => {
-          const splash = document.getElementById('splash');
-          const splashGone = !splash || splash.style.display === 'none' || splash.classList.contains('fade-out');
-          const table = document.querySelector('table');
-          const grid = document.getElementById('grid');
-          const loaded = (table && table.querySelectorAll('tr').length > 1) ||
-                         (grid && !grid.querySelector('.spinner'));
-          return splashGone && loaded;
-        },
-        { timeout: 20000 }
-      ).catch(() => {});
-
-      // Aguarda 6s pra animações terminarem
-      await page.evaluate(() => new Promise(r => setTimeout(r, 6000)));
-
-      const screenshotPath = path.join(__dirname, '..', 'data', `painel_screenshot_${Date.now()}.png`);
-      fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
-
-      await page.screenshot({ path: screenshotPath, fullPage: false, type: 'png' });
-      console.log('[SCREENSHOT] Captura salva em:', screenshotPath);
-
-      return screenshotPath;
-    } catch(e) {
-      console.error('[SCREENSHOT] Erro ao capturar tela:', e.message);
-      return null;
-    } finally {
-      if (browser) await browser.close();
-    }
-  }
-
   // ── Relatório diário WhatsApp ─────────────────────────────────────────────
   app.post('/api/relatorio/enviar', requireAuth, requirePermissao('enviar_relatorio_painel'), async (req, res) => {
     try {
@@ -1750,13 +1687,11 @@ function startServer() {
       const mi = String(agoraBR.getUTCMinutes()).padStart(2,'0');
       const dataFmt  = `${d}/${m}/${y}`;
       const horaFmt  = `${hh}:${mi}`;
-      console.log('[RELATORIO] step1 - data:', dataFmt);
 
       const osHoje = db.all(
         `SELECT status, subestacoes, unidade, equipe FROM ordens_servico WHERE data = ? ORDER BY criado_em DESC`,
         [dataFmt]
       ) || [];
-      console.log('[RELATORIO] step2 - osHoje:', osHoje.length);
 
       const osAndamento  = osHoje.filter(o => o.status === 'Andamento');
       const osConcluidas = osHoje.filter(o => o.status === 'Concluído');
@@ -1770,9 +1705,7 @@ function startServer() {
       const ativos = Array.from(colabSet);
 
       const dataISO = `${y}-${m}-${d}`;
-      console.log('[RELATORIO] step3 - dataISO:', dataISO);
       const inspStats = insp.statsDashboard(dataISO, dataISO);
-      console.log('[RELATORIO] step4 - inspStats:', JSON.stringify(inspStats));
 
       // ── Monta mensagem ──
       const linhas = [];
@@ -1817,38 +1750,12 @@ function startServer() {
 
       const msg = linhas.join('\n').trim();
 
-      // Resolve grupo — com retry se o ID em cache não existir mais
+      // Resolve grupo e envia
       const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
-      async function resolverGrupoRel() {
-        if (global._grupoRelId) {
-          try { return await global._waClient.getChatById(global._grupoRelId); }
-          catch(e) { global._grupoRelId = null; } // ID inválido, busca de novo
-        }
-        const chats = await global._waClient.getChats();
-        const grupo = chats.find(c => c.isGroup && c.name === GRUPO_REL);
-        if (!grupo) throw new Error(`Grupo "${GRUPO_REL}" não encontrado. Verifique GRUPO_RELATORIO_NOME.`);
-        global._grupoRelId = grupo.id._serialized;
-        return grupo;
-      }
-      const chat = await resolverGrupoRel();
-
-      // 1) Envia texto imediatamente — não espera screenshot
+      const chat = await resolverGrupo('_grupoRelId', GRUPO_REL);
       await chat.sendMessage(msg);
-      res.json({ ok: true, msg: 'Relatório enviado!', preview: msg });
 
-      // 2) Screenshot em background — envia a foto depois, sem bloquear a resposta
-      capturarTelaDosPainel().then(async (screenshotPath) => {
-        if (!screenshotPath || !fs.existsSync(screenshotPath)) return;
-        try {
-          const { MessageMedia } = require('whatsapp-web.js');
-          const media = MessageMedia.fromFilePath(screenshotPath);
-          await chat.sendMessage(media, { caption: '📸 Painel OS — captura do momento do envio' });
-        } catch(e) {
-          console.warn('[RELATORIO] Erro ao enviar screenshot:', e.message);
-        } finally {
-          try { fs.unlinkSync(screenshotPath); } catch(e) {}
-        }
-      }).catch(e => console.warn('[RELATORIO] Screenshot falhou:', e.message));
+      res.json({ ok: true, msg: 'Relatório enviado!', preview: msg });
     } catch(e) {
       console.error('[RELATORIO] ERRO COMPLETO:', e.stack || e.message);
       res.status(500).json({ ok: false, error: e.message });
