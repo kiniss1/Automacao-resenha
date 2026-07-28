@@ -1708,14 +1708,14 @@ function startServer() {
     try {
       const botState = require('./state');
 
-      // Aguarda até 10s pelo bot ficar pronto (caso tenha acabado de escanear o QR)
+      // Aguarda até 30s pelo bot ficar pronto
       if (!botState.isReady() || !global._waClient) {
         await new Promise((resolve, reject) => {
-          const MAX = 10000, STEP = 500;
+          const MAX = 30000, STEP = 500;
           let elapsed = 0;
           const t = setInterval(() => {
             if (botState.isReady() && global._waClient) { clearInterval(t); resolve(); }
-            else if ((elapsed += STEP) >= MAX) { clearInterval(t); reject(new Error('Bot WhatsApp não conectado')); }
+            else if ((elapsed += STEP) >= MAX) { clearInterval(t); reject(new Error('WhatsApp não conectado. Escaneie o QR em /qr e tente novamente.')); }
           }, STEP);
         });
       }
