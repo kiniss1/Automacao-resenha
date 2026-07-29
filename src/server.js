@@ -13,19 +13,26 @@ function startServer() {
 
   // Helper: resolve chat de um grupo pelo nome, com cache e retry automático
   async function resolverGrupo(cacheKey, nomeGrupo) {
-    // Tenta cache primeiro
     if (global[cacheKey]) {
       try { return await global._waClient.getChatById(global[cacheKey]); }
       catch(e) { global[cacheKey] = null; }
     }
-    // Aguarda 2s antes de buscar chats (whatsapp-web.js pode não estar totalmente pronto)
-    await new Promise(r => setTimeout(r, 2000));
-    const chats = await global._waClient.getChats();
-    const grupo = chats.find(c => c.isGroup && c.name === nomeGrupo);
-    if (!grupo) throw new Error(`Grupo "${nomeGrupo}" não encontrado`);
-    global[cacheKey] = grupo.id._serialized;
-    console.log(`[BOT] Grupo "${nomeGrupo}" cacheado: ${global[cacheKey]}`);
-    return grupo;
+    let lastErr;
+    for (let i = 0; i < 3; i++) {
+      await new Promise(r => setTimeout(r, (i + 1) * 3000));
+      try {
+        const chats = await global._waClient.getChats();
+        const grupo = chats.find(c => c.isGroup && c.name === nomeGrupo);
+        if (!grupo) throw new Error(`Grupo "${nomeGrupo}" nao encontrado. Verifique a variavel de ambiente.`);
+        global[cacheKey] = grupo.id._serialized;
+        console.log(`[BOT] Grupo "${nomeGrupo}" cacheado.`);
+        return grupo;
+      } catch(e) {
+        lastErr = e;
+        console.warn(`[BOT] Tentativa ${i+1} falhou ao buscar grupo "${nomeGrupo}": ${e.message}`);
+      }
+    }
+    throw lastErr;
   }
   const app = express();
   app.use(cors());
