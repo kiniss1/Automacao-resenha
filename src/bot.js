@@ -19,8 +19,36 @@ const GRUPOS_CONFIG = [
   { env: 'GRUPO_CIAO_NOME',      key: '_grupoCiaoId'      },
 ];
 
+// IDs fixos via variável de ambiente (ex: GRUPO_RELATORIO_ID=120363xxxxxx@g.us)
+const GRUPOS_ID_CONFIG = [
+  { env: 'GRUPO_NOME_ID',           key: '_grupoId'          },
+  { env: 'GRUPO_RETORNO_ID',        key: '_grupoRetornoId'   },
+  { env: 'GRUPO_RELATORIO_ID',      key: '_grupoRelId'       },
+  { env: 'GRUPO_CHECKIN_ID',        key: '_grupoCheckinId'   },
+  { env: 'GRUPO_INSP_ID',           key: '_grupoInspId'      },
+  { env: 'GRUPO_AUTOINSP_ID',       key: '_grupoAutoInspId'  },
+  { env: 'GRUPO_INDICADOR_ID',      key: '_grupoIndicadorId' },
+  { env: 'GRUPO_CIAO_ID',           key: '_grupoCiaoId'      },
+];
+
+function carregarIdsFixos() {
+  let fixos = 0;
+  for (const { env, key } of GRUPOS_ID_CONFIG) {
+    const id = process.env[env];
+    if (id && id.includes('@g.us')) {
+      global[key] = id;
+      console.log(`[BOT] ID fixo carregado: ${key} = ${id}`);
+      fixos++;
+    }
+  }
+  return fixos;
+}
+
 function limparGlobaisGrupo() {
-  GRUPOS_CONFIG.forEach(g => { global[g.key] = null; });
+  // Só limpa os que não têm ID fixo configurado
+  for (const { env: envId, key } of GRUPOS_ID_CONFIG) {
+    if (!process.env[envId]) global[key] = null;
+  }
 }
 
 function limparLockChromium() {
@@ -41,72 +69,50 @@ function limparLockChromium() {
   removerLocksEm(DATA_PATH);
 }
 
-async function cachearGrupos(client) {
-  const nomes = GRUPOS_CONFIG
-    .map(g => ({ ...g, nome: process.env[g.env] }))
-    .filter(g => g.nome);
+async function cachearGruposPorNome(client) {
+  const pendentes = GRUPOS_CONFIG.filter(g => !global[g.key] && process.env[g.env]);
+  if (!pendentes.length) { console.log('[BOT] Todos os grupos já têm ID.'); return; }
 
   for (let tentativa = 1; tentativa <= 5; tentativa++) {
-    const delay = tentativa * 5000;
-    console.log(`[BOT] Tentativa ${tentativa} de cachear grupos (aguardando ${delay/1000}s)...`);
-    await new Promise(r => setTimeout(r, delay));
-
+    await new Promise(r => setTimeout(r, tentativa * 10000));
     try {
-      // Usa o método interno do whatsapp-web.js — evaluta no contexto isolado correto
+      // Executa no contexto isolado do whatsapp-web.js (UTIL_2)
       const grupos = await client.pupPage.evaluate(async () => {
-        // Tenta via WWebJS helper que o lib injeta
-        if (typeof WWebJS !== 'undefined' && WWebJS.getChats) {
-          const chats = await WWebJS.getChats();
-          return chats
-            .filter(c => c.isGroup)
-            .map(c => ({ id: c.id._serialized, name: c.name || '' }));
+        // Aguarda o módulo do Store estar disponível
+        for (let i = 0; i < 10; i++) {
+          try {
+            const mod = window.require('WAWebChatCollection');
+            if (mod) {
+              const chats = mod.default.getModelsArray();
+              return chats.filter(c => c.isGroup).map(c => ({
+                id: c.id._serialized,
+                name: c.name || c.formattedTitle || c.__x_name || ''
+              }));
+            }
+          } catch(e) {}
+          await new Promise(r => setTimeout(r, 1000));
         }
-        // Fallback: tenta via window.require do webpack do WhatsApp
-        const waRequire = window.require || window.webpackChunkbuild;
-        if (!waRequire) throw new Error('WWebJS e require nao disponiveis');
-        throw new Error('WWebJS nao disponivel');
+        throw new Error('WAWebChatCollection nao disponivel');
       });
 
       let achou = 0;
-      for (const { key, nome } of nomes) {
+      for (const { key, env } of pendentes) {
+        const nome = process.env[env];
         const g = grupos.find(c => c.name === nome);
-        if (g) { global[key] = g.id; console.log(`[BOT] ✅ "${nome}"`); achou++; }
-        else console.warn(`[BOT] ⚠️ Não encontrado: "${nome}"`);
+        if (g) { global[key] = g.id; console.log(`[BOT] ✅ "${nome}" → ${g.id}`); achou++; }
+        else console.warn(`[BOT] ⚠️ Não encontrado: "${nome}" (grupos visíveis: ${grupos.map(c=>c.name).slice(0,5).join(', ')})`);
       }
-
-      if (achou > 0) { console.log(`[BOT] ${achou}/${nomes.length} grupos cacheados.`); return; }
+      if (achou > 0) { console.log(`[BOT] ${achou}/${pendentes.length} grupos cacheados.`); return; }
     } catch(e) {
       console.warn(`[BOT] Tentativa ${tentativa} falhou: ${e.message}`);
-
-      // A partir da tentativa 3, usa client.getChats() com timeout próprio
-      if (tentativa >= 3) {
-        try {
-          console.log('[BOT] Tentando client.getChats() com timeout...');
-          const chats = await Promise.race([
-            client.getChats(),
-            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 30000))
-          ]);
-          const grupos = chats.filter(c => c.isGroup);
-          let achou = 0;
-          for (const { key, nome } of nomes) {
-            const g = grupos.find(c => c.name === nome);
-            if (g) { global[key] = g.id._serialized; console.log(`[BOT] ✅ "${nome}" (via getChats)`); achou++; }
-            else console.warn(`[BOT] ⚠️ Não encontrado: "${nome}"`);
-          }
-          if (achou > 0) { console.log(`[BOT] ${achou}/${nomes.length} grupos cacheados.`); return; }
-        } catch(e2) {
-          console.warn(`[BOT] getChats() falhou: ${e2.message}`);
-        }
-      }
     }
   }
-
-  console.error('[BOT] Não foi possível cachear grupos. Tentará novamente em 2min...');
-  setTimeout(() => cachearGrupos(client), 120000);
+  setTimeout(() => cachearGruposPorNome(client), 300000);
 }
 
 function startBot() {
   limparLockChromium();
+  carregarIdsFixos(); // Carrega IDs fixos imediatamente, sem precisar do WhatsApp
 
   const client = new Client({
     authStrategy: new LocalAuth({ dataPath: DATA_PATH }),
@@ -142,7 +148,7 @@ function startBot() {
           state.clearQR();
           global._waClient = client;
           console.log('[BOT] Pronto! (via 99%)');
-          cachearGrupos(client);
+          cachearGruposPorNome(client);
         }
       }, 5000);
     }
@@ -154,7 +160,7 @@ function startBot() {
     state.clearQR();
     global._waClient = client;
     console.log('[BOT] Pronto!');
-    cachearGrupos(client);
+    cachearGruposPorNome(client);
   });
 
   client.on('auth_failure', (msg) => {
