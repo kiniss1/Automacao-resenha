@@ -49,6 +49,32 @@ function startServer() {
     res.json({ ok: true, bot: state.isReady(), ts: new Date().toISOString() });
   });
 
+  // Rota de debug: lista grupos cacheados e disponíveis no WhatsApp
+  app.get('/api/debug/grupos', async (_req, res) => {
+    try {
+      const cacheados = {};
+      ['_grupoId','_grupoRetornoId','_grupoRelId','_grupoCheckinId','_grupoInspId','_grupoAutoInspId','_grupoIndicadorId','_grupoCiaoId']
+        .forEach(k => { if (global[k]) cacheados[k] = global[k]; });
+
+      let disponiveis = [];
+      if (global._waClient) {
+        try {
+          disponiveis = await global._waClient.pupPage.evaluate(() => {
+            const store = window.Store;
+            if (!store || !store.Chat) return [];
+            return store.Chat.getModelsArray()
+              .filter(c => c.isGroup)
+              .map(c => ({ id: c.id._serialized, name: c.name || c.formattedTitle || '' }));
+          });
+        } catch(e) { disponiveis = [{ erro: e.message }]; }
+      }
+
+      res.json({ ok: true, cacheados, disponiveis });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   app.get('/qr', (_req, res) => {
     const qr = state.getQR();
     if (state.isReady()) return res.send('<h2 style="font-family:sans-serif;color:green;padding:40px">✅ WhatsApp conectado!</h2>');
