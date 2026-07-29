@@ -11,29 +11,35 @@ const STATUS_VALIDOS = ['Andamento', 'Concluído', 'Etapa Concluída', 'Cancelad
 
 function startServer() {
 
-  // Helper: resolve chat de um grupo pelo nome, com cache e retry automático
+  // Helper: resolve chat de um grupo pelo nome, com cache pre-populado pelo bot.js
   async function resolverGrupo(cacheKey, nomeGrupo) {
+    // ID ja foi cacheado pelo bot.js no startup — usa diretamente
     if (global[cacheKey]) {
       try { return await global._waClient.getChatById(global[cacheKey]); }
-      catch(e) { global[cacheKey] = null; }
-    }
-    let lastErr;
-    for (let i = 0; i < 3; i++) {
-      await new Promise(r => setTimeout(r, (i + 1) * 3000));
-      try {
-        const chats = await global._waClient.getChats();
-        const grupo = chats.find(c => c.isGroup && c.name === nomeGrupo);
-        if (!grupo) throw new Error(`Grupo "${nomeGrupo}" nao encontrado. Verifique a variavel de ambiente.`);
-        global[cacheKey] = grupo.id._serialized;
-        console.log(`[BOT] Grupo "${nomeGrupo}" cacheado.`);
-        return grupo;
-      } catch(e) {
-        lastErr = e;
-        console.warn(`[BOT] Tentativa ${i+1} falhou ao buscar grupo "${nomeGrupo}": ${e.message}`);
+      catch(e) {
+        global[cacheKey] = null;
+        console.warn('[BOT] ID invalido para', nomeGrupo, '— aguardando recache...');
+        // Aguarda ate 30s o bot recachear apos reconexao
+        for (let i = 0; i < 6; i++) {
+          await new Promise(r => setTimeout(r, 5000));
+          if (global[cacheKey]) {
+            try { return await global._waClient.getChatById(global[cacheKey]); } catch(e2) {}
+          }
+        }
+        throw new Error('Grupo ' + nomeGrupo + ' nao disponivel. Bot pode estar reconectando.');
       }
     }
-    throw lastErr;
+    // Nao tem cache — aguarda ate 30s o bot cachear
+    console.warn('[BOT] Aguardando cache do grupo:', nomeGrupo);
+    for (let i = 0; i < 6; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      if (global[cacheKey]) {
+        try { return await global._waClient.getChatById(global[cacheKey]); } catch(e) {}
+      }
+    }
+    throw new Error('Grupo ' + nomeGrupo + ' nao encontrado. Verifique a variavel de ambiente.');
   }
+
   const app = express();
   app.use(cors());
   app.use(express.json());
