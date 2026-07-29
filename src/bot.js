@@ -1,102 +1,77 @@
 // src/bot.js
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
-const { parseOS } = require('./parser');
 const db = require('./db');
 const state = require('./state');
 const fs   = require('fs');
 const path = require('path');
 
-const GRUPO_NOME = process.env.GRUPO_NOME || 'Resenha';
-const DATA_PATH  = process.env.WA_DATA_PATH || '/data/.wwebjs_auth';
-const EXEC_PATH  = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
+const GRUPO_NOME          = process.env.GRUPO_NOME           || 'Resenha';
+const GRUPO_RETORNO_NOME  = process.env.GRUPO_RETORNO_NOME   || GRUPO_NOME;
+const GRUPO_RELATORIO_NOME= process.env.GRUPO_RELATORIO_NOME || GRUPO_NOME;
+const GRUPO_CHECKIN_NOME  = process.env.GRUPO_CHECKIN_NOME   || GRUPO_NOME;
+const GRUPO_INSP_NOME     = process.env.GRUPO_INSP_NOME      || GRUPO_NOME;
+const GRUPO_AUTOINSP_NOME = process.env.GRUPO_AUTOINSP_NOME  || GRUPO_RELATORIO_NOME;
+const GRUPO_INDICADOR_NOME= process.env.GRUPO_INDICADOR_NOME || GRUPO_NOME;
+const GRUPO_CIAO_NOME     = process.env.GRUPO_CIAO_NOME      || GRUPO_NOME;
 
-const MAX_RETRY = 3;
-const RETRY_DELAY = 2000;
+const DATA_PATH = process.env.WA_DATA_PATH || '/data/.wwebjs_auth';
+const EXEC_PATH = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-async function salvarComRetry(os, tentativa = 1) {
-  try {
-    db.inserirOS(os);
-    return true;
-  } catch (err) {
-    if (tentativa < MAX_RETRY) {
-      console.warn(`[DB] Tentativa ${tentativa} falhou para OS ${os.os}: ${err.message}. Tentando novamente...`);
-      await sleep(RETRY_DELAY);
-      return salvarComRetry(os, tentativa + 1);
-    }
-    console.error(`[DB] Falha definitiva ao salvar OS ${os.os} após ${MAX_RETRY} tentativas:`, err.message);
-    return false;
-  }
-}
-
-async function processarMensagem(msg) {
-  try {
-    const chat = await msg.getChat();
-    console.log(`[MSG] Chat: "${chat.name}" | isGroup: ${chat.isGroup}`);
-    if (!chat.isGroup || chat.name !== GRUPO_NOME) return;
-    if (msg.fromMe) return;
-
-    const resultado = parseOS(msg.body);
-    if (!resultado) return;
-
-    if (resultado.erro) {
-      await msg.reply(resultado.aviso);
-      return;
-    }
-
-    const { ordens, avisos } = resultado;
-    const registradas = [];
-    const falhas = [];
-
-    for (const os of ordens) {
-      const ok = await salvarComRetry(os);
-      if (ok) {
-        registradas.push(`• ${os.unidade} — ${os.servico.substring(0, 50)}`);
-        console.log(`[BOT] ✅ Registrada: ${os.os} | ${os.unidade} | ${os.status}`);
-      } else {
-        falhas.push(os.os);
-      }
-    }
-
-    const linhas = [];
-    if (registradas.length) {
-      linhas.push(`✅ *${registradas.length} OS(s) registrada(s):*`);
-      linhas.push(...registradas);
-    }
-    if (falhas.length) linhas.push(`\n❌ Falha ao salvar: ${falhas.join(', ')}`);
-    if (avisos.length) {
-      linhas.push(`\n⚠️ *Atenção:*`);
-      avisos.forEach(a => linhas.push(`  ${a}`));
-    }
-    if (linhas.length) await msg.reply(linhas.join('\n'));
-
-  } catch (err) {
-    console.error('[BOT] Erro ao processar mensagem:', err.message);
-  }
+function limparGlobaisGrupo() {
+  global._grupoId          = null;
+  global._grupoRetornoId   = null;
+  global._grupoRelId       = null;
+  global._grupoCheckinId   = null;
+  global._grupoInspId      = null;
+  global._grupoAutoInspId  = null;
+  global._grupoIndicadorId = null;
+  global._grupoCiaoId      = null;
 }
 
 function limparLockChromium() {
   const lockNames = ['SingletonLock', 'SingletonSocket', 'SingletonCookie'];
-
   function removerLocksEm(dir) {
     try {
       if (!fs.existsSync(dir)) return;
       const entries = fs.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          removerLocksEm(fullPath);
-        } else if (lockNames.includes(entry.name)) {
+        if (entry.isDirectory()) removerLocksEm(fullPath);
+        else if (lockNames.includes(entry.name)) {
           try { fs.unlinkSync(fullPath); console.log('[BOT] Lock removido:', fullPath); }
-          catch(e) { console.warn('[BOT] Não foi possível remover lock:', fullPath); }
+          catch(e) {}
         }
       }
-    } catch(e) { /* silencioso */ }
+    } catch(e) {}
   }
-
   removerLocksEm(DATA_PATH);
+}
+
+// Pre-cacheia IDs de todos os grupos configurados
+async function cachearGrupos(client) {
+  try {
+    await new Promise(r => setTimeout(r, 3000)); // aguarda estabilização
+    const chats = await client.getChats();
+    const grupos = chats.filter(c => c.isGroup);
+
+    const mapear = (nome, globalKey) => {
+      const g = grupos.find(c => c.name === nome);
+      if (g) { global[globalKey] = g.id._serialized; console.log(`[BOT] ✅ Grupo cacheado: "${nome}"`); }
+      else console.warn(`[BOT] ⚠️ Grupo não encontrado: "${nome}"`);
+    };
+
+    mapear(GRUPO_NOME,           '_grupoId');
+    mapear(GRUPO_RETORNO_NOME,   '_grupoRetornoId');
+    mapear(GRUPO_RELATORIO_NOME, '_grupoRelId');
+    mapear(GRUPO_CHECKIN_NOME,   '_grupoCheckinId');
+    mapear(GRUPO_INSP_NOME,      '_grupoInspId');
+    mapear(GRUPO_AUTOINSP_NOME,  '_grupoAutoInspId');
+    mapear(GRUPO_INDICADOR_NOME, '_grupoIndicadorId');
+    mapear(GRUPO_CIAO_NOME,      '_grupoCiaoId');
+  } catch(e) {
+    console.error('[BOT] Erro ao cachear grupos:', e.message);
+  }
 }
 
 function startBot() {
@@ -107,13 +82,9 @@ function startBot() {
     puppeteer: {
       executablePath: EXEC_PATH,
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-extensions',
+        '--no-sandbox', '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', '--disable-gpu',
+        '--no-first-run', '--no-zygote', '--disable-extensions',
       ],
       headless: true,
     },
@@ -125,7 +96,7 @@ function startBot() {
     try {
       state.setQR(await qrcode.toDataURL(qr));
       console.log('[BOT] QR gerado → acesse /qr no painel para escanear.');
-    } catch (err) {
+    } catch(err) {
       console.error('[BOT] Erro ao gerar QR:', err.message);
     }
   });
@@ -141,12 +112,9 @@ function startBot() {
           state.setReady(true);
           state.clearQR();
           global._waClient = client;
-          try {
-            const chats = await client.getChats();
-            const grupo = chats.find(c => c.isGroup && c.name === GRUPO_NOME);
-            if (grupo) { global._grupoId = grupo.id._serialized; console.log(`[BOT] Grupo ID salvo: ${global._grupoId}`); }
-          } catch(e) {}
-          console.log(`[BOT] Pronto! (via 99%) Monitorando grupo "${GRUPO_NOME}".`);
+          console.log(`[BOT] Pronto! (via 99%) Cacheando grupos...`);
+          await cachearGrupos(client);
+          console.log(`[BOT] Grupos cacheados.`);
         }
       }, 5000);
     }
@@ -157,21 +125,9 @@ function startBot() {
     state.setReady(true);
     state.clearQR();
     global._waClient = client;
-
-    try {
-      const chats = await client.getChats();
-      const grupo = chats.find(c => c.isGroup && c.name === GRUPO_NOME);
-      if (grupo) {
-        global._grupoId = grupo.id._serialized;
-        console.log(`[BOT] Grupo "${GRUPO_NOME}" encontrado. ID: ${global._grupoId}`);
-      } else {
-        console.warn(`[BOT] ⚠️ Grupo "${GRUPO_NOME}" não encontrado nos chats.`);
-      }
-    } catch(e) {
-      console.error('[BOT] Erro ao buscar grupo:', e.message);
-    }
-
-    console.log(`[BOT] Pronto! Monitorando grupo "${GRUPO_NOME}".`);
+    console.log('[BOT] Pronto! Cacheando grupos...');
+    await cachearGrupos(client);
+    console.log('[BOT] Grupos cacheados.');
   });
 
   client.on('auth_failure', (msg) => {
@@ -182,10 +138,7 @@ function startBot() {
   client.on('disconnected', (reason) => {
     state.setReady(false);
     global._waClient = null;
-    global._grupoId = null;
-    global._grupoInspId = null;
-    global._grupoCheckinId = null;
-    global._grupoRetornoId = null;
+    limparGlobaisGrupo();
     console.warn('[BOT] Desconectado:', reason);
     setTimeout(() => {
       limparLockChromium();
@@ -193,8 +146,6 @@ function startBot() {
       client.initialize().catch(err => console.error('[BOT] Erro ao reconectar:', err.message));
     }, 10000);
   });
-
-  // client.on('message', processarMensagem);
 
   client.initialize();
 }
