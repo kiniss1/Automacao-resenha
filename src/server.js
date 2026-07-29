@@ -14,7 +14,6 @@ function startServer() {
   // Helper: envia mensagem para um grupo pelo nome
   // Usa ID cacheado (pelo bot.js via auto-cache) ou aguarda até 60s pelo cache
   async function enviarParaGrupo(cacheKey, nomeGrupo, mensagem, opts = {}) {
-    // Tenta carregar ID fixo da env se ainda não cacheado
     const ID_ENV_MAP = {
       '_grupoId':          'GRUPO_NOME_ID',
       '_grupoRetornoId':   'GRUPO_RETORNO_ID',
@@ -25,11 +24,10 @@ function startServer() {
       '_grupoIndicadorId': 'GRUPO_INDICADOR_ID',
       '_grupoCiaoId':      'GRUPO_CIAO_ID',
     };
+    // Carrega ID fixo da env se disponível
     if (!global[cacheKey] && ID_ENV_MAP[cacheKey] && process.env[ID_ENV_MAP[cacheKey]]) {
       global[cacheKey] = process.env[ID_ENV_MAP[cacheKey]];
-      console.log(`[BOT] ID fixo aplicado: ${cacheKey} = ${global[cacheKey]}`);
     }
-
     // Aguarda cache por até 60s
     for (let i = 0; i < 12; i++) {
       if (global[cacheKey]) break;
@@ -37,10 +35,10 @@ function startServer() {
       await new Promise(r => setTimeout(r, 5000));
     }
     if (!global[cacheKey]) {
-      throw new Error(`Grupo "${nomeGrupo}" ainda nao cacheado. Configure ${ID_ENV_MAP[cacheKey] || 'o ID fixo'} no Railway.`);
+      throw new Error(`Grupo "${nomeGrupo}" sem ID. Configure ${ID_ENV_MAP[cacheKey] || 'o ID fixo'} no Railway.`);
     }
-    const chat = await global._waClient.getChatById(global[cacheKey]);
-    await chat.sendMessage(mensagem, opts);
+    // Usa sendMessage direto com o ID — evita getChatById que falha neste ambiente
+    await global._waClient.sendMessage(global[cacheKey], mensagem, opts);
   }
 
   const app = express();
