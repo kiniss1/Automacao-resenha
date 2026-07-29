@@ -6,27 +6,22 @@ const state = require('./state');
 const fs   = require('fs');
 const path = require('path');
 
-const GRUPO_NOME          = process.env.GRUPO_NOME           || 'Resenha';
-const GRUPO_RETORNO_NOME  = process.env.GRUPO_RETORNO_NOME   || GRUPO_NOME;
-const GRUPO_RELATORIO_NOME= process.env.GRUPO_RELATORIO_NOME || GRUPO_NOME;
-const GRUPO_CHECKIN_NOME  = process.env.GRUPO_CHECKIN_NOME   || GRUPO_NOME;
-const GRUPO_INSP_NOME     = process.env.GRUPO_INSP_NOME      || GRUPO_NOME;
-const GRUPO_AUTOINSP_NOME = process.env.GRUPO_AUTOINSP_NOME  || GRUPO_RELATORIO_NOME;
-const GRUPO_INDICADOR_NOME= process.env.GRUPO_INDICADOR_NOME || GRUPO_NOME;
-const GRUPO_CIAO_NOME     = process.env.GRUPO_CIAO_NOME      || GRUPO_NOME;
-
 const DATA_PATH = process.env.WA_DATA_PATH || '/data/.wwebjs_auth';
 const EXEC_PATH = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 
+const GRUPOS_CONFIG = [
+  { env: 'GRUPO_NOME',           key: '_grupoId'          },
+  { env: 'GRUPO_RETORNO_NOME',   key: '_grupoRetornoId'   },
+  { env: 'GRUPO_RELATORIO_NOME', key: '_grupoRelId'       },
+  { env: 'GRUPO_CHECKIN_NOME',   key: '_grupoCheckinId'   },
+  { env: 'GRUPO_INSP_NOME',      key: '_grupoInspId'      },
+  { env: 'GRUPO_AUTOINSP_NOME',  key: '_grupoAutoInspId'  },
+  { env: 'GRUPO_INDICADOR_NOME', key: '_grupoIndicadorId' },
+  { env: 'GRUPO_CIAO_NOME',      key: '_grupoCiaoId'      },
+];
+
 function limparGlobaisGrupo() {
-  global._grupoId          = null;
-  global._grupoRetornoId   = null;
-  global._grupoRelId       = null;
-  global._grupoCheckinId   = null;
-  global._grupoInspId      = null;
-  global._grupoAutoInspId  = null;
-  global._grupoIndicadorId = null;
-  global._grupoCiaoId      = null;
+  GRUPOS_CONFIG.forEach(g => { global[g.key] = null; });
 }
 
 function limparLockChromium() {
@@ -39,8 +34,7 @@ function limparLockChromium() {
         const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory()) removerLocksEm(fullPath);
         else if (lockNames.includes(entry.name)) {
-          try { fs.unlinkSync(fullPath); console.log('[BOT] Lock removido:', fullPath); }
-          catch(e) {}
+          try { fs.unlinkSync(fullPath); console.log('[BOT] Lock removido:', fullPath); } catch(e) {}
         }
       }
     } catch(e) {}
@@ -48,27 +42,28 @@ function limparLockChromium() {
   removerLocksEm(DATA_PATH);
 }
 
-// Pre-cacheia IDs de todos os grupos configurados
+// Busca grupos via WWebJS sem usar getChats() (que usa page.evaluate e falha)
 async function cachearGrupos(client) {
+  // Aguarda o Chromium estabilizar
+  await new Promise(r => setTimeout(r, 8000));
+  
   try {
-    await new Promise(r => setTimeout(r, 3000)); // aguarda estabilização
-    const chats = await client.getChats();
-    const grupos = chats.filter(c => c.isGroup);
+    // Usa o store interno do whatsapp-web.js diretamente
+    const grupos = await client.pupPage.evaluate(() => {
+      return WWebJS.getChats().then(chats =>
+        chats
+          .filter(c => c.isGroup)
+          .map(c => ({ id: c.id._serialized, name: c.name }))
+      );
+    });
 
-    const mapear = (nome, globalKey) => {
+    for (const { env, key } of GRUPOS_CONFIG) {
+      const nome = process.env[env];
+      if (!nome) continue;
       const g = grupos.find(c => c.name === nome);
-      if (g) { global[globalKey] = g.id._serialized; console.log(`[BOT] ✅ Grupo cacheado: "${nome}"`); }
+      if (g) { global[key] = g.id; console.log(`[BOT] ✅ "${nome}" → ${g.id}`); }
       else console.warn(`[BOT] ⚠️ Grupo não encontrado: "${nome}"`);
-    };
-
-    mapear(GRUPO_NOME,           '_grupoId');
-    mapear(GRUPO_RETORNO_NOME,   '_grupoRetornoId');
-    mapear(GRUPO_RELATORIO_NOME, '_grupoRelId');
-    mapear(GRUPO_CHECKIN_NOME,   '_grupoCheckinId');
-    mapear(GRUPO_INSP_NOME,      '_grupoInspId');
-    mapear(GRUPO_AUTOINSP_NOME,  '_grupoAutoInspId');
-    mapear(GRUPO_INDICADOR_NOME, '_grupoIndicadorId');
-    mapear(GRUPO_CIAO_NOME,      '_grupoCiaoId');
+    }
   } catch(e) {
     console.error('[BOT] Erro ao cachear grupos:', e.message);
   }
@@ -112,9 +107,8 @@ function startBot() {
           state.setReady(true);
           state.clearQR();
           global._waClient = client;
-          console.log(`[BOT] Pronto! (via 99%) Cacheando grupos...`);
+          console.log('[BOT] Pronto! (via 99%) Cacheando grupos...');
           await cachearGrupos(client);
-          console.log(`[BOT] Grupos cacheados.`);
         }
       }, 5000);
     }
@@ -127,7 +121,6 @@ function startBot() {
     global._waClient = client;
     console.log('[BOT] Pronto! Cacheando grupos...');
     await cachearGrupos(client);
-    console.log('[BOT] Grupos cacheados.');
   });
 
   client.on('auth_failure', (msg) => {
