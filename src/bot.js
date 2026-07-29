@@ -74,25 +74,40 @@ async function cachearGruposPorNome(client) {
   if (!pendentes.length) { console.log('[BOT] Todos os grupos já têm ID.'); return; }
 
   for (let tentativa = 1; tentativa <= 5; tentativa++) {
-    await new Promise(r => setTimeout(r, tentativa * 10000));
+    await new Promise(r => setTimeout(r, tentativa * 8000));
     try {
-      // Executa no contexto isolado do whatsapp-web.js (UTIL_2)
       const grupos = await client.pupPage.evaluate(async () => {
-        // Aguarda o módulo do Store estar disponível
-        for (let i = 0; i < 10; i++) {
-          try {
-            const mod = window.require('WAWebChatCollection');
-            if (mod) {
-              const chats = mod.default.getModelsArray();
-              return chats.filter(c => c.isGroup).map(c => ({
-                id: c.id._serialized,
-                name: c.name || c.formattedTitle || c.__x_name || ''
-              }));
-            }
-          } catch(e) {}
-          await new Promise(r => setTimeout(r, 1000));
+        // Descobre módulos disponíveis que têm grupos
+        const tryModules = [
+          'WAWebChatCollection', 'ChatStore', 'Wap.Chat',
+          'WAWebGroupMetadataStore', 'ContactStore'
+        ];
+
+        // Tenta via webpack chunk
+        let chats = null;
+        try {
+          const keys = Object.keys(window.webpackChunkbuild?.__webpack_require__?.m || {});
+          for (const k of keys.slice(0, 200)) {
+            try {
+              const mod = window.webpackChunkbuild.__webpack_require__(k);
+              if (mod && mod.default && typeof mod.default.getModelsArray === 'function') {
+                const arr = mod.default.getModelsArray();
+                if (arr && arr.length > 0 && arr[0].isGroup !== undefined) {
+                  chats = arr;
+                  break;
+                }
+              }
+            } catch(e) {}
+          }
+        } catch(e) {}
+
+        if (chats) {
+          return chats.filter(c => c.isGroup).map(c => ({
+            id: c.id._serialized,
+            name: c.name || c.formattedTitle || ''
+          }));
         }
-        throw new Error('WAWebChatCollection nao disponivel');
+        throw new Error('Nenhum modulo de chat encontrado');
       });
 
       let achou = 0;
@@ -100,7 +115,7 @@ async function cachearGruposPorNome(client) {
         const nome = process.env[env];
         const g = grupos.find(c => c.name === nome);
         if (g) { global[key] = g.id; console.log(`[BOT] ✅ "${nome}" → ${g.id}`); achou++; }
-        else console.warn(`[BOT] ⚠️ Não encontrado: "${nome}" (grupos visíveis: ${grupos.map(c=>c.name).slice(0,5).join(', ')})`);
+        else console.warn(`[BOT] ⚠️ "${nome}" não encontrado. Grupos: ${grupos.map(c=>c.name).join(' | ')}`);
       }
       if (achou > 0) { console.log(`[BOT] ${achou}/${pendentes.length} grupos cacheados.`); return; }
     } catch(e) {
