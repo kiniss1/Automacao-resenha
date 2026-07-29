@@ -1,7 +1,6 @@
 // src/bot.js
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
-const db = require('./db');
 const state = require('./state');
 const fs   = require('fs');
 const path = require('path');
@@ -42,31 +41,56 @@ function limparLockChromium() {
   removerLocksEm(DATA_PATH);
 }
 
-// Busca grupos via WWebJS sem usar getChats() (que usa page.evaluate e falha)
+// Tenta cachear grupos com múltiplos métodos e retries
 async function cachearGrupos(client) {
-  // Aguarda o Chromium estabilizar
-  await new Promise(r => setTimeout(r, 8000));
-  
-  try {
-    // Usa o store interno do whatsapp-web.js diretamente
-    const grupos = await client.pupPage.evaluate(() => {
-      return WWebJS.getChats().then(chats =>
-        chats
-          .filter(c => c.isGroup)
-          .map(c => ({ id: c.id._serialized, name: c.name }))
-      );
-    });
+  const nomes = GRUPOS_CONFIG
+    .map(g => ({ ...g, nome: process.env[g.env] }))
+    .filter(g => g.nome);
 
-    for (const { env, key } of GRUPOS_CONFIG) {
-      const nome = process.env[env];
-      if (!nome) continue;
-      const g = grupos.find(c => c.name === nome);
-      if (g) { global[key] = g.id; console.log(`[BOT] ✅ "${nome}" → ${g.id}`); }
-      else console.warn(`[BOT] ⚠️ Grupo não encontrado: "${nome}"`);
+  // Tenta até 5x com delay crescente
+  for (let tentativa = 1; tentativa <= 5; tentativa++) {
+    const delay = tentativa * 5000;
+    console.log(`[BOT] Tentativa ${tentativa} de cachear grupos (aguardando ${delay/1000}s)...`);
+    await new Promise(r => setTimeout(r, delay));
+
+    try {
+      // Método 1: pupBrowser direto via Store
+      const grupos = await client.pupPage.evaluate(() => {
+        return new Promise((resolve, reject) => {
+          try {
+            const store = window.Store;
+            if (!store || !store.Chat) return reject(new Error('Store nao disponivel'));
+            const chats = store.Chat.getModelsArray();
+            resolve(chats
+              .filter(c => c.isGroup)
+              .map(c => ({ id: c.id._serialized, name: c.name || c.formattedTitle || '' }))
+            );
+          } catch(e) { reject(e); }
+        });
+      });
+
+      let achou = 0;
+      for (const { env, key, nome } of nomes) {
+        const g = grupos.find(c => c.name === nome);
+        if (g) {
+          global[key] = g.id;
+          console.log(`[BOT] ✅ "${nome}" → ${g.id}`);
+          achou++;
+        } else {
+          console.warn(`[BOT] ⚠️ Grupo não encontrado: "${nome}"`);
+        }
+      }
+
+      if (achou > 0) {
+        console.log(`[BOT] ${achou}/${nomes.length} grupos cacheados.`);
+        return;
+      }
+    } catch(e) {
+      console.warn(`[BOT] Tentativa ${tentativa} falhou: ${e.message}`);
     }
-  } catch(e) {
-    console.error('[BOT] Erro ao cachear grupos:', e.message);
   }
+
+  console.error('[BOT] Não foi possível cachear grupos após 5 tentativas.');
 }
 
 function startBot() {
@@ -107,8 +131,8 @@ function startBot() {
           state.setReady(true);
           state.clearQR();
           global._waClient = client;
-          console.log('[BOT] Pronto! (via 99%) Cacheando grupos...');
-          await cachearGrupos(client);
+          console.log('[BOT] Pronto! (via 99%)');
+          cachearGrupos(client); // não aguarda — faz em background
         }
       }, 5000);
     }
@@ -119,8 +143,8 @@ function startBot() {
     state.setReady(true);
     state.clearQR();
     global._waClient = client;
-    console.log('[BOT] Pronto! Cacheando grupos...');
-    await cachearGrupos(client);
+    console.log('[BOT] Pronto!');
+    cachearGrupos(client); // não aguarda — faz em background
   });
 
   client.on('auth_failure', (msg) => {
