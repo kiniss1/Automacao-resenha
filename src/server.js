@@ -69,7 +69,17 @@ function startServer() {
         } catch(e) { disponiveis = [{ erro: e.message }]; }
       }
 
-      res.json({ ok: true, cacheados, disponiveis });
+      // Tenta ler IDs do arquivo de sessão salvo
+      const sessionIds = [];
+      try {
+        const sessionDir = process.env.WA_DATA_PATH || '/data/.wwebjs_auth';
+        const defaultDir = require('path').join(sessionDir, 'session', 'Default');
+        if (require('fs').existsSync(defaultDir)) {
+          sessionIds.push('sessionDir existe: ' + defaultDir);
+        }
+      } catch(e) {}
+
+      res.json({ ok: true, cacheados, disponiveis, sessionIds, botReady: state.isReady(), temClient: !!global._waClient });
     } catch(e) {
       res.status(500).json({ ok: false, error: e.message });
     }
