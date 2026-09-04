@@ -263,12 +263,11 @@
     .brand-logo-svg{color:#fff;overflow:visible}
     .brand-logo-svg .ring-arc{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
     .brand-logo-svg .bolt{fill:currentColor;stroke:none}
-    #splash .brand-logo-svg .ring-arc{stroke-dasharray:100;stroke-dashoffset:100;animation:logoDrawRing .5s ease forwards .15s}
-    #splash .brand-logo-svg .ring-arc2{animation-delay:.4s}
-    #splash .brand-logo-svg .bolt{stroke:currentColor;stroke-width:1;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;fill-opacity:0;animation:logoDrawBolt .55s ease forwards .7s,logoFillBolt .35s ease forwards 1.15s}
-    @keyframes logoDrawRing{to{stroke-dashoffset:0}}
-    @keyframes logoDrawBolt{to{stroke-dashoffset:0}}
-    @keyframes logoFillBolt{to{fill-opacity:1}}
+    #splash .brand-logo-svg .ring-arc{stroke-dasharray:100;stroke-dashoffset:100;animation:logoLoopDraw 2.4s ease-in-out infinite}
+    #splash .brand-logo-svg .ring-arc2{animation-delay:.2s}
+    #splash .brand-logo-svg .bolt{stroke:currentColor;stroke-width:1;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;fill-opacity:0;animation:logoLoopDraw 2.4s ease-in-out infinite .45s,logoLoopFill 2.4s ease-in-out infinite}
+    @keyframes logoLoopDraw{0%{stroke-dashoffset:100}20%{stroke-dashoffset:0}75%{stroke-dashoffset:0}95%,100%{stroke-dashoffset:100}}
+    @keyframes logoLoopFill{0%,38%{fill-opacity:0}58%,78%{fill-opacity:1}92%,100%{fill-opacity:0}}
     .main-panel{opacity:0;transform:translateY(10px);transition:opacity .6s ease,transform .6s ease}
     body.revealed .main-panel{opacity:1;transform:translateY(0)}
     header.main-panel{transition-delay:0s}
