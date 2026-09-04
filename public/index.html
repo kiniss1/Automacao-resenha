@@ -344,7 +344,6 @@
         <a href="/usuarios.html" class="menu-item" id="linkUsuarios" style="display:none"><span class="ico">👥</span> Usuários</a>
         <a href="/colaboradores.html" class="menu-item" id="linkColabs" style="display:none"><span class="ico">👷</span> Colaboradores</a>
         <div class="menu-divider"></div>
-        <button class="menu-item" id="btnRelatorio" onclick="fecharMenu();abrirRelatorio()" style="display:none"><span class="ico" style="color:#25d366">📤</span> Relatório</button>
         <button class="menu-item" id="btnRelatorioImg" onclick="fecharMenu();enviarRelatorioImagem()" style="display:none"><span class="ico" style="color:#25d366">🖼️</span> Relatório Diário</button>
         <button class="menu-item" onclick="toggleTema()"><span class="ico">🌙</span> <span id="temaLabel">Tema: Claro</span></button>
         <div class="menu-divider"></div>
@@ -573,11 +572,9 @@
 
   function aplicarPermissoesUI() {
     if (!temPermissao('enviar_relatorio_painel')) {
-      document.getElementById('btnRelatorio')?.remove();
       document.getElementById('btnRelatorioImg')?.remove();
       document.getElementById('btnEnviarWA')?.remove();
     } else {
-      document.getElementById('btnRelatorio').style.display = '';
       document.getElementById('btnRelatorioImg').style.display = '';
     }
     if (temPermissao('gerenciar_usuarios'))  { document.getElementById('linkUsuarios').style.display = ''; document.getElementById('linkColabs').style.display = ''; }
