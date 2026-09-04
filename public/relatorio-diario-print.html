@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório Diário</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#f4fafa;--surface:#ffffff;--surface2:#edf7f6;--border:#CDCDCD;--border2:#b0cece;
+    --text:#414141;--muted:#7F7F7F;--muted2:#9aa6a5;
+    --primary:#009B91;--primary-bg:#e0f5f4;--primary-dark:#005852;
+    --green:#005852;--green-bg:#e0f5f4;--green-border:#009B91;
+    --orange:#c97a06;--orange-bg:#fff4e0;--orange-border:#EB8C0A;
+    --red:#c0392b;--red-bg:#fdecea;--red-border:#e57373;
+    --violet:#009B91;--violet-bg:#e0f5f4;--violet-border:#005852;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,system-ui,sans-serif;width:1200px}
+  #sheet{width:1200px;padding:28px 32px 36px}
+
+  .header{display:flex;align-items:center;justify-content:space-between;padding-bottom:18px;border-bottom:2px solid var(--primary);margin-bottom:18px}
+  .header-title{display:flex;align-items:center;gap:12px}
+  .header-logo{width:38px;height:38px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;flex-shrink:0}
+  .header-title h1{font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--green)}
+  .header-title .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .header-date{text-align:right}
+  .header-date .d{font-size:15px;font-weight:700;color:var(--text)}
+  .header-date .h{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .stats-bar{display:flex;gap:12px;margin-bottom:22px}
+  .stat-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center}
+  .stat-card .num{font-size:26px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .stat-card .lbl{font-size:11px;color:var(--muted);margin-top:5px;white-space:nowrap;font-weight:600}
+  .stat-card.s-orange .num{color:var(--orange)}
+  .stat-card.s-green  .num{color:var(--green)}
+  .stat-card.s-red    .num{color:var(--red)}
+  .stat-card.s-violet .num{color:var(--violet)}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .os-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;break-inside:avoid}
+  .card-accent{height:4px}
+  .card-accent[data-s="Andamento"]{background:var(--orange)}
+  .card-accent[data-s="Concluído"]{background:var(--green)}
+  .card-accent[data-s="Etapa Concluída"]{background:var(--violet)}
+  .card-accent[data-s="Cancelado"]{background:var(--red)}
+  .card-inner{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+  .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .unidade{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+  .os-num{font-size:11px;color:var(--muted2);border:1px solid var(--border2);border-radius:4px;padding:1px 6px}
+  .card-servico{font-size:13px;font-weight:700;line-height:1.4}
+  .card-row{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .badges-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.02em}
+  .badge[data-s="Andamento"]{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border)}
+  .badge[data-s="Concluído"]{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+  .badge[data-s="Cancelado"]{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+  .badge[data-s="Etapa Concluída"]{background:var(--violet-bg);color:var(--violet);border:1px solid var(--violet-border)}
+  .sp-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px}
+  .sp-badge.ok{background:var(--green-bg);color:var(--green)}
+  .sp-badge.fila{background:var(--orange-bg);color:var(--orange)}
+  .apr-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--primary-bg);color:var(--primary-dark)}
+
+  .empty{padding:60px 0;text-align:center;color:var(--muted);font-size:14px}
+
+  .footer{margin-top:24px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:10px;color:var(--muted2)}
+</style>
+</head>
+<body>
+<div id="sheet">
+  <div class="header">
+    <div class="header-title">
+      <div class="header-logo">📋</div>
+      <div>
+        <h1>Relatório Diário — Ordens de Serviço</h1>
+        <div class="sub">Resenha das atividades registradas hoje</div>
+      </div>
+    </div>
+    <div class="header-date">
+      <div class="d" id="hData">—</div>
+      <div class="h" id="hHora">—</div>
+    </div>
+  </div>
+
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="footer">
+    <span>GESTÃO DE ATIVOS E OCORRÊNCIAS</span>
+    <span id="fGerado">Gerado automaticamente</span>
+  </div>
+</div>
+
+<script>
+  function e(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderStats(stats){
+    const cards=[
+      {k:'total',cls:'',lbl:'Total'},
+      {k:'andamento',cls:'s-orange',lbl:'Andamento'},
+      {k:'etapa',cls:'s-violet',lbl:'Etapa Concluída'},
+      {k:'concluido',cls:'s-green',lbl:'Concluído'},
+      {k:'cancelado',cls:'s-red',lbl:'Cancelado'}
+    ];
+    document.getElementById('statsBar').innerHTML=cards.map(c=>
+      '<div class="stat-card '+c.cls+'"><div class="num">'+(stats[c.k]||0)+'</div><div class="lbl">'+c.lbl+'</div></div>'
+    ).join('');
+  }
+
+  function renderCard(os){
+    const partes=(os.servico||'—').split(' | ');
+    const principal=e(partes[0]);
+    const st=os.status||'Andamento';
+    const hasApr=!!os.apr_path;
+    return '<div class="os-card">'+
+      '<div class="card-accent" data-s="'+e(st)+'"></div>'+
+      '<div class="card-inner">'+
+        '<div class="card-top">'+
+          '<span class="unidade">'+e(os.unidade)+'</span>'+
+          (os.os?'<span class="os-num">'+e(os.os)+'</span>':'')+
+        '</div>'+
+        '<div class="card-servico">'+principal+'</div>'+
+        (os.equipe?'<div class="card-row">👷 <span>'+e(os.equipe)+'</span></div>':'')+
+        (os.veiculo?'<div class="card-row">🚔 <span>'+e(os.veiculo)+'</span></div>':'')+
+        (os.data?'<div class="card-row">📅 <span>'+(os.dia_semana?e(os.dia_semana)+', ':'')+e(os.data)+'</span></div>':'')+
+        '<div class="badges-row">'+
+          '<span class="badge" data-s="'+e(st)+'">'+e(st)+'</span>'+
+          (hasApr?'<span class="apr-badge">📎 APR</span>':'')+
+          (os.sp_enviado===1?'<span class="sp-badge ok">✅ SharePoint</span>':os.sp_enviado===2?'<span class="sp-badge fila">⏳ Na fila</span>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function render(){
+    const dados=window.__DADOS__||{};
+    document.getElementById('hData').textContent=(dados.diaSemana?dados.diaSemana+', ':'')+(dados.data||'—');
+    document.getElementById('hHora').textContent='Gerado às '+(dados.hora||'—');
+    document.getElementById('fGerado').textContent='Gerado automaticamente em '+(dados.data||'')+' às '+(dados.hora||'');
+    renderStats(dados.stats||{});
+    const lista=dados.lista||[];
+    const grid=document.getElementById('grid');
+    grid.innerHTML=lista.length?lista.map(renderCard).join(''):'<div class="empty">📭 Nenhuma OS registrada hoje.</div>';
+  }
+
+  render();
+</script>
+</body>
+</html>
