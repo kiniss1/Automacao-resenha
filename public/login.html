@@ -24,13 +24,18 @@
   .btn:hover{opacity:.88}
   .btn:disabled{opacity:.4;cursor:default}
   .err{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:8px;padding:9px 12px;font-size:.8rem;display:none}
+  .brand-logo-svg{color:#fff;overflow:visible}
+  .brand-logo-svg .ring-arc{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+  .brand-logo-svg .bolt{fill:currentColor;stroke:none}
 </style>
 </head>
 <body>
   <div class="box">
     <div class="logo">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
+      <svg class="brand-logo-svg" width="26" height="26" viewBox="0 0 24 24">
+        <path class="ring-arc" d="M15.34 3.63 A9 9 0 0 1 11.89 21.0"/>
+        <path class="ring-arc ring-arc2" d="M7.12 19.56 A9 9 0 0 1 10.39 3.14"/>
+        <path class="bolt" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
       </svg>
     </div>
     <h1>Sistema OOMC</h1>

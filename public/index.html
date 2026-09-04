@@ -260,14 +260,25 @@
     .splash-progress-pct{font-size:.68rem;color:var(--muted2);text-align:right;margin-top:6px;font-variant-numeric:tabular-nums}
     @keyframes splashIn{to{opacity:1;transform:translateY(0)}}
     @keyframes splashPulse{0%,100%{opacity:.25}50%{opacity:1}}
+    .brand-logo-svg{color:#fff;overflow:visible}
+    .brand-logo-svg .ring-arc{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+    .brand-logo-svg .bolt{fill:currentColor;stroke:none}
+    #splash .brand-logo-svg .ring-arc{stroke-dasharray:100;stroke-dashoffset:100;animation:logoDrawRing .5s ease forwards .15s}
+    #splash .brand-logo-svg .ring-arc2{animation-delay:.4s}
+    #splash .brand-logo-svg .bolt{stroke:currentColor;stroke-width:1;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;fill-opacity:0;animation:logoDrawBolt .55s ease forwards .7s,logoFillBolt .35s ease forwards 1.15s}
+    @keyframes logoDrawRing{to{stroke-dashoffset:0}}
+    @keyframes logoDrawBolt{to{stroke-dashoffset:0}}
+    @keyframes logoFillBolt{to{fill-opacity:1}}
   </style>
 </head>
 <body class="light">
 
 <div id="splash">
   <div class="splash-logo">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
+    <svg class="brand-logo-svg" width="28" height="28" viewBox="0 0 24 24">
+      <path class="ring-arc" pathLength="100" d="M15.34 3.63 A9 9 0 0 1 11.89 21.0"/>
+      <path class="ring-arc ring-arc2" pathLength="100" d="M7.12 19.56 A9 9 0 0 1 10.39 3.14"/>
+      <path class="bolt" pathLength="100" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
     </svg>
   </div>
   <div class="splash-title">Sistema OOMC</div>
@@ -284,7 +295,13 @@
 
 <header>
   <div class="header-left">
-    <div class="header-logo">⚡</div>
+    <div class="header-logo">
+      <svg class="brand-logo-svg" width="16" height="16" viewBox="0 0 24 24">
+        <path class="ring-arc" d="M15.34 3.63 A9 9 0 0 1 11.89 21.0"/>
+        <path class="ring-arc ring-arc2" d="M7.12 19.56 A9 9 0 0 1 10.39 3.14"/>
+        <path class="bolt" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
+      </svg>
+    </div>
     <div>
       <h1>Painel de Ordens de Serviço</h1>
       <span>OOMC — Manutenção Alta Tensão</span>
