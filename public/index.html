@@ -269,6 +269,13 @@
     @keyframes logoDrawRing{to{stroke-dashoffset:0}}
     @keyframes logoDrawBolt{to{stroke-dashoffset:0}}
     @keyframes logoFillBolt{to{fill-opacity:1}}
+    .main-panel{opacity:0;transform:translateY(10px);transition:opacity .6s ease,transform .6s ease}
+    body.revealed .main-panel{opacity:1;transform:translateY(0)}
+    header.main-panel{transition-delay:0s}
+    .stats-bar.main-panel{transition-delay:.08s}
+    .stats-toggle.main-panel{transition-delay:.12s}
+    .filters.main-panel{transition-delay:.16s}
+    .grid.main-panel{transition-delay:.22s}
   </style>
 </head>
 <body class="light">
@@ -276,9 +283,9 @@
 <div id="splash">
   <div class="splash-logo">
     <svg class="brand-logo-svg" width="28" height="28" viewBox="0 0 24 24">
-      <path class="ring-arc" pathLength="100" d="M15.34 3.63 A9 9 0 0 1 11.89 21.0"/>
-      <path class="ring-arc ring-arc2" pathLength="100" d="M7.12 19.56 A9 9 0 0 1 10.39 3.14"/>
-      <path class="bolt" pathLength="100" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
+      <path class="ring-arc" pathLength="100" d="M16.55 4.23 A9 9 0 0 1 11.95 21"/>
+      <path class="ring-arc ring-arc2" pathLength="100" d="M7.43 19.76 A9 9 0 0 1 12.05 3"/>
+      <path class="bolt" pathLength="100" d="M15 1 L5 13 L12 13 L9 23 L19 11 L12 11 Z"/>
     </svg>
   </div>
   <div class="splash-title">Sistema OOMC</div>
@@ -293,13 +300,13 @@
   </div>
 </div>
 
-<header>
+<header class="main-panel">
   <div class="header-left">
     <div class="header-logo">
       <svg class="brand-logo-svg" width="16" height="16" viewBox="0 0 24 24">
-        <path class="ring-arc" d="M15.34 3.63 A9 9 0 0 1 11.89 21.0"/>
-        <path class="ring-arc ring-arc2" d="M7.12 19.56 A9 9 0 0 1 10.39 3.14"/>
-        <path class="bolt" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
+        <path class="ring-arc" d="M16.55 4.23 A9 9 0 0 1 11.95 21"/>
+        <path class="ring-arc ring-arc2" d="M7.43 19.76 A9 9 0 0 1 12.05 3"/>
+        <path class="bolt" d="M15 1 L5 13 L12 13 L9 23 L19 11 L12 11 Z"/>
       </svg>
     </div>
     <div>
@@ -370,14 +377,14 @@
   </div>
 </header>
 
-<div class="stats-bar">
+<div class="stats-bar main-panel">
   <div class="stat-card">          <div class="num" id="sTotal">–</div>     <div class="lbl">Total</div></div>
   <div class="stat-card s-orange"> <div class="num" id="sAndamento">–</div>  <div class="lbl">Andamento</div></div>
   <div class="stat-card s-violet"> <div class="num" id="sEtapa">–</div>      <div class="lbl">Etapa Concluída</div></div>
   <div class="stat-card s-green">  <div class="num" id="sConcluido">–</div>  <div class="lbl">Concluído</div></div>
   <div class="stat-card s-red">    <div class="num" id="sCancelado">–</div>  <div class="lbl">Cancelado</div></div>
 </div>
-<div class="stats-toggle">
+<div class="stats-toggle main-panel">
   <span class="toggle-label active" id="lblHoje">Hoje</span>
   <div class="toggle-track" id="statsToggle" onclick="toggleStats()">
     <div class="toggle-thumb"></div>
@@ -385,7 +392,7 @@
   <span class="toggle-label" id="lblGeral">Geral</span>
 </div>
 
-<div class="filters">
+<div class="filters main-panel">
   <!-- inputs ocultos para enganar o autopreenchimento do navegador -->
   <input type="text" name="fake_user" style="display:none" autocomplete="username" tabindex="-1"/>
   <input type="password" name="fake_pass" style="display:none" autocomplete="current-password" tabindex="-1"/>
@@ -406,7 +413,7 @@
   <button class="btn-refresh" id="btnRefresh" onclick="load()">↻ Atualizar</button>
 </div>
 
-<div class="grid" id="grid">
+<div class="grid main-panel" id="grid">
   <div class="empty"><div class="spinner"></div><br>Carregando...</div>
 </div>
 
@@ -1165,8 +1172,8 @@
 
   // ── Splash ────────────────────────────────────────────────────────────────
   (function(){
-    const frases=['Carregando banco de dados...','Carregando ordens de serviço...','Carregando inspeções...','Carregando atividades diárias...','Finalizando...'];
-    const totalMs=4200,stepMs=totalMs/frases.length;
+    const frases=['Carregando banco de dados...','Carregando ordens de serviço...','Carregando inspeções...','Sincronizando checkins...','Carregando indicador de qualidade...','Carregando atividades diárias...','Finalizando...'];
+    const totalMs=8200,stepMs=totalMs/frases.length;
     let i=0;
     const txt=document.getElementById('splashTxt');
     const fill=document.getElementById('splashFill');
@@ -1183,6 +1190,7 @@
       clearInterval(frasesTimer);clearInterval(progTimer);
       const splash=document.getElementById('splash');
       if(splash){splash.classList.add('fade-out');setTimeout(()=>splash.remove(),650);}
+      document.body.classList.add('revealed');
     },totalMs);
   })();
 </script>
