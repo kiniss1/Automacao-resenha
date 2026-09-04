@@ -1817,17 +1817,18 @@ function startServer() {
 
     const browser = await getReportBrowser();
     const page = await browser.newPage();
+    let sheetHeight;
     try {
       await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
       await page.setContent(html, { waitUntil: 'networkidle0' });
-      const sheetHeight = await page.evaluate(() => document.getElementById('sheet').scrollHeight);
+      sheetHeight = await page.evaluate(() => document.getElementById('sheet').scrollHeight);
       await page.setViewport({ width: 1200, height: sheetHeight, deviceScaleFactor: 2 });
       await page.screenshot({ path: outPath, fullPage: false });
     } finally {
       await page.close();
     }
 
-    return { outPath, dataFmt, horaFmt };
+    return { outPath, dataFmt, horaFmt, sheetHeight };
   }
 
   app.post('/api/relatorio-diario/enviar', requireAuth, requirePermissao('enviar_relatorio_painel'), async (req, res) => {
@@ -1847,18 +1848,18 @@ function startServer() {
         });
       }
 
-      const { outPath, dataFmt, horaFmt } = await gerarImagemRelatorioDiario();
+      const { outPath, dataFmt, horaFmt, sheetHeight } = await gerarImagemRelatorioDiario();
       imgPath = outPath;
 
       const { MessageMedia } = require('whatsapp-web.js');
       const media = MessageMedia.fromFilePath(imgPath);
       const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
-      // Envia como documento (não como foto) para o WhatsApp não recomprimir a imagem —
-      // em dias com muitas atividades o relatório fica bem alto e a compressão de foto do
-      // WhatsApp (~1600px no lado maior) deixaria o texto ilegível.
+      // Na maioria dos dias manda como foto (abre direto na conversa). Só em dias muito
+      // cheios (relatório bem alto) manda como documento, pra não perder nitidez com a
+      // recompressão de foto do WhatsApp (~1600px no lado maior).
       await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, {
         caption: `📊 Relatório diário — ${dataFmt} às ${horaFmt}`,
-        sendMediaAsDocument: true,
+        sendMediaAsDocument: sheetHeight > 1400,
       });
 
       res.json({ ok: true, msg: 'Relatório enviado!' });
