@@ -345,6 +345,7 @@
         <a href="/colaboradores.html" class="menu-item" id="linkColabs" style="display:none"><span class="ico">👷</span> Colaboradores</a>
         <div class="menu-divider"></div>
         <button class="menu-item" id="btnRelatorio" onclick="fecharMenu();abrirRelatorio()" style="display:none"><span class="ico" style="color:#25d366">📤</span> Relatório</button>
+        <button class="menu-item" id="btnRelatorioImg" onclick="fecharMenu();enviarRelatorioImagem()" style="display:none"><span class="ico" style="color:#25d366">🖼️</span> Relatório Diário</button>
         <button class="menu-item" onclick="toggleTema()"><span class="ico">🌙</span> <span id="temaLabel">Tema: Claro</span></button>
         <div class="menu-divider"></div>
         <button class="menu-item danger" onclick="logout()"><span class="ico">🚪</span> Sair</button>
@@ -573,9 +574,11 @@
   function aplicarPermissoesUI() {
     if (!temPermissao('enviar_relatorio_painel')) {
       document.getElementById('btnRelatorio')?.remove();
+      document.getElementById('btnRelatorioImg')?.remove();
       document.getElementById('btnEnviarWA')?.remove();
     } else {
       document.getElementById('btnRelatorio').style.display = '';
+      document.getElementById('btnRelatorioImg').style.display = '';
     }
     if (temPermissao('gerenciar_usuarios'))  { document.getElementById('linkUsuarios').style.display = ''; document.getElementById('linkColabs').style.display = ''; }
     if (temPermissao('gerenciar_inspecao'))  document.getElementById('linkAutoinsp').style.display = '';
@@ -1031,6 +1034,22 @@
       setTimeout(()=>fecharRelModal(),2000);
       toast('📊 Relatório enviado ao WhatsApp!');
     }catch(e){ fb.style.color='var(--red)'; fb.textContent='❌ '+e.message; btn.disabled=false; btn.textContent='📲 Tentar novamente'; }
+  }
+
+  async function enviarRelatorioImagem(){
+    const btn=document.getElementById('btnRelatorioImg');
+    const original=btn.innerHTML;
+    btn.disabled=true; btn.innerHTML='<span class="ico">⏳</span> Gerando imagem...';
+    toast('🖼️ Gerando relatório diário...');
+    try{
+      const res=await authFetch('/api/relatorio-diario/enviar',{method:'POST'}).then(r=>r.json());
+      if(!res.ok) throw new Error(res.error);
+      toast('📊 Relatório diário enviado ao WhatsApp!');
+    }catch(e){
+      toast('❌ Erro ao enviar relatório: '+e.message,'err');
+    }finally{
+      btn.disabled=false; btn.innerHTML=original;
+    }
   }
   document.getElementById('relModal').addEventListener('click',function(e){if(e.target===this)fecharRelModal();});
 

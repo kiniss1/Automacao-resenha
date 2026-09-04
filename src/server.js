@@ -5,6 +5,7 @@ const path    = require('path');
 const fs      = require('fs');
 const db      = require('./db');
 const state   = require('./state');
+const puppeteer = require('puppeteer-core');
 
 const PORT = process.env.PORT || 3000;
 const STATUS_VALIDOS = ['Andamento', 'Concluído', 'Etapa Concluída', 'Cancelado'];
@@ -1759,6 +1760,107 @@ function startServer() {
     } catch(e) {
       console.error('[RELATORIO] ERRO COMPLETO:', e.stack || e.message);
       res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // ── Relatório diário em imagem (substitui o print manual do painel) ────────
+  let _reportBrowser = null;
+  async function getReportBrowser() {
+    if (_reportBrowser && _reportBrowser.isConnected()) return _reportBrowser;
+    _reportBrowser = await puppeteer.launch({
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+      headless: true,
+      args: [
+        '--no-sandbox', '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', '--disable-gpu',
+        '--no-first-run', '--no-zygote', '--disable-extensions',
+      ],
+    });
+    return _reportBrowser;
+  }
+
+  async function gerarImagemRelatorioDiario() {
+    const agoraBR = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const y  = agoraBR.getUTCFullYear();
+    const m  = String(agoraBR.getUTCMonth()+1).padStart(2,'0');
+    const d  = String(agoraBR.getUTCDate()).padStart(2,'0');
+    const hh = String(agoraBR.getUTCHours()).padStart(2,'0');
+    const mi = String(agoraBR.getUTCMinutes()).padStart(2,'0');
+    const dataFmt = `${d}/${m}/${y}`;
+    const horaFmt = `${hh}:${mi}`;
+
+    const lista = db.all(
+      `SELECT * FROM ordens_servico WHERE data = ? ORDER BY criado_em DESC`,
+      [dataFmt]
+    ) || [];
+
+    const stats = {
+      total:     lista.length,
+      andamento: lista.filter(o => o.status === 'Andamento').length,
+      etapa:     lista.filter(o => o.status === 'Etapa Concluída').length,
+      concluido: lista.filter(o => o.status === 'Concluído').length,
+      cancelado: lista.filter(o => o.status === 'Cancelado').length,
+    };
+
+    const dados = { data: dataFmt, diaSemana: lista[0]?.dia_semana || '', hora: horaFmt, stats, lista };
+    const dadosJson = JSON.stringify(dados).replace(/</g, '\\u003c');
+
+    const templatePath = path.join(__dirname, '..', 'public', 'relatorio-diario-print.html');
+    let html = fs.readFileSync(templatePath, 'utf8');
+    html = html.replace(
+      '<script>',
+      `<script>window.__DADOS__ = ${dadosJson};</script><script>`
+    );
+
+    const outPath = path.join(__dirname, '..', 'data', `relatorio_${Date.now()}.png`);
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+
+    const browser = await getReportBrowser();
+    const page = await browser.newPage();
+    try {
+      await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      const sheetHeight = await page.evaluate(() => document.getElementById('sheet').scrollHeight);
+      await page.setViewport({ width: 1200, height: sheetHeight, deviceScaleFactor: 2 });
+      await page.screenshot({ path: outPath, fullPage: false });
+    } finally {
+      await page.close();
+    }
+
+    return { outPath, dataFmt, horaFmt };
+  }
+
+  app.post('/api/relatorio-diario/enviar', requireAuth, requirePermissao('enviar_relatorio_painel'), async (req, res) => {
+    let imgPath = null;
+    try {
+      const botState = require('./state');
+
+      // Aguarda até 30s pelo bot ficar pronto
+      if (!botState.isReady() || !global._waClient) {
+        await new Promise((resolve, reject) => {
+          const MAX = 30000, STEP = 500;
+          let elapsed = 0;
+          const t = setInterval(() => {
+            if (botState.isReady() && global._waClient) { clearInterval(t); resolve(); }
+            else if ((elapsed += STEP) >= MAX) { clearInterval(t); reject(new Error('WhatsApp não conectado. Escaneie o QR em /qr e tente novamente.')); }
+          }, STEP);
+        });
+      }
+
+      const { outPath, dataFmt, horaFmt } = await gerarImagemRelatorioDiario();
+      imgPath = outPath;
+
+      const { MessageMedia } = require('whatsapp-web.js');
+      const media = MessageMedia.fromFilePath(imgPath);
+      const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+      await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, { caption: `📊 Relatório diário — ${dataFmt} às ${horaFmt}` });
+
+      res.json({ ok: true, msg: 'Relatório enviado!' });
+    } catch(e) {
+      console.error('[RELATORIO-DIARIO] ERRO COMPLETO:', e.stack || e.message);
+      res.status(500).json({ ok: false, error: e.message });
+    } finally {
+      if (imgPath) { try { fs.unlinkSync(imgPath); } catch(e) {} }
     }
   });
 
