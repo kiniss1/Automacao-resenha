@@ -268,6 +268,9 @@
     #splash .brand-logo-svg .bolt{stroke:currentColor;stroke-width:1;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;fill-opacity:0;animation:logoLoopDraw 2.4s ease-in-out infinite .45s,logoLoopFill 2.4s ease-in-out infinite}
     @keyframes logoLoopDraw{0%{stroke-dashoffset:100}20%{stroke-dashoffset:0}75%{stroke-dashoffset:0}95%,100%{stroke-dashoffset:100}}
     @keyframes logoLoopFill{0%,38%{fill-opacity:0}58%,78%{fill-opacity:1}92%,100%{fill-opacity:0}}
+    .header-logo .brand-logo-svg .ring-arc{stroke-dasharray:100;stroke-dashoffset:100;animation:logoLoopDraw 2.4s ease-in-out infinite}
+    .header-logo .brand-logo-svg .ring-arc2{animation-delay:.2s}
+    .header-logo .brand-logo-svg .bolt{stroke:currentColor;stroke-width:1;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;fill-opacity:0;animation:logoLoopDraw 2.4s ease-in-out infinite .45s,logoLoopFill 2.4s ease-in-out infinite}
     .main-panel{opacity:0;transform:translateY(10px);transition:opacity .6s ease,transform .6s ease}
     body.revealed .main-panel{opacity:1;transform:translateY(0)}
     header.main-panel{transition-delay:0s}
@@ -303,9 +306,9 @@
   <div class="header-left">
     <div class="header-logo">
       <svg class="brand-logo-svg" width="16" height="16" viewBox="0 0 24 24">
-        <path class="ring-arc" d="M16.55 4.23 A9 9 0 0 1 11.95 21"/>
-        <path class="ring-arc ring-arc2" d="M7.43 19.76 A9 9 0 0 1 12.05 3"/>
-        <path class="bolt" d="M15 1 L5 13 L12 13 L9 23 L19 11 L12 11 Z"/>
+        <path class="ring-arc" pathLength="100" d="M16.55 4.23 A9 9 0 0 1 11.95 21"/>
+        <path class="ring-arc ring-arc2" pathLength="100" d="M7.43 19.76 A9 9 0 0 1 12.05 3"/>
+        <path class="bolt" pathLength="100" d="M15 1 L5 13 L12 13 L9 23 L19 11 L12 11 Z"/>
       </svg>
     </div>
     <div>
