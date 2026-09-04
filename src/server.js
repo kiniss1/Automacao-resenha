@@ -1853,7 +1853,13 @@ function startServer() {
       const { MessageMedia } = require('whatsapp-web.js');
       const media = MessageMedia.fromFilePath(imgPath);
       const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
-      await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, { caption: `📊 Relatório diário — ${dataFmt} às ${horaFmt}` });
+      // Envia como documento (não como foto) para o WhatsApp não recomprimir a imagem —
+      // em dias com muitas atividades o relatório fica bem alto e a compressão de foto do
+      // WhatsApp (~1600px no lado maior) deixaria o texto ilegível.
+      await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, {
+        caption: `📊 Relatório diário — ${dataFmt} às ${horaFmt}`,
+        sendMediaAsDocument: true,
+      });
 
       res.json({ ok: true, msg: 'Relatório enviado!' });
     } catch(e) {
