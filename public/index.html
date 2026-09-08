@@ -41,7 +41,7 @@
     @media(min-width:600px){.header-left span{display:block}}
     .header-trail{position:relative;flex:1;min-width:40px;max-width:460px;height:20px;margin:0 4px}
     .header-trail-line{position:absolute;top:50%;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border2) 10%,var(--border2) 90%,transparent)}
-    .header-trail-spark{position:absolute;top:50%;left:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--primary);box-shadow:0 0 8px 2px var(--primary);offset-path:path('M0,0 L460,0');animation:headerTrailTravel 4.6s linear infinite}
+    .header-trail-spark{position:absolute;top:50%;left:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--primary);box-shadow:0 0 8px 2px var(--primary);offset-path:path('M0,0 L460,0');animation:headerTrailTravel 6.8s linear infinite}
     @keyframes headerTrailTravel{0%{offset-distance:0%;opacity:0}8%{opacity:1}92%{opacity:1}100%{offset-distance:100%;opacity:0}}
     .header-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .hbtn{background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;text-decoration:none;transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;font-weight:500}
@@ -234,16 +234,25 @@
     .splash-logo{width:64px;height:64px;background:var(--primary);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:22px;opacity:0;transform:translateY(10px);animation:splashIn .6s ease forwards}
     .splash-title{font-size:1.6rem;font-weight:800;letter-spacing:.02em;opacity:0;transform:translateY(10px);animation:splashIn .6s ease forwards;animation-delay:.15s}
     .splash-sub{font-size:.8rem;color:var(--muted);margin-top:6px;opacity:0;transform:translateY(10px);animation:splashIn .6s ease forwards;animation-delay:.3s}
-    .splash-loading{margin-top:34px;font-size:.78rem;color:var(--muted2);min-height:18px;opacity:0;transform:translateY(10px);animation:splashIn .6s ease forwards;animation-delay:.45s;display:flex;align-items:center;gap:8px}
-    .splash-dot{width:5px;height:5px;border-radius:50%;background:var(--primary);animation:splashPulse 1s ease-in-out infinite}
-    .splash-dot:nth-child(2){animation-delay:.15s}
-    .splash-dot:nth-child(3){animation-delay:.3s}
+    .splash-loading{--sw-bg:var(--bg);margin-top:34px;color:var(--muted2);font-family:inherit;font-weight:500;font-size:1rem;box-sizing:content-box;height:22px;display:flex;align-items:center;gap:7px;opacity:0;transform:translateY(10px);animation:splashIn .6s ease forwards;animation-delay:.45s}
+    .splash-words{overflow:hidden;position:relative;height:100%}
+    .splash-words::after{content:"";position:absolute;inset:0;background:linear-gradient(var(--sw-bg) 10%,transparent 30%,transparent 70%,var(--sw-bg) 90%);z-index:2}
+    .splash-word{display:block;height:100%;line-height:22px;white-space:nowrap;color:var(--primary);font-weight:700;animation:splashWordSpin 4s infinite}
+    @keyframes splashWordSpin{
+      10%{transform:translateY(-102%)}
+      25%{transform:translateY(-100%)}
+      35%{transform:translateY(-202%)}
+      50%{transform:translateY(-200%)}
+      60%{transform:translateY(-302%)}
+      75%{transform:translateY(-300%)}
+      85%{transform:translateY(-402%)}
+      100%{transform:translateY(-400%)}
+    }
     .splash-progress-wrap{width:200px;margin-top:16px;opacity:0;transform:translateY(10px);animation:splashIn .6s ease forwards;animation-delay:.45s}
     .splash-progress-track{width:100%;height:3px;background:var(--border);border-radius:3px;overflow:hidden}
     .splash-progress-fill{height:100%;width:0%;background:var(--primary);border-radius:3px;transition:width .35s ease}
     .splash-progress-pct{font-size:.68rem;color:var(--muted2);text-align:right;margin-top:6px;font-variant-numeric:tabular-nums}
     @keyframes splashIn{to{opacity:1;transform:translateY(0)}}
-    @keyframes splashPulse{0%,100%{opacity:.25}50%{opacity:1}}
     .brand-logo-svg{color:#fff;overflow:visible}
     .brand-logo-svg .ring-arc{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
     .brand-logo-svg .bolt{fill:currentColor;stroke:none}
@@ -277,8 +286,14 @@
   <div class="splash-title">Sistema OOMC</div>
   <div class="splash-sub">desenvolvido por Gabriel Filipe</div>
   <div class="splash-loading" id="splashLoading">
-    <span class="splash-dot"></span><span class="splash-dot"></span><span class="splash-dot"></span>
-    <span id="splashTxt">Carregando banco de dados...</span>
+    <span>Carregando</span>
+    <div class="splash-words">
+      <span class="splash-word">banco de dados</span>
+      <span class="splash-word">ordens de serviço</span>
+      <span class="splash-word">inspeções</span>
+      <span class="splash-word">atividades diárias</span>
+      <span class="splash-word">banco de dados</span>
+    </div>
   </div>
   <div class="splash-progress-wrap">
     <div class="splash-progress-track"><div class="splash-progress-fill" id="splashFill"></div></div>
@@ -1051,13 +1066,9 @@
 
   // ── Splash ────────────────────────────────────────────────────────────────
   (function(){
-    const frases=['Carregando banco de dados...','Carregando ordens de serviço...','Carregando inspeções...','Sincronizando checkins...','Carregando indicador de qualidade...','Carregando atividades diárias...','Finalizando...'];
-    const totalMs=8200,stepMs=totalMs/frases.length;
-    let i=0;
-    const txt=document.getElementById('splashTxt');
+    const totalMs=8200;
     const fill=document.getElementById('splashFill');
     const pct=document.getElementById('splashPct');
-    const frasesTimer=setInterval(()=>{i++;if(txt&&i<frases.length)txt.textContent=frases[i];},stepMs);
     const start=Date.now();
     const progTimer=setInterval(()=>{
       const p=Math.min(100,Math.round((Date.now()-start)/totalMs*100));
@@ -1066,7 +1077,7 @@
       if(p>=100)clearInterval(progTimer);
     },60);
     setTimeout(()=>{
-      clearInterval(frasesTimer);clearInterval(progTimer);
+      clearInterval(progTimer);
       const splash=document.getElementById('splash');
       if(splash){splash.classList.add('fade-out');setTimeout(()=>splash.remove(),650);}
       document.body.classList.add('revealed');
