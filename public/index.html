@@ -30,11 +30,19 @@
     }
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px}
     header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
-    .header-left{display:flex;align-items:center;gap:10px}
-    .header-logo{width:28px;height:28px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-    .header-left h1{font-size:15px;font-weight:600;letter-spacing:-.01em}
-    .header-left span{font-size:11px;color:var(--muted);display:none}
+    .header-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+    .header-logo-wrap{position:relative;flex-shrink:0;width:38px;height:38px}
+    .header-logo{width:38px;height:38px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2}
+    .pulse-ring{position:absolute;inset:0;border-radius:9px;border:1.5px solid var(--primary);opacity:0;animation:pulseRingHdr 2.6s cubic-bezier(.2,.6,.4,1) infinite}
+    .pulse-ring.r2{animation-delay:1.3s}
+    @keyframes pulseRingHdr{0%{transform:scale(1);opacity:.65}100%{transform:scale(2.15);opacity:0}}
+    .header-left h1{font-size:20px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+    .header-left span{font-size:13px;color:var(--muted);display:none;white-space:nowrap}
     @media(min-width:600px){.header-left span{display:block}}
+    .header-trail{position:relative;flex:1;min-width:40px;max-width:460px;height:20px;margin:0 4px}
+    .header-trail-line{position:absolute;top:50%;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border2) 10%,var(--border2) 90%,transparent)}
+    .header-trail-spark{position:absolute;top:50%;left:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--primary);box-shadow:0 0 8px 2px var(--primary);offset-path:path('M0,0 L460,0');animation:headerTrailTravel 4.6s linear infinite}
+    @keyframes headerTrailTravel{0%{offset-distance:0%;opacity:0}8%{opacity:1}92%{opacity:1}100%{offset-distance:100%;opacity:0}}
     .header-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .hbtn{background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;text-decoration:none;transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;font-weight:500}
     .hbtn:hover{background:var(--surface2);color:var(--text);border-color:var(--muted2)}
@@ -61,30 +69,6 @@
     .menu-item.danger:hover{background:rgba(224,90,78,.08)}
     .menu-divider{height:1px;background:var(--border);margin:4px 0}
     .stats-bar{display:flex;gap:10px;padding:16px 20px;flex-wrap:wrap}
-    .ind-wrap{position:relative;margin-left:10px}
-    .ind-badge{display:flex;align-items:center;gap:6px;background:#2d1f00;border:1px solid #EB8C0A;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.9rem;font-weight:800;color:#F5AA41;transition:all .15s;user-select:none;white-space:nowrap}
-    .ind-badge:hover{background:#3d2a00;box-shadow:0 4px 16px rgba(235,140,10,.25);transform:translateY(-1px)}
-    .ind-badge.open{background:#3d2a00;box-shadow:0 4px 16px rgba(235,140,10,.3)}
-    .ind-badge.muted{border-color:var(--muted2);color:var(--muted)}
-    .ind-dropdown{position:absolute;top:calc(100% + 8px);left:0;background:#1a1200;border:1px solid #EB8C0A;border-radius:12px;min-width:300px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:200;display:none;overflow:hidden}
-    .ind-dropdown.show{display:block;animation:menuIn .15s ease}
-    .ind-drop-header{background:#2d1f00;padding:14px 16px;border-bottom:1px solid #EB8C0A44}
-    .ind-ger-row{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:#F5AA41;padding:3px 0}
-    .ind-ger-row b{font-size:1rem}
-    .ind-drop-num{font-size:2.4rem;font-weight:900;color:#F5AA41;line-height:1;text-shadow:0 0 20px rgba(245,170,65,.4);text-align:center}
-    .ind-drop-lbl{font-size:.62rem;font-weight:700;color:#F5AA41;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;text-align:center}
-    .ind-drop-sub{font-size:.65rem;color:#a07830;margin-top:6px;text-align:center}
-    .ind-drop-section{padding:12px 14px;border-bottom:1px solid #EB8C0A22}
-    .ind-drop-label{font-size:.65rem;font-weight:700;color:#a07830;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-    .ind-drop-times{display:flex;gap:6px}
-    .ind-drop-times input[type=time],.ind-drop-times select{flex:1;background:#0d0800;border:1px solid #EB8C0A55;color:#F5AA41;border-radius:6px;padding:6px 8px;font-size:.78rem;outline:none}
-    .ind-drop-times input[type=time]:focus,.ind-drop-times select:focus{border-color:#EB8C0A}
-    .ind-drop-actions{padding:10px 14px;display:flex;gap:6px;flex-wrap:wrap}
-    .ind-btn{flex:1;background:var(--primary);color:#fff;border:none;border-radius:7px;padding:8px 10px;font-size:.73rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s;text-align:center;min-width:120px}
-    .ind-btn:hover{opacity:.88}
-    .ind-btn:disabled{opacity:.4;cursor:default}
-    .ind-btn.red{background:var(--red)}
-    .ind-btn.gray{background:var(--gray)}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;min-width:80px;text-align:center;transition:border-color .12s;cursor:default}
     .stat-card:hover{border-color:var(--border2)}
     .stat-card .num{font-size:22px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
@@ -304,50 +288,24 @@
 
 <header class="main-panel">
   <div class="header-left">
-    <div class="header-logo">
-      <svg class="brand-logo-svg" width="16" height="16" viewBox="0 0 24 24">
-        <path class="ring-arc" pathLength="100" d="M16.55 4.23 A9 9 0 0 1 11.95 21"/>
-        <path class="ring-arc ring-arc2" pathLength="100" d="M7.43 19.76 A9 9 0 0 1 12.05 3"/>
-        <path class="bolt" pathLength="100" d="M15 1 L5 13 L12 13 L9 23 L19 11 L12 11 Z"/>
-      </svg>
+    <div class="header-logo-wrap">
+      <div class="pulse-ring"></div>
+      <div class="pulse-ring r2"></div>
+      <div class="header-logo">
+        <svg class="brand-logo-svg" width="20" height="20" viewBox="0 0 24 24">
+          <path class="ring-arc" pathLength="100" d="M16.55 4.23 A9 9 0 0 1 11.95 21"/>
+          <path class="ring-arc ring-arc2" pathLength="100" d="M7.43 19.76 A9 9 0 0 1 12.05 3"/>
+          <path class="bolt" pathLength="100" d="M15 1 L5 13 L12 13 L9 23 L19 11 L12 11 Z"/>
+        </svg>
+      </div>
     </div>
     <div>
       <h1>Painel de Ordens de Serviço</h1>
       <span>OOMC — Manutenção Alta Tensão</span>
     </div>
-    <div class="ind-wrap" id="indWrap">
-      <div class="ind-badge" onclick="toggleIndicador()" title="Indicador de Qualidade" id="indBadge">
-        🏆 <span id="indNum">–</span>
-      </div>
-      <div class="ind-dropdown" id="indDropdown">
-        <div class="ind-drop-header">
-          <div class="ind-drop-num" id="indDropNum">–</div>
-          <div class="ind-drop-lbl">dias sem desarme (geral)</div>
-          <div class="ind-ger-row"><span>OOMC</span><b id="indOomc">–</b></div>
-          <div class="ind-ger-row"><span>OOMM</span><b id="indOomm">–</b></div>
-          <div class="ind-ger-row"><span>OOMT</span><b id="indOomt">–</b></div>
-          <div class="ind-drop-sub" id="indSub">Carregando...</div>
-        </div>
-        <div class="ind-drop-section">
-          <div class="ind-drop-label">✏️ Editar dias (Geral)</div>
-          <div class="ind-drop-times">
-            <input type="number" id="indEditDias" min="0" placeholder="Nº de dias"/>
-            <button class="ind-btn" onclick="editarDias()" style="flex:none;padding:6px 10px">✓ Salvar</button>
-          </div>
-        </div>
-        <div class="ind-drop-section">
-          <div class="ind-drop-label">⏰ Disparos automáticos</div>
-          <div class="ind-drop-times">
-            <input type="time" id="indH1" onchange="salvarHorarios()" title="Horário 1"/>
-            <input type="time" id="indH2" onchange="salvarHorarios()" title="Horário 2 (opcional)"/>
-          </div>
-        </div>
-        <div class="ind-drop-actions">
-          <button class="ind-btn" id="btnDispararInd" onclick="dispararIndicador()">📲 Re-sinalizar status real</button>
-          <button class="ind-btn gray" id="btnMuteInd" onclick="toggleMuteAlertas()">🔕 Não alertar no grupo</button>
-          <button class="ind-btn red" onclick="zerarIndicador()">🔄 Zerar (OOMC)</button>
-        </div>
-      </div>
+    <div class="header-trail">
+      <div class="header-trail-line"></div>
+      <div class="header-trail-spark"></div>
     </div>
   </div>
   <div class="header-right">
@@ -1076,85 +1034,6 @@
   }
   document.getElementById('relModal').addEventListener('click',function(e){if(e.target===this)fecharRelModal();});
 
-  // ── Indicador de Qualidade ────────────────────────────────────────────────
-  let _indMutado = false;
-  async function carregarIndicador(){
-    try{
-      const r=await authFetch('/api/indicador').then(r=>r.json());
-      if(!r.ok) return;
-      const d=r.data;
-      document.getElementById('indNum').textContent=d.GERAL.dias;
-      document.getElementById('indDropNum').textContent=d.GERAL.dias;
-      document.getElementById('indOomc').textContent=d.OOMC.dias;
-      document.getElementById('indOomm').textContent=d.OOMM.dias;
-      document.getElementById('indOomt').textContent=d.OOMT.dias;
-      document.getElementById('indH1').value=d.GERAL.horario1||'07:00';
-      document.getElementById('indH2').value=d.GERAL.horario2||'';
-      _indMutado=!!d.GERAL.alertas_mutados;
-      const badge=document.getElementById('indBadge');
-      const btnMute=document.getElementById('btnMuteInd');
-      badge.classList.toggle('muted',_indMutado);
-      btnMute.textContent=_indMutado?'🔔 Reativar alertas':'🔕 Não alertar no grupo';
-      btnMute.classList.toggle('red',_indMutado);
-      btnMute.classList.toggle('gray',!_indMutado);
-      document.getElementById('indSub').textContent=_indMutado?'⚠️ Alertas automáticos DESATIVADOS':(d.GERAL.ultimo_data?`Último desarme: ${d.GERAL.ultimo_data}`:'Nenhum desarme registrado');
-    }catch(e){}
-  }
-  function toggleIndicador(){
-    document.getElementById('indBadge').classList.toggle('open');
-    document.getElementById('indDropdown').classList.toggle('show');
-  }
-  document.addEventListener('click',e=>{
-    if(!e.target.closest('.ind-wrap')){
-      document.getElementById('indBadge')?.classList.remove('open');
-      document.getElementById('indDropdown')?.classList.remove('show');
-    }
-  });
-  async function editarDias(){
-    const dias=parseInt(document.getElementById('indEditDias').value);
-    if(isNaN(dias)||dias<0){toast('Valor inválido','err');return;}
-    try{
-      const r=await authFetch('/api/indicador/GERAL/dias',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({dias})}).then(r=>r.json());
-      if(r.ok){toast('Contador atualizado!','ok');await carregarIndicador();document.getElementById('indEditDias').value='';}
-      else toast(r.error||'Erro','err');
-    }catch(e){toast('Erro: '+e.message,'err');}
-  }
-  async function salvarHorarios(){
-    const h1=document.getElementById('indH1').value;
-    const h2=document.getElementById('indH2').value;
-    try{await authFetch('/api/indicador/horarios',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({horario1:h1,horario2:h2||null})});}catch(e){}
-  }
-  async function dispararIndicador(){
-    const btn=document.getElementById('btnDispararInd');
-    btn.disabled=true; btn.textContent='⏳ Enviando...';
-    try{
-      const r=await authFetch('/api/indicador/disparar',{method:'POST'}).then(r=>r.json());
-      if(r.ok) toast('Status real re-sinalizado no grupo!','ok');
-      else toast(r.error||'Erro ao disparar','err');
-    }catch(e){toast('Erro: '+e.message,'err');}
-    btn.disabled=false; btn.textContent='📲 Re-sinalizar status real';
-    await carregarIndicador();
-  }
-  async function toggleMuteAlertas(){
-    const novoEstado=!_indMutado;
-    const btn=document.getElementById('btnMuteInd');
-    btn.disabled=true;
-    try{
-      const r=await authFetch('/api/indicador/mute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mute:novoEstado})}).then(r=>r.json());
-      if(r.ok){toast(novoEstado?'🔕 Alertas automáticos desativados':'🔔 Alertas automáticos reativados','ok');await carregarIndicador();}
-      else toast(r.error||'Erro','err');
-    }catch(e){toast('Erro: '+e.message,'err');}
-    btn.disabled=false;
-  }
-  async function zerarIndicador(){
-    if(!confirm('Zerar o contador da OOMC manualmente?')) return;
-    try{
-      const r=await authFetch('/api/indicador/OOMC/zerar',{method:'POST'}).then(r=>r.json());
-      if(r.ok){toast('Contador OOMC zerado!','ok');await carregarIndicador();}
-      else toast(r.error||'Erro ao zerar','err');
-    }catch(e){toast('Erro: '+e.message,'err');}
-  }
-
   // ── Filtros de data padrão e inicialização ────────────────────────────────
   (function(){
     const d=new Date();
@@ -1169,8 +1048,6 @@
   load(); checkBot();
   setInterval(checkBot,15_000);
   setInterval(load,60_000);
-  carregarIndicador();
-  setInterval(carregarIndicador,60_000);
 
   // ── Splash ────────────────────────────────────────────────────────────────
   (function(){
