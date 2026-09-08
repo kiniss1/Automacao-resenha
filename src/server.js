@@ -1766,7 +1766,7 @@ function startServer() {
   // ── Relatório diário em imagem (substitui o print manual do painel) ────────
   let _reportBrowser = null;
   async function getReportBrowser() {
-    if (_reportBrowser && _reportBrowser.isConnected()) return _reportBrowser;
+    if (_reportBrowser && _reportBrowser.connected) return _reportBrowser;
     _reportBrowser = await puppeteer.launch({
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
       headless: true,
