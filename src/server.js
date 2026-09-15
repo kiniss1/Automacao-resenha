@@ -1802,7 +1802,20 @@ function startServer() {
       cancelado: lista.filter(o => o.status === 'Cancelado').length,
     };
 
-    const dados = { data: dataFmt, diaSemana: lista[0]?.dia_semana || '', hora: horaFmt, stats, lista };
+    let supervisor = null;
+    try {
+      const supervisorDb = require('./db_supervisor');
+      const s = supervisorDb.buscar();
+      if (s && s.nome) {
+        let fotoBase64 = null;
+        if (s.foto_path && fs.existsSync(s.foto_path)) {
+          fotoBase64 = 'data:image/jpeg;base64,' + fs.readFileSync(s.foto_path).toString('base64');
+        }
+        supervisor = { nome: s.nome, cargo: s.cargo || '', fotoBase64 };
+      }
+    } catch(e) { console.warn('[RELATORIO-DIARIO] Falha ao carregar supervisor:', e.message); }
+
+    const dados = { data: dataFmt, diaSemana: lista[0]?.dia_semana || '', hora: horaFmt, stats, lista, supervisor };
     const dadosJson = JSON.stringify(dados).replace(/</g, '\\u003c');
 
     const templatePath = path.join(__dirname, '..', 'public', 'relatorio-diario-print.html');
@@ -1869,6 +1882,62 @@ function startServer() {
     } finally {
       if (imgPath) { try { fs.unlinkSync(imgPath); } catch(e) {} }
     }
+  });
+
+  // ── Supervisor da equipe (nome/cargo/foto exibidos no relatório diário) ────
+  const supervisorDb  = require('./db_supervisor');
+  const SUPERVISOR_DIR = path.join(__dirname, '..', 'data');
+  fs.mkdirSync(SUPERVISOR_DIR, { recursive: true });
+  const SUPERVISOR_FOTO_PATH = path.join(SUPERVISOR_DIR, 'supervisor_foto.jpg');
+
+  const supervisor_upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 15 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const ok = /^image\/(jpeg|png|gif|webp|heic|heif)$/i.test(file.mimetype)
+               || /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.originalname);
+      cb(null, ok);
+    }
+  });
+
+  app.get('/api/supervisor-equipe', requireAuth, (req, res) => {
+    try {
+      const s = supervisorDb.buscar();
+      res.json({ ok: true, data: {
+        nome: s?.nome || '',
+        cargo: s?.cargo || '',
+        temFoto: !!(s?.foto_path && fs.existsSync(s.foto_path)),
+      }});
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/api/supervisor-equipe/foto', (req, res) => {
+    try {
+      const s = supervisorDb.buscar();
+      if (!s || !s.foto_path || !fs.existsSync(s.foto_path)) return res.status(404).json({ ok: false });
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      fs.createReadStream(s.foto_path).pipe(res);
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/supervisor-equipe', requireAuth, requirePermissao('enviar_relatorio_painel'), supervisor_upload.single('foto'), async (req, res) => {
+    try {
+      const nome  = (req.body.nome  || '').trim();
+      const cargo = (req.body.cargo || '').trim();
+      let foto_path;
+      if (req.file) {
+        const sharp = require('sharp');
+        await sharp(req.file.buffer)
+          .rotate()
+          .resize({ width: 400, height: 400, fit: 'cover' })
+          .jpeg({ quality: 85 })
+          .toFile(SUPERVISOR_FOTO_PATH);
+        foto_path = SUPERVISOR_FOTO_PATH;
+      }
+      const s = supervisorDb.salvar({ nome, cargo, foto_path });
+      res.json({ ok: true, data: { nome: s.nome, cargo: s.cargo, temFoto: !!s.foto_path } });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
