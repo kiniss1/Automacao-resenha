@@ -67,6 +67,10 @@ async function init() {
   const indicador = require('./db_indicador');
   indicador.setDb(db);
 
+  // Inicializa registro do supervisor da equipe (nome/cargo/foto do relatório diário)
+  const supervisor = require('./db_supervisor');
+  supervisor.setDb(db);
+
   persist();
   console.log('[DB] Banco iniciado:', DB_PATH);
 }

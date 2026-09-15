@@ -229,6 +229,23 @@
     .del-os-box .btn-del-os{flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s}
     .del-os-box .btn-del-os:hover{opacity:.85}
     .del-os-box .btn-del-os:disabled{opacity:.4;cursor:default}
+    #supervisorModal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:600;backdrop-filter:blur(3px)}
+    #supervisorModal.hidden{display:none}
+    .sup-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:28px;width:380px;max-width:92vw}
+    .sup-box h3{font-size:.95rem;font-weight:700;margin-bottom:16px}
+    .sup-box label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:5px;margin-top:12px}
+    .sup-box input[type=text]{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.9rem;outline:none;font-family:inherit}
+    .sup-box input[type=text]:focus{border-color:var(--primary)}
+    .sup-foto-row{display:flex;align-items:center;gap:12px;margin-top:12px}
+    .sup-foto-preview{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--surface2);border:1px solid var(--border2);flex-shrink:0}
+    .sup-foto-preview.placeholder{display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted2)}
+    .sup-box .sup-err{color:var(--red);font-size:.73rem;height:16px;margin-top:8px}
+    .sup-box .sup-btns{display:flex;gap:8px;margin-top:16px}
+    .sup-box .sup-btns button{flex:1;border:none;border-radius:8px;padding:9px;font-size:.85rem;cursor:pointer}
+    .sup-box .btn-sup-cancel{background:transparent;border:1px solid var(--border) !important;color:var(--muted)}
+    .sup-box .btn-sup-save{background:var(--primary);color:#fff;font-weight:700;transition:opacity .15s}
+    .sup-box .btn-sup-save:hover{opacity:.88}
+    .sup-box .btn-sup-save:disabled{opacity:.4;cursor:default}
     #splash{
       --bg:#0d1a19;--surface:#112220;--text:#e8f4f3;--muted:#7aaba7;--muted2:#4a7572;--border:#1e3836;--border2:#2a4f4c;
       position:fixed;inset:0;z-index:9999;overflow:hidden;
@@ -379,6 +396,7 @@
         <a href="/colaboradores.html" class="menu-item" id="linkColabs" style="display:none"><span class="ico">👷</span> Colaboradores</a>
         <div class="menu-divider"></div>
         <button class="menu-item" id="btnRelatorioImg" onclick="fecharMenu();enviarRelatorioImagem()" style="display:none"><span class="ico" style="color:#25d366">🖼️</span> Relatório Diário</button>
+        <button class="menu-item" id="btnSupervisor" onclick="fecharMenu();abrirSupervisorModal()" style="display:none"><span class="ico">👤</span> Supervisor da Equipe</button>
         <button class="menu-item" onclick="toggleTema()"><span class="ico">🌙</span> <span id="temaLabel">Tema: Claro</span></button>
         <div class="menu-divider"></div>
         <button class="menu-item danger" onclick="logout()"><span class="ico">🚪</span> Sair</button>
@@ -451,6 +469,26 @@
       <button class="btn-rel-send" id="btnRelSend" onclick="enviarRelatorio()">📲 Enviar ao grupo</button>
     </div>
     <div id="relFeedback" style="font-size:.75rem;text-align:center;min-height:14px"></div>
+  </div>
+</div>
+
+<div id="supervisorModal" class="hidden">
+  <div class="sup-box">
+    <h3>👤 Supervisor da Equipe</h3>
+    <label>Nome</label>
+    <input type="text" id="supNome" placeholder="Nome completo"/>
+    <label>Cargo</label>
+    <input type="text" id="supCargo" placeholder="Supervisor de Equipe de Campo"/>
+    <div class="sup-foto-row">
+      <img class="sup-foto-preview" id="supFotoPreview" style="display:none"/>
+      <div class="sup-foto-preview placeholder" id="supFotoPlaceholder">👤</div>
+      <input type="file" id="supFoto" accept="image/*" onchange="previewFotoSupervisor(this)"/>
+    </div>
+    <div class="sup-err" id="supErr"></div>
+    <div class="sup-btns">
+      <button class="btn-sup-cancel" onclick="fecharSupervisorModal()">Cancelar</button>
+      <button class="btn-sup-save" id="btnSupSalvar" onclick="salvarSupervisor()">💾 Salvar</button>
+    </div>
   </div>
 </div>
 
@@ -607,9 +645,11 @@
   function aplicarPermissoesUI() {
     if (!temPermissao('enviar_relatorio_painel')) {
       document.getElementById('btnRelatorioImg')?.remove();
+      document.getElementById('btnSupervisor')?.remove();
       document.getElementById('btnEnviarWA')?.remove();
     } else {
       document.getElementById('btnRelatorioImg').style.display = '';
+      document.getElementById('btnSupervisor').style.display = '';
     }
     if (temPermissao('gerenciar_usuarios'))  { document.getElementById('linkUsuarios').style.display = ''; document.getElementById('linkColabs').style.display = ''; }
     if (temPermissao('gerenciar_inspecao'))  document.getElementById('linkAutoinsp').style.display = '';
@@ -1083,6 +1123,65 @@
     }
   }
   document.getElementById('relModal').addEventListener('click',function(e){if(e.target===this)fecharRelModal();});
+
+  // ── Supervisor da Equipe ─────────────────────────────────────────────────
+  async function abrirSupervisorModal(){
+    document.getElementById('supErr').textContent='';
+    document.getElementById('supFoto').value='';
+    document.getElementById('supervisorModal').classList.remove('hidden');
+    try{
+      const res=await authFetch('/api/supervisor-equipe').then(r=>r.json());
+      if(!res.ok) throw new Error(res.error);
+      document.getElementById('supNome').value=res.data.nome||'';
+      document.getElementById('supCargo').value=res.data.cargo||'';
+      const preview=document.getElementById('supFotoPreview');
+      const placeholder=document.getElementById('supFotoPlaceholder');
+      if(res.data.temFoto){
+        preview.src='/api/supervisor-equipe/foto?_='+Date.now();
+        preview.style.display='';
+        placeholder.style.display='none';
+      }else{
+        preview.style.display='none';
+        placeholder.style.display='';
+      }
+    }catch(e){
+      document.getElementById('supErr').textContent='Erro ao carregar: '+e.message;
+    }
+  }
+  function fecharSupervisorModal(){ document.getElementById('supervisorModal').classList.add('hidden'); }
+  function previewFotoSupervisor(input){
+    if(!input.files || !input.files[0]) return;
+    const preview=document.getElementById('supFotoPreview');
+    const placeholder=document.getElementById('supFotoPlaceholder');
+    preview.src=URL.createObjectURL(input.files[0]);
+    preview.style.display='';
+    placeholder.style.display='none';
+  }
+  async function salvarSupervisor(){
+    const nome=document.getElementById('supNome').value.trim();
+    const cargo=document.getElementById('supCargo').value.trim();
+    const errEl=document.getElementById('supErr');
+    const btn=document.getElementById('btnSupSalvar');
+    errEl.textContent='';
+    if(!nome){ errEl.textContent='Informe o nome.'; return; }
+    const fd=new FormData();
+    fd.append('nome',nome);
+    fd.append('cargo',cargo);
+    const fotoInput=document.getElementById('supFoto');
+    if(fotoInput.files && fotoInput.files[0]) fd.append('foto',fotoInput.files[0]);
+    btn.disabled=true; btn.textContent='⏳ Salvando...';
+    try{
+      const res=await authFetch('/api/supervisor-equipe',{method:'POST',body:fd}).then(r=>r.json());
+      if(!res.ok) throw new Error(res.error);
+      toast('👤 Supervisor da equipe atualizado!');
+      fecharSupervisorModal();
+    }catch(e){
+      errEl.textContent='Erro: '+e.message;
+    }finally{
+      btn.disabled=false; btn.textContent='💾 Salvar';
+    }
+  }
+  document.getElementById('supervisorModal').addEventListener('click',function(e){if(e.target===this)fecharSupervisorModal();});
 
   // ── Filtros de data padrão e inicialização ────────────────────────────────
   (function(){
