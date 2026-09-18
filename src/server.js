@@ -1871,7 +1871,7 @@ function startServer() {
       // cheios (relatório bem alto) manda como documento, pra não perder nitidez com a
       // recompressão de foto do WhatsApp (~1600px no lado maior).
       await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, {
-        caption: `📊 Relatório diário — ${dataFmt} às ${horaFmt}`,
+        caption: `📊 Relatório diário | Atividades OOMC | ${dataFmt}`,
         sendMediaAsDocument: sheetHeight > 1400,
       });
 
