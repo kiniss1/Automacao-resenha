@@ -21,6 +21,7 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 WORKDIR /app
 
 COPY package*.json ./
+COPY patches ./patches
 RUN npm install --only=production
 
 COPY . .
