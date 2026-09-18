@@ -1,0 +1,18 @@
+diff --git a/node_modules/whatsapp-web.js/src/util/Injected/Utils.js b/node_modules/whatsapp-web.js/src/util/Injected/Utils.js
+index 540078a..ac164d7 100644
+--- a/node_modules/whatsapp-web.js/src/util/Injected/Utils.js
++++ b/node_modules/whatsapp-web.js/src/util/Injected/Utils.js
+@@ -483,6 +483,13 @@ exports.LoadUtils = () => {
+             ...extraOptions,
+         };
+ 
++        // Corrige bug do WhatsApp Web (upstream não mergeado, PR wwebjs #201923):
++        // o modelo MediaData devolvido por processMediaData() tem uma propriedade
++        // interna __x_id que, ao ser espalhada acima, sobrescreve o id real da
++        // mensagem (newMsgKey) e quebra o envio de mídia com "Data passed to
++        // getter must include an id property".
++        delete message.__x_id;
++
+         // Bot's won't reply if canonicalUrl is set (linking)
+         if (botOptions) {
+             delete message.canonicalUrl;
