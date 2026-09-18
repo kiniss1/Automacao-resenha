@@ -1867,13 +1867,21 @@ function startServer() {
       const { MessageMedia } = require('whatsapp-web.js');
       const media = MessageMedia.fromFilePath(imgPath);
       const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+      const caption = `📊 Relatório diário | Atividades OOMC | ${dataFmt}`;
       // Na maioria dos dias manda como foto (abre direto na conversa). Só em dias muito
       // cheios (relatório bem alto) manda como documento, pra não perder nitidez com a
       // recompressão de foto do WhatsApp (~1600px no lado maior).
-      await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, {
-        caption: `📊 Relatório diário | Atividades OOMC | ${dataFmt}`,
-        sendMediaAsDocument: sheetHeight > 1400,
-      });
+      const comoDocumento = sheetHeight > 1400;
+      try {
+        await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, { caption, sendMediaAsDocument: comoDocumento });
+      } catch (sendErr) {
+        // Envio "como documento" às vezes falha por instabilidade interna do próprio
+        // WhatsApp Web (erro de terceiros, fora do nosso controle). Se foi esse o caso,
+        // tenta de novo como foto normal em vez de deixar o relatório sem ser enviado.
+        if (!comoDocumento) throw sendErr;
+        console.warn('[RELATORIO-DIARIO] Falha ao enviar como documento, tentando como foto:', sendErr.message);
+        await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, { caption, sendMediaAsDocument: false });
+      }
 
       res.json({ ok: true, msg: 'Relatório enviado!' });
     } catch(e) {
