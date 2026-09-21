@@ -32,8 +32,13 @@ function carregarIdsFixos() {
     { env: 'GRUPO_CIAO_ID',      key: '_grupoCiaoId'      },
   ];
   for (const { env, key } of ID_MAP) {
-    const id = process.env[env];
-    if (id) { global[key] = id; console.log(`[BOT] ID fixo: ${key} = ${id}`); }
+    const val = process.env[env];
+    if (!val) continue;
+    // Suporte a múltiplos grupos: GRUPO_RELATORIO_ID=120363xxx@g.us,120363yyy@g.us
+    const lista = val.split(',').map(s => s.trim()).filter(Boolean);
+    global[key] = lista[0]; // compat: rotas legadas que leem global[key] direto esperam um único ID
+    global[key + 'Lista'] = lista; // lista completa, usada por enviarParaGrupo pra enviar em vários grupos
+    console.log(`[BOT] ID(s) fixo(s): ${key} = ${lista.join(', ')}`);
   }
 }
 
