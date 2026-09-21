@@ -25,9 +25,32 @@ function startServer() {
       '_grupoIndicadorId': 'GRUPO_INDICADOR_ID',
       '_grupoCiaoId':      'GRUPO_CIAO_ID',
     };
+    // Lista de IDs fixos (suporta múltiplos grupos: GRUPO_RELATORIO_ID=id1,id2).
+    // Carregada normalmente pelo bot.js no início (carregarIdsFixos); lida direto
+    // da env aqui só como fallback, caso esta função rode antes disso.
+    let lista = global[cacheKey + 'Lista'];
+    if (!lista && ID_ENV_MAP[cacheKey] && process.env[ID_ENV_MAP[cacheKey]]) {
+      lista = process.env[ID_ENV_MAP[cacheKey]].split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (lista && lista.length > 1) {
+      // Usa sendMessage direto com o ID — evita getChatById que falha neste ambiente
+      let sucesso = 0, ultimoErro = null;
+      for (const id of lista) {
+        try {
+          await global._waClient.sendMessage(id, mensagem, opts);
+          sucesso++;
+        } catch (e) {
+          console.error(`[BOT] Falha ao enviar pro grupo ${id}:`, e.message);
+          ultimoErro = e;
+        }
+      }
+      if (sucesso === 0) throw ultimoErro;
+      return;
+    }
+
     // Carrega ID fixo da env se disponível
     if (!global[cacheKey] && ID_ENV_MAP[cacheKey] && process.env[ID_ENV_MAP[cacheKey]]) {
-      global[cacheKey] = process.env[ID_ENV_MAP[cacheKey]];
+      global[cacheKey] = process.env[ID_ENV_MAP[cacheKey]].split(',')[0].trim();
     }
     // Aguarda cache por até 60s
     for (let i = 0; i < 12; i++) {
