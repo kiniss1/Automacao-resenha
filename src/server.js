@@ -1864,6 +1864,20 @@ function startServer() {
       await page.close();
     }
 
+    // Redimensiona nós mesmos (alta qualidade) pro limite de recompressão de foto do
+    // WhatsApp (~1600px no lado maior), em vez de deixar o WhatsApp encolher a imagem
+    // com o próprio algoritmo — assim o relatório sempre pode ir como foto (abre direto
+    // na conversa) mesmo em dias muito cheios, sem perder nitidez do texto dos cards.
+    const sharp = require('sharp');
+    const meta = await sharp(outPath).metadata();
+    if ((meta.width || 0) > 1600 || (meta.height || 0) > 1600) {
+      const redimensionado = await sharp(outPath)
+        .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
+        .png()
+        .toBuffer();
+      fs.writeFileSync(outPath, redimensionado);
+    }
+
     return { outPath, dataFmt, horaFmt, sheetHeight };
   }
 
@@ -1884,27 +1898,17 @@ function startServer() {
         });
       }
 
-      const { outPath, dataFmt, horaFmt, sheetHeight } = await gerarImagemRelatorioDiario();
+      const { outPath, dataFmt, horaFmt } = await gerarImagemRelatorioDiario();
       imgPath = outPath;
 
       const { MessageMedia } = require('whatsapp-web.js');
       const media = MessageMedia.fromFilePath(imgPath);
       const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
       const caption = `📊 Relatório diário | Atividades OOMC | ${dataFmt}`;
-      // Na maioria dos dias manda como foto (abre direto na conversa). Só em dias muito
-      // cheios (relatório bem alto) manda como documento, pra não perder nitidez com a
-      // recompressão de foto do WhatsApp (~1600px no lado maior).
-      const comoDocumento = sheetHeight > 1400;
-      try {
-        await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, { caption, sendMediaAsDocument: comoDocumento });
-      } catch (sendErr) {
-        // Envio "como documento" às vezes falha por instabilidade interna do próprio
-        // WhatsApp Web (erro de terceiros, fora do nosso controle). Se foi esse o caso,
-        // tenta de novo como foto normal em vez de deixar o relatório sem ser enviado.
-        if (!comoDocumento) throw sendErr;
-        console.warn('[RELATORIO-DIARIO] Falha ao enviar como documento, tentando como foto:', sendErr.message);
-        await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, { caption, sendMediaAsDocument: false });
-      }
+      // Sempre envia como foto (abre direto na conversa). A imagem já é redimensionada
+      // em gerarImagemRelatorioDiario() pro limite de recompressão do WhatsApp, então
+      // não perde nitidez mesmo em dias cheios.
+      await enviarParaGrupo('_grupoRelId', GRUPO_REL, media, { caption, sendMediaAsDocument: false });
 
       res.json({ ok: true, msg: 'Relatório enviado!' });
     } catch(e) {
