@@ -397,6 +397,7 @@
         <a href="/finalizador-sap.html" class="menu-item" id="linkFinalizadorSap" style="display:none"><span class="ico">📋</span> Finalizador de Ordem</a>
         <div class="menu-divider"></div>
         <button class="menu-item" id="btnRelatorioImg" onclick="fecharMenu();enviarRelatorioImagem()" style="display:none"><span class="ico" style="color:#25d366">🖼️</span> Relatório Diário</button>
+        <button class="menu-item" id="btnResumo" onclick="fecharMenu();enviarResumoAtividades()" style="display:none"><span class="ico" style="color:#25d366">📊</span> Resumo</button>
         <button class="menu-item" id="btnSupervisor" onclick="fecharMenu();abrirSupervisorModal()" style="display:none"><span class="ico">👤</span> Supervisor da Equipe</button>
         <button class="menu-item" onclick="toggleTema()"><span class="ico">🌙</span> <span id="temaLabel">Tema: Claro</span></button>
         <div class="menu-divider"></div>
@@ -646,10 +647,12 @@
   function aplicarPermissoesUI() {
     if (!temPermissao('enviar_relatorio_painel')) {
       document.getElementById('btnRelatorioImg')?.remove();
+      document.getElementById('btnResumo')?.remove();
       document.getElementById('btnSupervisor')?.remove();
       document.getElementById('btnEnviarWA')?.remove();
     } else {
       document.getElementById('btnRelatorioImg').style.display = '';
+      document.getElementById('btnResumo').style.display = '';
       document.getElementById('btnSupervisor').style.display = '';
     }
     if (temPermissao('gerenciar_usuarios'))  { document.getElementById('linkUsuarios').style.display = ''; document.getElementById('linkColabs').style.display = ''; }
@@ -1125,6 +1128,22 @@
     }
   }
   document.getElementById('relModal').addEventListener('click',function(e){if(e.target===this)fecharRelModal();});
+
+  async function enviarResumoAtividades(){
+    const btn=document.getElementById('btnResumo');
+    const original=btn.innerHTML;
+    btn.disabled=true; btn.innerHTML='<span class="ico">⏳</span> Enviando...';
+    toast('📊 Gerando resumo das atividades...');
+    try{
+      const res=await authFetch('/api/resumo-atividades/enviar',{method:'POST'}).then(r=>r.json());
+      if(!res.ok) throw new Error(res.error);
+      toast('📊 Resumo enviado ao WhatsApp!');
+    }catch(e){
+      toast('❌ Erro ao enviar resumo: '+e.message,'err');
+    }finally{
+      btn.disabled=false; btn.innerHTML=original;
+    }
+  }
 
   // ── Supervisor da Equipe ─────────────────────────────────────────────────
   async function abrirSupervisorModal(){

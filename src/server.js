@@ -1929,6 +1929,59 @@ function startServer() {
     }
   });
 
+  // ── Resumo das atividades (texto, mesmo grupo do relatório diário) ─────────
+  app.post('/api/resumo-atividades/enviar', requireAuth, requirePermissao('enviar_relatorio_painel'), async (req, res) => {
+    try {
+      const botState = require('./state');
+      if (!botState.isReady() || !global._waClient) {
+        return res.status(503).json({ ok: false, error: 'WhatsApp não conectado. Escaneie o QR em /qr e tente novamente.' });
+      }
+
+      const agoraBR = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const y  = agoraBR.getUTCFullYear();
+      const m  = String(agoraBR.getUTCMonth() + 1).padStart(2, '0');
+      const d  = String(agoraBR.getUTCDate()).padStart(2, '0');
+      const dataFmt = `${d}/${m}/${y}`;
+      const dataISO = `${y}-${m}-${d}`;
+
+      const lista = db.all(`SELECT * FROM ordens_servico WHERE data = ?`, [dataFmt]) || [];
+      const concluidas = lista.filter(o => o.status === 'Concluído').length;
+      const etapas     = lista.filter(o => o.status === 'Etapa Concluída').length;
+      const canceladas = lista.filter(o => o.status === 'Cancelado').length;
+
+      // SEs únicas que tiveram atividade registrada hoje (sem repetir)
+      const sesAtividade = Array.from(new Set(lista.map(o => (o.unidade || '').trim()).filter(Boolean)));
+
+      // SEs inspecionadas hoje (dado real — já existe no dashboard de Inspeção)
+      const sesInspecionadas = insp.statsDashboard(dataISO, dataISO).porSE.length;
+
+      // Autoinspeções realizadas hoje (dado real — já existe no módulo de Autoinspeção)
+      const autoinspecoes = autoInsp.estatisticasDia(dataISO).total;
+
+      const linhas = [
+        `📊 *Resumo das Atividades OOMC* | ${dataFmt}`,
+        '',
+        `✅ Atividades concluídas: ${concluidas}`,
+        `🔄 Etapas concluídas: ${etapas}`,
+        `❌ Canceladas: ${canceladas}`,
+        `📍 SEs em atividade hoje: ${sesAtividade.length}` + (sesAtividade.length ? ` (${sesAtividade.join(' | ')})` : ''),
+        `🔍 SEs inspecionadas hoje: ${sesInspecionadas}`,
+        `🦺 Autoinspeções realizadas: ${autoinspecoes}`,
+        '',
+        '_Gerado automaticamente pelo sistema OOMC_',
+      ];
+      const msg = linhas.join('\n');
+
+      const GRUPO_REL = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+      await enviarParaGrupo('_grupoRelId', GRUPO_REL, msg);
+
+      res.json({ ok: true, msg: 'Resumo enviado!', preview: msg });
+    } catch(e) {
+      console.error('[RESUMO-ATIVIDADES] ERRO COMPLETO:', e.stack || e.message);
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // ── Supervisor da equipe (nome/cargo/foto exibidos no relatório diário) ────
   const supervisorDb  = require('./db_supervisor');
   const SUPERVISOR_DIR = path.join(__dirname, '..', 'data');
