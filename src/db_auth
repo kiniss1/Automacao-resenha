@@ -18,6 +18,7 @@ const PERMISSOES_INFO = [
   { key: 'gerenciar_inspecao',         grupo: 'Inspeção',         label: 'Criar/editar fichas de inspeção por SE' },
   { key: 'excluir_historico_inspecao', grupo: 'Inspeção',         label: 'Excluir inspeções do histórico' },
   { key: 'enviar_sharepoint',          grupo: 'Integrações',      label: 'Enviar dados ao SharePoint' },
+  { key: 'finalizar_os_sap',           grupo: 'Integrações',      label: 'Finalizar Ordem no SAP (fila de automação)' },
   { key: 'gerenciar_usuarios',         grupo: 'Administração',    label: 'Gerenciar usuários' },
 ];
 const PERMISSOES = PERMISSOES_INFO.map(p => p.key);

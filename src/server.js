@@ -458,7 +458,14 @@ function startServer() {
         if (botState.isReady() && global._waClient) {
           const baseUrl = process.env.PUBLIC_URL || ('https://' + req.headers.host);
           const ordensComLink = registradas.map(r => ({ ...r, aprLink: baseUrl + '/apr.html?os=' + encodeURIComponent(r.os) }));
-          const msgWA = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: ordensComLink });
+          let msgWA = formatMsgWhatsApp({ tipo, guarda, horario, dia_semana, data, equipe, telefone, veiculo, ordens: ordensComLink });
+
+          // Na resenha final, acrescenta um link direto pro Finalizador de Ordem (SAP)
+          if (tipo === 'final' && registradas.length) {
+            const linkFinalizador = baseUrl + '/finalizador-sap.html'
+              + (registradas.length === 1 ? ('?finalizar=' + encodeURIComponent(registradas[0].os)) : '');
+            msgWA += '\n\n📋 Pronta pra finalizar no SAP? ' + linkFinalizador;
+          }
 
           const grupoRetornoNome = process.env.GRUPO_RETORNO_NOME || process.env.GRUPO_NOME || 'Resenha';
           await enviarParaGrupo('_grupoRetornoId', grupoRetornoNome, msgWA);
@@ -1975,6 +1982,160 @@ function startServer() {
       }
       const s = supervisorDb.salvar({ nome, cargo, foto_path });
       res.json({ ok: true, data: { nome: s.nome, cargo: s.cargo, temFoto: !!s.foto_path } });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // ── Finalizador de Ordem (SAP) — fila de automação + credenciais pessoais ──
+  const sapFinalizacao = require('./db_sap_finalizacao');
+  const SAP_ANEXOS_DIR = path.join(__dirname, '..', 'data', 'sap-anexos');
+  fs.mkdirSync(SAP_ANEXOS_DIR, { recursive: true });
+
+  const sap_anexo_upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 20 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const ok = /^(image\/(jpeg|png|webp|heic|heif)|application\/pdf)$/i.test(file.mimetype)
+               || /\.(jpg|jpeg|png|webp|heic|heif|pdf)$/i.test(file.originalname);
+      cb(null, ok);
+    }
+  });
+  function extensaoAnexo(mimetype) {
+    if (/pdf/i.test(mimetype)) return 'pdf';
+    const m = /^image\/(jpeg|png|webp|heic|heif)$/i.exec(mimetype);
+    return m ? (m[1].toLowerCase() === 'jpeg' ? 'jpg' : m[1].toLowerCase()) : 'bin';
+  }
+
+  // Autenticação do agente desktop — token fixo, não é um usuário do painel
+  function requireAgenteSap(req, res, next) {
+    const header = req.headers['authorization'] || '';
+    const token = header.replace('Bearer ', '').trim();
+    if (!process.env.AGENTE_SAP_TOKEN || token !== process.env.AGENTE_SAP_TOKEN) {
+      return res.status(401).json({ ok: false, error: 'Agente não autenticado.' });
+    }
+    next();
+  }
+
+  // Credenciais SAP pessoais — cada um cadastra/atualiza só a própria
+  app.get('/api/sap-credenciais', requireAuth, (req, res) => {
+    try {
+      const status = sapFinalizacao.statusCredencial(req.user.id);
+      res.json({ ok: true, data: status
+        ? { cadastrada: true, sapUsuario: status.sapUsuario, atualizadoEm: status.atualizadoEm }
+        : { cadastrada: false } });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/sap-credenciais', requireAuth, express.json(), (req, res) => {
+    try {
+      const sap_usuario = (req.body.sap_usuario || '').trim();
+      const sap_senha   = (req.body.sap_senha   || '').trim();
+      if (!sap_usuario || !sap_senha) {
+        return res.status(400).json({ ok: false, error: 'Informe o usuário e a senha do SAP.' });
+      }
+      sapFinalizacao.salvarCredencial(req.user.id, sap_usuario, sap_senha);
+      res.json({ ok: true });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // Fila — envio e consulta (painel)
+  app.get('/api/finalizacoes-sap', requireAuth, (req, res) => {
+    try {
+      const jobs = sapFinalizacao.listarJobs().map(j => ({
+        id: j.id, osId: j.os_id, osCodigo: j.os_codigo, numeroOrdemSap: j.numero_ordem_sap, possuiNota: !!j.possui_nota,
+        dtlVe: j.dtl_ve, horasTrabalhadas: j.horas_trabalhadas, qtdFuncionarios: j.qtd_funcionarios,
+        veiculo: j.veiculo, km: j.km, temAnexo: !!j.anexo_path, status: j.status,
+        etapaAtual: j.etapa_atual, erroMensagem: j.erro_mensagem,
+        enviadoPorNome: j.enviado_por_nome || j.enviado_por_username,
+        criadoEm: j.criado_em, atualizadoEm: j.atualizado_em, concluidoEm: j.concluido_em,
+      }));
+      res.json({ ok: true, data: jobs });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/finalizacoes-sap', requireAuth, requirePermissao('finalizar_os_sap'), sap_anexo_upload.single('anexo'), async (req, res) => {
+    try {
+      const credencial = sapFinalizacao.statusCredencial(req.user.id);
+      if (!credencial) {
+        return res.status(400).json({ ok: false, error: 'Cadastre sua senha do SAP antes de enviar uma finalização.' });
+      }
+      const numero_ordem_sap = (req.body.numero_ordem_sap || '').trim();
+      if (!numero_ordem_sap) {
+        return res.status(400).json({ ok: false, error: 'Informe o número da Ordem no SAP.' });
+      }
+      const job = sapFinalizacao.criarJob({
+        os_id: req.body.os_id ? parseInt(req.body.os_id, 10) : null,
+        numero_ordem_sap,
+        possui_nota: req.body.possui_nota === 'true' || req.body.possui_nota === '1',
+        dtl_ve: req.body.dtl_ve,
+        horas_trabalhadas: req.body.horas_trabalhadas,
+        qtd_funcionarios: req.body.qtd_funcionarios,
+        veiculo: req.body.veiculo,
+        km: req.body.km,
+        enviado_por: req.user.id,
+      });
+      if (req.file) {
+        const anexoPath = path.join(SAP_ANEXOS_DIR, `finalizacao_${job.id}.${extensaoAnexo(req.file.mimetype)}`);
+        fs.writeFileSync(anexoPath, req.file.buffer);
+        sapFinalizacao.atualizarAnexo(job.id, anexoPath);
+      }
+      res.json({ ok: true, data: { id: job.id } });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/finalizacoes-sap/:id/reenviar', requireAuth, requirePermissao('finalizar_os_sap'), (req, res) => {
+    try {
+      sapFinalizacao.reenviarJob(parseInt(req.params.id, 10));
+      res.json({ ok: true });
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // Fila — rotas do agente desktop (token próprio, não é login de usuário)
+  app.post('/api/agente-sap/proximo-job', requireAgenteSap, express.json(), (req, res) => {
+    try {
+      const job = sapFinalizacao.proximoJobPendente();
+      if (!job) return res.json({ ok: true, data: null });
+
+      const credencial = sapFinalizacao.buscarCredencialDecifrada(job.enviado_por);
+      if (!credencial) {
+        sapFinalizacao.marcarErro(job.id, 'Colaborador não tem senha do SAP cadastrada no painel.');
+        return res.json({ ok: true, data: null });
+      }
+
+      res.json({ ok: true, data: {
+        id: job.id,
+        numeroOrdemSap: job.numero_ordem_sap,
+        possuiNota: !!job.possui_nota,
+        dtlVe: job.dtl_ve,
+        horasTrabalhadas: job.horas_trabalhadas,
+        qtdFuncionarios: job.qtd_funcionarios,
+        veiculo: job.veiculo,
+        km: job.km,
+        temAnexo: !!job.anexo_path,
+        sapUsuario: credencial.sapUsuario,
+        sapSenha: credencial.sapSenha,
+      }});
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/api/agente-sap/job/:id/anexo', requireAgenteSap, (req, res) => {
+    try {
+      const job = sapFinalizacao.buscarJob(parseInt(req.params.id, 10));
+      if (!job || !job.anexo_path || !fs.existsSync(job.anexo_path)) {
+        return res.status(404).json({ ok: false, error: 'Anexo não encontrado.' });
+      }
+      res.sendFile(job.anexo_path);
+    } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/api/agente-sap/job/:id/status', requireAgenteSap, express.json(), (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const { status, etapa_atual, mensagem } = req.body;
+      if (status === 'concluido') sapFinalizacao.marcarConcluido(id);
+      else if (status === 'erro') sapFinalizacao.marcarErro(id, mensagem || 'Erro não especificado.');
+      else if (etapa_atual) sapFinalizacao.atualizarEtapa(id, etapa_atual);
+      else return res.status(400).json({ ok: false, error: 'Informe status ou etapa_atual.' });
+      res.json({ ok: true });
     } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 

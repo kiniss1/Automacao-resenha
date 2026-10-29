@@ -1,3 +1,5 @@
 node_modules/
 data/
 .env
+desktop-agent/__pycache__/
+desktop-agent/.venv/

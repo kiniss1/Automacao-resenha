@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finalizador de Ordem — OOMC</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --bg:#f4fafa; --surface:#ffffff; --surface2:#edf7f6; --border:#d7e3e2; --border2:#b0cece;
+    --text:#273332; --muted:#64726f; --muted2:#93a09d;
+    --primary:#009B91; --primary-dark:#005852; --primary-bg:#e0f5f4;
+    --ok:#005852; --ok-bg:#e0f5f4; --ok-border:#009B91;
+    --warn:#c97a06; --warn-bg:#fff4e0; --warn-border:#EB8C0A;
+    --danger:#c0392b; --danger-bg:#fdecea; --danger-border:#e57373;
+    --proc:#2f6fed; --proc-bg:#e8f0ff; --proc-border:#6f9bf5;
+    --font-display:'IBM Plex Sans',system-ui,sans-serif;
+    --font-body:'IBM Plex Sans',system-ui,sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;padding:20px}
+  h1,h2,h3{font-family:var(--font-display)}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  .wrap{max-width:1180px;margin:0 auto}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:16px;border-bottom:2px solid var(--primary);margin-bottom:20px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:40px;height:40px;border-radius:10px;background:linear-gradient(145deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;font-weight:700;flex-shrink:0}
+  .brand h1{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .brand .crumb{font-size:12px;color:var(--muted);margin-top:2px}
+  .nav-links{display:flex;gap:8px;align-items:center}
+  .nav-link{font-size:12.5px;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:7px 13px}
+  .nav-link:hover{border-color:var(--primary);color:var(--primary)}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  @media (max-width:700px){ .stats{grid-template-columns:repeat(2,1fr)} }
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 12px;text-align:center;min-width:0}
+  .stat-card .num{font-family:var(--font-mono);font-size:26px;font-weight:700;line-height:1}
+  .stat-card .lbl{font-size:11px;color:var(--muted);margin-top:6px;font-weight:600}
+  .stat-card.c-proc .num{color:var(--proc)}
+  .stat-card.c-ok .num{color:var(--ok)}
+  .stat-card.c-danger .num{color:var(--danger)}
+
+  .note{font-size:12px;color:var(--muted);margin-bottom:18px;display:flex;gap:7px;align-items:flex-start}
+  .note b{color:var(--text)}
+
+  .cred-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .cred-box.pendente{border-color:var(--warn-border);background:var(--warn-bg)}
+  .cred-box .txt{font-size:12.5px;color:var(--muted)}
+  .cred-box .txt b{color:var(--text)}
+  .cred-box button{background:none;border:1px solid var(--primary);color:var(--primary-dark);border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--font-body)}
+
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start}
+  @media (max-width:860px){ .grid{grid-template-columns:1fr} }
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;min-width:0}
+  .card-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .card-head h2{font-size:15px}
+  .card-head .hint{font-size:11.5px;color:var(--muted)}
+  .card-body{padding:16px 18px}
+
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+  .field label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  .field input,.field select,.field textarea{font-family:var(--font-body);font-size:13.5px;color:var(--text);background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;width:100%}
+  .field input:focus,.field select:focus{outline:2px solid var(--primary);outline-offset:1px}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .section-lbl{font-size:12px;font-weight:700;color:var(--primary-dark);margin:18px 0 10px;display:flex;align-items:center;gap:7px}
+  .section-lbl .n{width:18px;height:18px;border-radius:50%;background:var(--primary-bg);color:var(--primary-dark);display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;flex-shrink:0}
+  .section-lbl:first-child{margin-top:0}
+
+  .os-busca{display:flex;gap:8px}
+  .os-busca input{flex:1}
+  .os-busca button{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:0 13px;font-size:12.5px;cursor:pointer;color:var(--text);font-family:var(--font-body)}
+  .os-resultados{margin-top:8px;display:flex;flex-direction:column;gap:5px;max-height:160px;overflow-y:auto}
+  .os-opcao{text-align:left;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:12px;cursor:pointer;font-family:var(--font-body);color:var(--text)}
+  .os-opcao:hover{border-color:var(--primary)}
+  .os-vinculada{background:var(--ok-bg);border:1px solid var(--ok-border);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--ok);display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .os-vinculada button{background:none;border:none;color:var(--ok);font-size:14px;cursor:pointer}
+
+  .dropzone{border:1.5px dashed var(--border2);border-radius:10px;padding:16px;text-align:center;color:var(--muted);font-size:12.5px;background:var(--surface2);cursor:pointer}
+  .dropzone b{color:var(--primary-dark);display:block;font-size:13px;margin-bottom:3px}
+  .dropzone.tem-arquivo{border-color:var(--ok-border);color:var(--ok)}
+
+  .btn-primary{width:100%;margin-top:6px;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;font-family:var(--font-body);cursor:pointer}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-primary:disabled{opacity:.5;cursor:default}
+  .form-err{background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger);border-radius:8px;padding:9px 11px;font-size:12px;margin-top:10px;display:none}
+
+  .job{border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:10px;cursor:pointer;background:var(--surface)}
+  .job:last-child{margin-bottom:0}
+  .job-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .job-ids{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .job-ids .os{font-size:13px;font-weight:700}
+  .job-ids .sap{font-family:var(--font-mono);font-size:11.5px;color:var(--muted)}
+  .pill{font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:999px;letter-spacing:.02em;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;flex-shrink:0}
+  .pill.fila{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
+  .pill.processando{background:var(--proc-bg);color:var(--proc);border:1px solid var(--proc-border)}
+  .pill.concluido{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border)}
+  .pill.erro{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .pill.processando .dot{animation:blink 1.1s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .job-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:11.5px;color:var(--muted)}
+  .job-error{margin-top:10px;background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:8px;padding:9px 11px;font-size:12px;color:var(--danger)}
+  .job-error b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
+  .job-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border2);font-size:12px;color:var(--muted)}
+  .job.open .job-detail{display:block}
+  .job-detail .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-bottom:8px}
+  .job-detail .kv b{color:var(--text);font-weight:600}
+  .job-detail .retry{margin-top:8px;background:none;border:1px solid var(--danger-border);color:var(--danger);border-radius:7px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body)}
+  .queue-list{max-height:640px;overflow-y:auto;padding-right:2px}
+  .empty{padding:40px 0;text-align:center;color:var(--muted);font-size:13px}
+
+  #credModal{position:fixed;inset:0;background:rgba(10,20,19,.6);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px}
+  #credModal.hidden{display:none}
+  .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
+  .modal-box h2{font-size:15px}
+  .modal-box p{font-size:12px;color:var(--muted);line-height:1.5}
+  .modal-footer{display:flex;gap:8px;margin-top:4px}
+  .btn-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:10px;font-size:13px;cursor:pointer;font-family:var(--font-body)}
+  .btn-salvar{flex:1;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body)}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--primary-dark);color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:400}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">⚡</div>
+      <div>
+        <h1>Finalizador de Ordem</h1>
+        <div class="crumb">Painel OOMC · Encerramento SAP (ZNTR)</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="/" class="nav-link">🔧 Painel</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="num" id="statFila">—</div><div class="lbl">Na fila</div></div>
+    <div class="stat-card c-proc"><div class="num" id="statProc">—</div><div class="lbl">Processando</div></div>
+    <div class="stat-card c-ok"><div class="num" id="statOk">—</div><div class="lbl">Concluídas hoje</div></div>
+    <div class="stat-card c-danger"><div class="num" id="statErro">—</div><div class="lbl">Erros em aberto</div></div>
+  </div>
+
+  <div class="note">💡 <span>O robô processa <b>uma ordem por vez</b>, na ordem de chegada — evita confirmar duas linhas em paralelo no SAP e duplicar valor por engano.</span></div>
+
+  <div class="cred-box" id="credBox">
+    <span class="txt">Verificando sua credencial do SAP...</span>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Nova finalização</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="section-lbl"><span class="n">·</span>Vincular à nossa OS (opcional)</div>
+        <div id="osVinculadaBox"></div>
+        <div class="os-busca" id="osBuscaBox">
+          <input type="text" id="osBusca" placeholder="Buscar por número da OS ou SE...">
+          <button type="button" onclick="buscarOS()">Buscar</button>
+        </div>
+        <div class="os-resultados" id="osResultados"></div>
+
+        <div class="section-lbl"><span class="n">1</span>Identificação</div>
+        <div class="field">
+          <label>Número da Ordem (SAP)</label>
+          <input type="text" class="mono" id="fNumeroOrdem" placeholder="4500123456">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Possui Nota?</label>
+            <select id="fPossuiNota"><option value="false" selected>Não</option><option value="true">Sim</option></select>
+          </div>
+          <div class="field">
+            <label>DTL-VE</label>
+            <input type="text" class="mono" id="fDtlVe" placeholder="—">
+          </div>
+        </div>
+
+        <div class="section-lbl"><span class="n">2</span>Mão de obra e veículo</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Horas trabalhadas</label>
+            <input type="text" class="mono" id="fHoras" placeholder="04:30">
+          </div>
+          <div class="field">
+            <label>Qtd. funcionários</label>
+            <input type="text" class="mono" id="fQtdFunc" placeholder="2">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Veículo</label>
+            <input type="text" id="fVeiculo" placeholder="VTR-04">
+          </div>
+          <div class="field">
+            <label>KM (ida + volta)</label>
+            <input type="text" class="mono" id="fKm" placeholder="38">
+          </div>
+        </div>
+
+        <div class="section-lbl"><span class="n">3</span>Anexo (ordem e nota escaneadas)</div>
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('fAnexo').click()">
+          <b id="dzLabel">📎 Clique pra escolher o arquivo</b>
+          frente e verso, devidamente preenchidas
+        </div>
+        <input type="file" id="fAnexo" accept="image/*,application/pdf" style="display:none" onchange="onAnexoEscolhido()">
+
+        <button class="btn-primary" id="btnEnviar" onclick="enviarFinalizacao()">Adicionar à fila de finalização</button>
+        <div class="form-err" id="formErr"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Fila de finalização</h2>
+        <span class="hint" id="filaHint">—</span>
+      </div>
+      <div class="card-body queue-list" id="queueList">
+        <div class="empty">Carregando...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="credModal" class="hidden">
+  <div class="modal-box">
+    <h2>🔐 Credencial do SAP</h2>
+    <p>Sua senha fica <b>cifrada</b> no banco e só é usada pelo robô na hora de processar um job seu — nunca é mostrada de novo depois de salva. Use seu usuário e senha normais do SAP.</p>
+    <div class="field"><label>Usuário do SAP</label><input type="text" id="credUsuario"></div>
+    <div class="field"><label>Senha do SAP</label><input type="password" id="credSenha"></div>
+    <div class="form-err" id="credErr"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharCredModal()">Cancelar</button>
+      <button class="btn-salvar" onclick="salvarCredencial()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const TOKEN = localStorage.getItem('oomc_token');
+  let osSelecionada = null;
+  let anexoSelecionado = null;
+  let pollTimer = null;
+
+  function authFetch(url, opts = {}) {
+    opts.headers = { ...(opts.headers||{}), 'x-auth-token': TOKEN };
+    return fetch(url, opts);
+  }
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2600);
+  }
+  function e(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  async function init() {
+    if (!TOKEN) { location.href = '/login.html?redirect=/finalizador-sap.html'; return; }
+    const me = await authFetch('/api/auth/me').then(r=>r.json()).catch(()=>null);
+    if (!me || !me.ok) { location.href = '/login.html?redirect=/finalizador-sap.html'; return; }
+    if (!me.usuario.permissoes.includes('finalizar_os_sap')) {
+      document.querySelector('.wrap').innerHTML = '<p style="padding:40px;text-align:center;color:var(--muted)">⚠️ Você não tem permissão para acessar esta página.</p>';
+      return;
+    }
+    await carregarCredencial();
+    await carregarFila();
+    pollTimer = setInterval(carregarFila, 6000);
+
+    const params = new URLSearchParams(location.search);
+    const osCodigo = params.get('finalizar');
+    if (osCodigo) vincularOsPorCodigo(osCodigo);
+  }
+
+  // ── Credencial SAP ──────────────────────────────────────────────────────
+  async function carregarCredencial() {
+    const r = await authFetch('/api/sap-credenciais').then(r=>r.json()).catch(()=>null);
+    const box = document.getElementById('credBox');
+    if (!r || !r.ok) { box.innerHTML = '<span class="txt">Não foi possível verificar sua credencial do SAP.</span>'; return; }
+    if (r.data.cadastrada) {
+      box.classList.remove('pendente');
+      box.innerHTML = `<span class="txt">🔐 Credencial SAP cadastrada: <b>${e(r.data.sapUsuario)}</b></span>
+        <button onclick="abrirCredModal()">Atualizar</button>`;
+    } else {
+      box.classList.add('pendente');
+      box.innerHTML = `<span class="txt">⚠️ Você ainda não cadastrou sua senha do SAP — necessária pro robô logar como você.</span>
+        <button onclick="abrirCredModal()">Cadastrar agora</button>`;
+    }
+  }
+  function abrirCredModal() {
+    document.getElementById('credErr').style.display = 'none';
+    document.getElementById('credUsuario').value = '';
+    document.getElementById('credSenha').value = '';
+    document.getElementById('credModal').classList.remove('hidden');
+  }
+  function fecharCredModal() { document.getElementById('credModal').classList.add('hidden'); }
+  async function salvarCredencial() {
+    const sap_usuario = document.getElementById('credUsuario').value.trim();
+    const sap_senha = document.getElementById('credSenha').value.trim();
+    const errEl = document.getElementById('credErr');
+    errEl.style.display = 'none';
+    if (!sap_usuario || !sap_senha) { errEl.textContent = 'Preencha usuário e senha.'; errEl.style.display='block'; return; }
+    try {
+      const r = await authFetch('/api/sap-credenciais', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sap_usuario, sap_senha }),
+      }).then(r=>r.json());
+      if (!r.ok) throw new Error(r.error);
+      toast('🔐 Credencial do SAP salva!');
+      fecharCredModal();
+      await carregarCredencial();
+    } catch(err) { errEl.textContent = 'Erro: ' + err.message; errEl.style.display='block'; }
+  }
+
+  // ── Vincular OS (opcional, só referência) ───────────────────────────────
+  async function buscarOS() {
+    const termo = document.getElementById('osBusca').value.trim();
+    if (!termo) return;
+    const r = await authFetch('/api/os?search=' + encodeURIComponent(termo)).then(r=>r.json()).catch(()=>null);
+    const box = document.getElementById('osResultados');
+    if (!r || !r.ok || !r.data.length) { box.innerHTML = '<div class="empty" style="padding:10px 0">Nada encontrado.</div>'; return; }
+    box.innerHTML = r.data.slice(0, 8).map(os =>
+      `<button type="button" class="os-opcao" onclick='vincularOs(${JSON.stringify(os).replace(/'/g,"&#39;")})'>
+        <b>OS ${e(os.os)}</b> · ${e(os.unidade||'—')} · ${e(os.equipe||'—')}
+      </button>`
+    ).join('');
+  }
+  function vincularOs(os) {
+    osSelecionada = os;
+    document.getElementById('osBuscaBox').style.display = 'none';
+    document.getElementById('osResultados').innerHTML = '';
+    document.getElementById('osVinculadaBox').innerHTML =
+      `<div class="os-vinculada"><span>✓ OS ${e(os.os)} · ${e(os.unidade||'—')}</span><button onclick="desvincularOs()">✕</button></div>`;
+  }
+  function desvincularOs() {
+    osSelecionada = null;
+    document.getElementById('osBuscaBox').style.display = 'flex';
+    document.getElementById('osVinculadaBox').innerHTML = '';
+  }
+  async function vincularOsPorCodigo(codigo) {
+    const r = await authFetch('/api/os?search=' + encodeURIComponent(codigo)).then(r=>r.json()).catch(()=>null);
+    const os = r && r.ok ? r.data.find(o => o.os === codigo) : null;
+    if (os) vincularOs(os);
+  }
+
+  // ── Anexo ────────────────────────────────────────────────────────────────
+  function onAnexoEscolhido() {
+    const input = document.getElementById('fAnexo');
+    anexoSelecionado = input.files[0] || null;
+    const dz = document.getElementById('dropzone');
+    const lbl = document.getElementById('dzLabel');
+    if (anexoSelecionado) { dz.classList.add('tem-arquivo'); lbl.textContent = '📎 ' + anexoSelecionado.name; }
+    else { dz.classList.remove('tem-arquivo'); lbl.textContent = '📎 Clique pra escolher o arquivo'; }
+  }
+
+  // ── Envio ────────────────────────────────────────────────────────────────
+  async function enviarFinalizacao() {
+    const errEl = document.getElementById('formErr');
+    errEl.style.display = 'none';
+    const numero_ordem_sap = document.getElementById('fNumeroOrdem').value.trim();
+    if (!numero_ordem_sap) { errEl.textContent = 'Informe o número da Ordem no SAP.'; errEl.style.display='block'; return; }
+
+    const fd = new FormData();
+    if (osSelecionada) fd.append('os_id', osSelecionada.id);
+    fd.append('numero_ordem_sap', numero_ordem_sap);
+    fd.append('possui_nota', document.getElementById('fPossuiNota').value);
+    fd.append('dtl_ve', document.getElementById('fDtlVe').value.trim());
+    fd.append('horas_trabalhadas', document.getElementById('fHoras').value.trim());
+    fd.append('qtd_funcionarios', document.getElementById('fQtdFunc').value.trim());
+    fd.append('veiculo', document.getElementById('fVeiculo').value.trim());
+    fd.append('km', document.getElementById('fKm').value.trim());
+    if (anexoSelecionado) fd.append('anexo', anexoSelecionado);
+
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    try {
+      const r = await authFetch('/api/finalizacoes-sap', { method: 'POST', body: fd }).then(r=>r.json());
+      if (!r.ok) throw new Error(r.error);
+      toast('✅ Adicionado à fila de finalização!');
+      document.getElementById('fNumeroOrdem').value = '';
+      document.getElementById('fDtlVe').value = '';
+      document.getElementById('fHoras').value = '';
+      document.getElementById('fQtdFunc').value = '';
+      document.getElementById('fVeiculo').value = '';
+      document.getElementById('fKm').value = '';
+      document.getElementById('fAnexo').value = '';
+      anexoSelecionado = null;
+      onAnexoEscolhido();
+      desvincularOs();
+      await carregarFila();
+    } catch(err) {
+      errEl.textContent = 'Erro: ' + err.message; errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Adicionar à fila de finalização';
+    }
+  }
+
+  // ── Fila ─────────────────────────────────────────────────────────────────
+  function statusLabel(s) {
+    return { fila: 'Na fila', processando: 'Processando', concluido: '✓ Concluído', erro: '⚠ Erro' }[s] || s;
+  }
+  function tempoRelativo(iso) {
+    if (!iso) return '—';
+    const diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (diffMin < 1) return 'agora';
+    if (diffMin < 60) return 'há ' + diffMin + ' min';
+    return 'há ' + Math.round(diffMin/60) + 'h';
+  }
+
+  async function carregarFila() {
+    const r = await authFetch('/api/finalizacoes-sap').then(r=>r.json()).catch(()=>null);
+    if (!r || !r.ok) return;
+    const jobs = r.data;
+
+    const hoje = new Date().toISOString().slice(0,10);
+    document.getElementById('statFila').textContent = jobs.filter(j=>j.status==='fila').length;
+    document.getElementById('statProc').textContent = jobs.filter(j=>j.status==='processando').length;
+    document.getElementById('statOk').textContent = jobs.filter(j=>j.status==='concluido' && (j.concluidoEm||'').slice(0,10)===hoje).length;
+    document.getElementById('statErro').textContent = jobs.filter(j=>j.status==='erro').length;
+    document.getElementById('filaHint').textContent = jobs.length + (jobs.length===1 ? ' item' : ' itens');
+
+    const list = document.getElementById('queueList');
+    if (!jobs.length) { list.innerHTML = '<div class="empty">Nenhuma finalização na fila ainda.</div>'; return; }
+
+    list.innerHTML = jobs.map(j => `
+      <div class="job" onclick="this.classList.toggle('open')">
+        <div class="job-top">
+          <div class="job-ids">
+            <span class="os">${j.osCodigo ? 'OS ' + e(j.osCodigo) : 'Sem OS vinculada'}</span>
+            <span class="sap">Ordem ${e(j.numeroOrdemSap)}</span>
+          </div>
+          <span class="pill ${j.status}"><span class="dot"></span>${statusLabel(j.status)}</span>
+        </div>
+        <div class="job-meta">
+          <span>👷 ${e(j.enviadoPorNome || '—')}</span>
+          <span>🕑 ${tempoRelativo(j.atualizadoEm)}</span>
+          ${j.etapaAtual ? '<span>⚙️ ' + e(j.etapaAtual) + '</span>' : ''}
+        </div>
+        ${j.status === 'erro' && j.erroMensagem ? `
+          <div class="job-error"><b>Robô pausou pra revisão</b>${e(j.erroMensagem)}</div>
+        ` : ''}
+        <div class="job-detail">
+          <div class="kv">
+            <span>Horas / funcionários</span><b>${e(j.horasTrabalhadas||'—')} · ${e(j.qtdFuncionarios||'—')}</b>
+            <span>Veículo / KM</span><b>${e(j.veiculo||'—')} · ${e(j.km||'—')}</b>
+            <span>Possui nota</span><b>${j.possuiNota ? 'Sim' : 'Não'}</b>
+            <span>Anexo</span><b>${j.temAnexo ? 'Enviado' : 'Não enviado'}</b>
+            <span>Criado em</span><b>${new Date(j.criadoEm).toLocaleString('pt-BR')}</b>
+          </div>
+          ${j.status === 'erro' ? `<button class="retry" onclick="event.stopPropagation();reenviarJob(${j.id})">🔁 Corrigi no SAP, reenviar pra fila</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function reenviarJob(id) {
+    try {
+      const r = await authFetch('/api/finalizacoes-sap/' + id + '/reenviar', { method: 'POST' }).then(r=>r.json());
+      if (!r.ok) throw new Error(r.error);
+      toast('🔁 Reenviado pra fila!');
+      await carregarFila();
+    } catch(err) { toast('Erro: ' + err.message); }
+  }
+
+  init();
+</script>
+</body>
+</html>

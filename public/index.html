@@ -394,6 +394,7 @@
         <div class="menu-divider"></div>
         <a href="/usuarios.html" class="menu-item" id="linkUsuarios" style="display:none"><span class="ico">👥</span> Usuários</a>
         <a href="/colaboradores.html" class="menu-item" id="linkColabs" style="display:none"><span class="ico">👷</span> Colaboradores</a>
+        <a href="/finalizador-sap.html" class="menu-item" id="linkFinalizadorSap" style="display:none"><span class="ico">📋</span> Finalizador de Ordem</a>
         <div class="menu-divider"></div>
         <button class="menu-item" id="btnRelatorioImg" onclick="fecharMenu();enviarRelatorioImagem()" style="display:none"><span class="ico" style="color:#25d366">🖼️</span> Relatório Diário</button>
         <button class="menu-item" id="btnSupervisor" onclick="fecharMenu();abrirSupervisorModal()" style="display:none"><span class="ico">👤</span> Supervisor da Equipe</button>
@@ -653,6 +654,7 @@
     }
     if (temPermissao('gerenciar_usuarios'))  { document.getElementById('linkUsuarios').style.display = ''; document.getElementById('linkColabs').style.display = ''; }
     if (temPermissao('gerenciar_inspecao'))  document.getElementById('linkAutoinsp').style.display = '';
+    if (temPermissao('finalizar_os_sap'))    document.getElementById('linkFinalizadorSap').style.display = '';
   }
   aplicarPermissoesUI();
 

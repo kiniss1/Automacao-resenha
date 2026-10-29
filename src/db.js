@@ -71,6 +71,10 @@ async function init() {
   const supervisor = require('./db_supervisor');
   supervisor.setDb(db);
 
+  // Inicializa fila de finalização de Ordens no SAP + credenciais SAP cifradas
+  const sapFinalizacao = require('./db_sap_finalizacao');
+  sapFinalizacao.setDb(db);
+
   persist();
   console.log('[DB] Banco iniciado:', DB_PATH);
 }
