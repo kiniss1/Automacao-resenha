@@ -169,17 +169,43 @@ async function enviarAoPainel(turno, data, texto) {
   const r = await fetch(`${PAINEL_URL}/api/resumo-turno/enviar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-robo-token': ROBO_TOKEN },
-    body: JSON.stringify({ turno: TURNOS[turno].rotulo, data, texto }),
+    body: JSON.stringify({ turno: TURNOS[turno].rotulo, chave: turno, data, texto }),
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.ok) throw new Error(j.error || `HTTP ${r.status}`);
 }
 
+// Atende pedidos de "Enviar agora" feitos no painel (checa a cada minuto)
+async function atenderPedidos() {
+  const r = await fetch(`${PAINEL_URL}/api/resumo-turno/pendente`, { headers: { 'x-robo-token': ROBO_TOKEN } });
+  if (!r.ok) throw new Error(`pendente: HTTP ${r.status}`);
+  const { pendente } = await r.json();
+  if (!pendente) return;
+  const base = new Date();
+  const texto = await montarResumo(pendente.turno, base);
+  await enviarAoPainel(pendente.turno, fmtData(base), texto);
+  console.log(`[${new Date().toLocaleString('pt-BR')}] Pedido manual (${pendente.turno}) enviado.`);
+}
+
+async function loopPedidos() {
+  if (!ROBO_TOKEN) throw new Error('Defina ROBO_RESUMO_TOKEN (mesmo valor do painel).');
+  console.log(`Aguardando pedidos de envio manual em ${PAINEL_URL} ...`);
+  for (;;) {
+    try {
+      await atenderPedidos();
+    } catch (e) {
+      console.error(`[${new Date().toLocaleString('pt-BR')}] ERRO: ${e.message}`);
+    }
+    await new Promise(res => setTimeout(res, 60000));
+  }
+}
+
 (async () => {
   const args = process.argv.slice(2);
+  if (args.includes('--loop')) return loopPedidos();
   const turno = args[0];
   if (!TURNOS[turno]) {
-    console.error('uso: node resumo_turno.js noturno|diurno|14-23 [--data DD/MM/AAAA] [--dry-run]');
+    console.error('uso: node resumo_turno.js noturno|diurno|14-23 [--data DD/MM/AAAA] [--dry-run]\n     node resumo_turno.js --loop');
     process.exit(1);
   }
   const dataIdx = args.indexOf('--data');

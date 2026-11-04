@@ -379,6 +379,12 @@
     <div class="bot-badge" id="resumoBadge" title="Resumo automático por turno (SharePoint)">
       <div class="dot" id="resumoDot"></div>
       <span id="resumoLabel">Resumo: verificando...</span>
+      <select id="resumoTurnoSel" style="font-size:11px;background:transparent;color:var(--text);border:1px solid var(--border2);border-radius:6px">
+        <option value="noturno">Noturno</option>
+        <option value="diurno">Diurno</option>
+        <option value="14-23">14–23</option>
+      </select>
+      <button type="button" onclick="pedirResumoAgora()" style="font-size:11px;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:2px 8px;cursor:pointer">Enviar agora</button>
     </div>
     <div class="bot-badge">
       <div class="dot" id="botDot"></div>
@@ -721,21 +727,35 @@
     return slot || HORARIOS_RESUMO[0];
   }
 
+  let grupoResumo = '';
   async function atualizarResumoTurno(){
     try{
       const r = await authFetch('/api/resumo-turno/status').then(r => r.json());
+      grupoResumo = r.grupo || 'grupo não configurado';
       const ultimo = (r.envios || [])[0];
       const recente = ultimo && (Date.now() - new Date(ultimo.em).getTime()) < 26 * 3600_000;
       const dot = document.getElementById('resumoDot'), lbl = document.getElementById('resumoLabel');
+      const pendente = r.pendente ? ' · envio manual pendente' : '';
       if(recente){
         const hora = new Date(ultimo.em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         dot.className = 'dot online';
-        lbl.textContent = 'Resumo ligado · último envio ' + hora + ' · próximo ' + proximoResumo();
+        lbl.textContent = 'Resumo ligado → ' + grupoResumo + ' · último ' + hora + ' · próximo ' + proximoResumo() + pendente;
       } else {
         dot.className = 'dot';
-        lbl.textContent = 'Resumo sem envio recente · próximo ' + proximoResumo();
+        lbl.textContent = 'Resumo sem envio recente → ' + grupoResumo + ' · próximo ' + proximoResumo() + pendente;
       }
     }catch{}
+  }
+
+  async function pedirResumoAgora(){
+    const sel = document.getElementById('resumoTurnoSel');
+    if(!confirm('Enviar agora o resumo do turno ' + sel.selectedOptions[0].text + ' para o grupo ' + grupoResumo + '?')) return;
+    try{
+      const r = await authFetch('/api/resumo-turno/pedir-envio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ turno: sel.value }) }).then(r => r.json());
+      if(!r.ok) throw new Error(r.error || 'Falha ao pedir o envio');
+      toast('📤 Pedido registrado. O robô envia em instantes.');
+      atualizarResumoTurno();
+    }catch(e){ toast('❌ ' + e.message, 'err'); }
   }
 
   let _statsGeral = false;
