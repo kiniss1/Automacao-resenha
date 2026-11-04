@@ -376,6 +376,10 @@
     </div>
   </div>
   <div class="header-right">
+    <div class="bot-badge" id="resumoBadge" title="Resumo automático por turno (SharePoint)">
+      <div class="dot" id="resumoDot"></div>
+      <span id="resumoLabel">Resumo: verificando...</span>
+    </div>
     <div class="bot-badge">
       <div class="dot" id="botDot"></div>
       <span id="botLabel">Verificando...</span>
@@ -705,6 +709,32 @@
       if(r.ready){dot.className='dot online';lbl.textContent='Bot online';}
       else if(r.hasQR){dot.className='dot';dot.style.background='#d29922';lbl.innerHTML='Aguardando QR <a href="/qr" target="_blank" style="color:var(--primary)">Escanear</a>';}
       else{dot.className='dot';lbl.textContent='Iniciando...';}
+    }catch{}
+  }
+
+  // ── Visor do resumo automático por turno (só mostra status, não dispara nada) ─
+  const HORARIOS_RESUMO = ['07:30', '16:00', '23:00'];
+  function proximoResumo(){
+    const agora = new Date(Date.now() - 3 * 3600_000); // horário de Brasília
+    const minutos = agora.getUTCHours() * 60 + agora.getUTCMinutes();
+    const slot = HORARIOS_RESUMO.find(h => { const [hh, mm] = h.split(':').map(Number); return hh * 60 + mm > minutos; });
+    return slot || HORARIOS_RESUMO[0];
+  }
+
+  async function atualizarResumoTurno(){
+    try{
+      const r = await authFetch('/api/resumo-turno/status').then(r => r.json());
+      const ultimo = (r.envios || [])[0];
+      const recente = ultimo && (Date.now() - new Date(ultimo.em).getTime()) < 26 * 3600_000;
+      const dot = document.getElementById('resumoDot'), lbl = document.getElementById('resumoLabel');
+      if(recente){
+        const hora = new Date(ultimo.em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        dot.className = 'dot online';
+        lbl.textContent = 'Resumo ligado · último envio ' + hora + ' · próximo ' + proximoResumo();
+      } else {
+        dot.className = 'dot';
+        lbl.textContent = 'Resumo sem envio recente · próximo ' + proximoResumo();
+      }
     }catch{}
   }
 
@@ -1215,8 +1245,9 @@
     if(ate&&!ate.value) ate.value=today;
   })();
 
-  load(); checkBot();
+  load(); checkBot(); atualizarResumoTurno();
   setInterval(checkBot,15_000);
+  setInterval(atualizarResumoTurno,60_000);
   setInterval(load,60_000);
 
   // ── Splash ────────────────────────────────────────────────────────────────

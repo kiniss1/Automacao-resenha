@@ -1982,6 +1982,39 @@ function startServer() {
     }
   });
 
+  // ── Resumo por turno enviado pelo robô (SharePoint → painel → grupo WhatsApp) ─
+  const RESUMO_TURNO_FILE = path.join(__dirname, '..', 'data', 'resumo_turno.json');
+
+  function lerResumoTurno() {
+    try { return JSON.parse(fs.readFileSync(RESUMO_TURNO_FILE, 'utf8')); }
+    catch(e) { return { envios: [] }; }
+  }
+
+  app.get('/api/resumo-turno/status', requireAuth, (req, res) => {
+    res.json({ ok: true, envios: lerResumoTurno().envios.slice(0, 5) });
+  });
+
+  app.post('/api/resumo-turno/enviar', async (req, res) => {
+    const tokenEsperado = process.env.ROBO_RESUMO_TOKEN || '';
+    if (!tokenEsperado || req.headers['x-robo-token'] !== tokenEsperado) {
+      return res.status(401).json({ ok: false, error: 'Token do robô inválido ou não configurado.' });
+    }
+    const { turno, data, texto } = req.body || {};
+    if (!turno || !texto) return res.status(400).json({ ok: false, error: 'Informe turno e texto.' });
+    try {
+      const grupo = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+      await enviarParaGrupo('_grupoRelId', grupo, texto);
+      const st = lerResumoTurno();
+      st.envios = [{ turno, data, em: new Date().toISOString() }, ...st.envios].slice(0, 50);
+      fs.mkdirSync(path.dirname(RESUMO_TURNO_FILE), { recursive: true });
+      fs.writeFileSync(RESUMO_TURNO_FILE, JSON.stringify(st, null, 2));
+      res.json({ ok: true });
+    } catch(e) {
+      console.error('[RESUMO-TURNO] ERRO COMPLETO:', e.stack || e.message);
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // ── Supervisor da equipe (nome/cargo/foto exibidos no relatório diário) ────
   const supervisorDb  = require('./db_supervisor');
   const SUPERVISOR_DIR = path.join(__dirname, '..', 'data');
