@@ -70,7 +70,7 @@ function consultarSharePoint(start) {
     <GetListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/">
       <listName>{${LIST_GUID}}</listName>
       <query><Query><Where><And><Eq><FieldRef Name="TipoDeRegistro"/><Value Type="Choice">RDI</Value></Eq><Geq><FieldRef Name="Created"/><Value Type="DateTime" IncludeTimeValue="TRUE">${fmtCaml(start)}</Value></Geq></And></Where><OrderBy><FieldRef Name="ID" Ascending="FALSE"/></OrderBy></Query></query>
-      <viewFields><ViewFields><FieldRef Name="ID"/><FieldRef Name="Created"/><FieldRef Name="DataEHora"/><FieldRef Name="Guarda"/><FieldRef Name="CAS"/><FieldRef Name="Encarregado"/><FieldRef Name="TipoDeAtividade"/><FieldRef Name="OBSAtivRDI"/><FieldRef Name="HorarioPrimeiroContatoMantenedor"/><FieldRef Name="Liberado"/></ViewFields></viewFields>
+      <viewFields><ViewFields><FieldRef Name="ID"/><FieldRef Name="Created"/><FieldRef Name="DataEHora"/><FieldRef Name="Guarda"/><FieldRef Name="CAS"/><FieldRef Name="Subesta_x00e7__x00e3_oRDA"/><FieldRef Name="Encarregado"/><FieldRef Name="TipoDeAtividade"/><FieldRef Name="OBSAtivRDI"/><FieldRef Name="HorarioPrimeiroContatoMantenedor"/><FieldRef Name="Liberado"/></ViewFields></viewFields>
       <rowLimit>500</rowLimit>
     </GetListItems>
   </soap:Body>
@@ -103,7 +103,7 @@ async function montarResumo(turno, base) {
       criado: new Date(attr(row, 'Created').replace(' ', 'T')),
       registro: attr(row, 'DataEHora'),
       guarda: attr(row, 'Guarda'),
-      cas: attr(row, 'CAS'),
+      sub: attr(row, 'Subesta_x00e7__x00e3_oRDA') || attr(row, 'CAS'),
       encarregado: nomeEncarregado(attr(row, 'Encarregado')),
       tipo: attr(row, 'TipoDeAtividade'),
       obs: attr(row, 'OBSAtivRDI'),
@@ -112,14 +112,14 @@ async function montarResumo(turno, base) {
     }))
     .filter(i => i.guarda === cfg.guarda && i.criado >= start);
 
-  const porCas = {};
-  itens.forEach(i => { porCas[i.cas] = (porCas[i.cas] || 0) + 1; });
-  const casTxt = Object.entries(porCas).sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(' · ');
+  const porSub = {};
+  itens.forEach(i => { porSub[i.sub] = (porSub[i.sub] || 0) + 1; });
+  const subTxt = Object.entries(porSub).sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s} ${n}`).join(' · ');
 
   const grupos = { ocorrencia: [], manobra: [], impedimento: [], inspecao: [], outros: [] };
   itens.forEach(i => grupos[classificar(i.tipo)].push(i));
 
-  const codigos = lista => lista.map(i => i.cas).join(' · ');
+  const codigos = lista => lista.map(i => i.sub).join(' · ');
   const tempo = i => {
     if (i.ini && i.lib) return ` (DE ${i.ini} ATÉ ${i.lib})`;
     if (i.ini) return ` (DE ${i.ini})`;
@@ -137,15 +137,15 @@ async function montarResumo(turno, base) {
     `Turno: *${cfg.rotulo}*`,
     `Total de registros lançados no turno: *${itens.length}*`,
     '',
-    '*Por CAS:*',
-    casTxt || 'Nenhum registro neste turno',
+    '*Por subestação:*',
+    subTxt || 'Nenhum registro neste turno',
   ];
 
   if (grupos.ocorrencia.length) {
     linhas.push('', '*Ocorrências:*');
     grupos.ocorrencia
       .sort((a, b) => (a.registro > b.registro ? 1 : -1))
-      .forEach(i => linhas.push(`•  ${i.cas} – ${i.tipo}: ${texto(i.obs)}${tempo(i)} (${i.encarregado})`));
+      .forEach(i => linhas.push(`•  ${i.sub} – ${i.tipo}: ${texto(i.obs)}${tempo(i)} (${i.encarregado})`));
   }
   if (grupos.impedimento.length) {
     linhas.push('', `*Impedimentos (${grupos.impedimento.length}):*`, codigos(grupos.impedimento));
