@@ -1990,8 +1990,38 @@ function startServer() {
     catch(e) { return { envios: [] }; }
   }
 
+  const TURNOS_RESUMO = ['noturno', 'diurno', '14-23'];
+  const grupoResumo = () => process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+
+  function gravarResumoTurno(st) {
+    fs.mkdirSync(path.dirname(RESUMO_TURNO_FILE), { recursive: true });
+    fs.writeFileSync(RESUMO_TURNO_FILE, JSON.stringify(st, null, 2));
+  }
+
+  function tokenRoboValido(req) {
+    const tokenEsperado = process.env.ROBO_RESUMO_TOKEN || '';
+    return !!tokenEsperado && req.headers['x-robo-token'] === tokenEsperado;
+  }
+
   app.get('/api/resumo-turno/status', requireAuth, (req, res) => {
-    res.json({ ok: true, envios: lerResumoTurno().envios.slice(0, 5) });
+    const st = lerResumoTurno();
+    res.json({ ok: true, grupo: grupoResumo(), envios: st.envios.slice(0, 5), pendente: st.pendente || null });
+  });
+
+  // Botão "Enviar agora": marca o pedido; o robô no computador da rede busca e envia
+  app.post('/api/resumo-turno/pedir-envio', requireAuth, requirePermissao('enviar_relatorio_painel'), (req, res) => {
+    const { turno } = req.body || {};
+    if (!TURNOS_RESUMO.includes(turno)) return res.status(400).json({ ok: false, error: 'Turno inválido.' });
+    const st = lerResumoTurno();
+    st.pendente = { turno, em: new Date().toISOString() };
+    gravarResumoTurno(st);
+    res.json({ ok: true, pendente: st.pendente });
+  });
+
+  // Robô consulta se há pedido de envio manual pendente
+  app.get('/api/resumo-turno/pendente', (req, res) => {
+    if (!tokenRoboValido(req)) return res.status(401).json({ ok: false, error: 'Token do robô inválido.' });
+    res.json({ ok: true, pendente: lerResumoTurno().pendente || null });
   });
 
   app.post('/api/resumo-turno/enviar', async (req, res) => {
@@ -1999,15 +2029,14 @@ function startServer() {
     if (!tokenEsperado || req.headers['x-robo-token'] !== tokenEsperado) {
       return res.status(401).json({ ok: false, error: 'Token do robô inválido ou não configurado.' });
     }
-    const { turno, data, texto } = req.body || {};
+    const { turno, chave, data, texto } = req.body || {};
     if (!turno || !texto) return res.status(400).json({ ok: false, error: 'Informe turno e texto.' });
     try {
-      const grupo = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
-      await enviarParaGrupo('_grupoRelId', grupo, texto);
+      await enviarParaGrupo('_grupoRelId', grupoResumo(), texto);
       const st = lerResumoTurno();
       st.envios = [{ turno, data, em: new Date().toISOString() }, ...st.envios].slice(0, 50);
-      fs.mkdirSync(path.dirname(RESUMO_TURNO_FILE), { recursive: true });
-      fs.writeFileSync(RESUMO_TURNO_FILE, JSON.stringify(st, null, 2));
+      if (st.pendente && st.pendente.turno === chave) st.pendente = null;
+      gravarResumoTurno(st);
       res.json({ ok: true });
     } catch(e) {
       console.error('[RESUMO-TURNO] ERRO COMPLETO:', e.stack || e.message);
