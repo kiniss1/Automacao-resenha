@@ -137,12 +137,12 @@ async function montarResumo(turno, base) {
     `Turno: *${cfg.rotulo}*`,
     `Total de registros lançados no turno: *${itens.length}*`,
     '',
-    '*Por subestação:*',
+    '*Atendimento por subestação:*',
     subTxt || 'Nenhum registro neste turno',
   ];
 
   if (grupos.ocorrencia.length) {
-    linhas.push('', '*Ocorrências:*');
+    linhas.push('', '*Ocorrências por subestação:*');
     grupos.ocorrencia
       .sort((a, b) => (a.registro > b.registro ? 1 : -1))
       .forEach(i => linhas.push(`•  ${i.sub} – ${i.tipo}: ${texto(i.obs)}${tempo(i)} (${i.encarregado})`));
@@ -151,16 +151,16 @@ async function montarResumo(turno, base) {
     linhas.push('', `*Impedimentos (${grupos.impedimento.length}):*`, codigos(grupos.impedimento));
   }
   if (grupos.manobra.length) {
-    linhas.push('', `*Manobras (${grupos.manobra.length}):*`, codigos(grupos.manobra));
+    linhas.push('', `*Manobras por subestação (${grupos.manobra.length}):*`, codigos(grupos.manobra));
   }
   if (grupos.inspecao.length) {
-    linhas.push('', `*Inspeções de rotina (${grupos.inspecao.length}):*`, codigos(grupos.inspecao));
+    linhas.push('', `*Inspeções de rotina SE (${grupos.inspecao.length}):*`, codigos(grupos.inspecao));
   }
   if (grupos.outros.length) {
-    linhas.push('', `*Outros (${grupos.outros.length}):*`, codigos(grupos.outros));
+    linhas.push('', `*Leitura por subestação (${grupos.outros.length}):*`, codigos(grupos.outros));
   }
   if (itens.length) {
-    linhas.push('', `*Encarregados:* ${encTxt}`);
+    linhas.push('', `*SUPERVISORES:* ${encTxt}`);
   }
   return linhas.join('\n');
 }
