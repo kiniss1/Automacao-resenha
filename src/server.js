@@ -2002,8 +2002,16 @@ function startServer() {
     const { turno, data, texto } = req.body || {};
     if (!turno || !texto) return res.status(400).json({ ok: false, error: 'Informe turno e texto.' });
     try {
-      const grupo = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
-      await enviarParaGrupo('_grupoRelId', grupo, texto);
+      // GRUPO_RESUMO_TURNO_ID (um ou mais IDs separados por vírgula) tem prioridade;
+      // sem ela, o resumo segue para o mesmo grupo do relatório.
+      const idsResumo = (process.env.GRUPO_RESUMO_TURNO_ID || '').split(',').map(s => s.trim()).filter(Boolean);
+      if (idsResumo.length) {
+        if (!global._waClient) throw new Error('WhatsApp ainda não está conectado.');
+        for (const id of idsResumo) await global._waClient.sendMessage(id, texto);
+      } else {
+        const grupo = process.env.GRUPO_RELATORIO_NOME || process.env.GRUPO_NOME || 'Resenha';
+        await enviarParaGrupo('_grupoRelId', grupo, texto);
+      }
       const st = lerResumoTurno();
       st.envios = [{ turno, data, em: new Date().toISOString() }, ...st.envios].slice(0, 50);
       fs.mkdirSync(path.dirname(RESUMO_TURNO_FILE), { recursive: true });
