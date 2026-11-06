@@ -61,6 +61,13 @@ function classificar(tipo) {
   return 'ocorrencia';
 }
 
+// quebra uma lista de itens em linhas de `n` itens separados por " · "
+function emLinhas(itens, n) {
+  const out = [];
+  for (let k = 0; k < itens.length; k += n) out.push(itens.slice(k, k + n).join(' · '));
+  return out.join('\n');
+}
+
 // Consulta a lista via SOAP usando as credenciais do Windows (mesmo caminho do sync.js)
 function consultarSharePoint(start) {
   return new Promise((resolve, reject) => {
@@ -114,16 +121,17 @@ async function montarResumo(turno, base) {
 
   const porSub = {};
   itens.forEach(i => { porSub[i.sub] = (porSub[i.sub] || 0) + 1; });
-  const subTxt = Object.entries(porSub).sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s} ${n}`).join(' · ');
+  const subs = Object.entries(porSub).sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+  const subTxt = emLinhas(subs.map(([s, n]) => `${s} [${n}]`), 5);
 
   const grupos = { ocorrencia: [], manobra: [], impedimento: [], inspecao: [], outros: [] };
   itens.forEach(i => grupos[classificar(i.tipo)].push(i));
 
-  const codigos = lista => lista.map(i => i.sub).join(' · ');
-  const tempo = i => {
-    if (i.ini && i.lib) return ` (DE ${i.ini} ATÉ ${i.lib})`;
-    if (i.ini) return ` (DE ${i.ini})`;
-    if (i.lib) return ` (ATÉ ${i.lib})`;
+  const codigos = lista => emLinhas(lista.map(i => i.sub), 6);
+  const horario = i => {
+    if (i.ini && i.lib) return `🕐 ${i.ini} às ${i.lib} · `;
+    if (i.ini) return `🕐 desde ${i.ini} · `;
+    if (i.lib) return `🕐 até ${i.lib} · `;
     return '';
   };
   const texto = s => s.length > 220 ? s.slice(0, 220) + '…' : s;
@@ -133,34 +141,35 @@ async function montarResumo(turno, base) {
   const encTxt = Object.entries(enc).sort((a, b) => b[1] - a[1]).map(([n, c]) => `${n} ${c}`).join(' · ');
 
   const linhas = [
-    `📋 *Resumo Atividades CAS Operação ${fmtData(base)}*`,
-    `Turno: *${cfg.rotulo}*`,
-    `Total de registros lançados no turno: *${itens.length}*`,
+    '📋 *Resumo Atividades CAS Operação*',
+    `📅 ${fmtData(base)} · ${cfg.rotulo}`,
+    `📊 Total de registros: *${itens.length}*`,
     '',
-    '*Atendimento por subestação:*',
+    `📍 *Atendimento por subestação*${subs.length ? ` (${subs.length} SEs)` : ''}`,
+    '',
     subTxt || 'Nenhum registro neste turno',
   ];
 
   if (grupos.ocorrencia.length) {
-    linhas.push('', '*Ocorrências por subestação:*');
+    linhas.push('', `⚠️ *Ocorrências (${grupos.ocorrencia.length})*`);
     grupos.ocorrencia
       .sort((a, b) => (a.registro > b.registro ? 1 : -1))
-      .forEach(i => linhas.push(`•  ${i.sub} – ${i.tipo}: ${texto(i.obs)}${tempo(i)} (${i.encarregado})`));
+      .forEach(i => linhas.push('', `*${i.sub}* – ${i.tipo}`, ...(i.obs ? [texto(i.obs)] : []), `${horario(i)}${i.encarregado}`));
   }
   if (grupos.impedimento.length) {
-    linhas.push('', `*Impedimentos (${grupos.impedimento.length}):*`, codigos(grupos.impedimento));
+    linhas.push('', `⛔ *Impedimentos (${grupos.impedimento.length})*`, codigos(grupos.impedimento));
   }
   if (grupos.manobra.length) {
-    linhas.push('', `*Manobras por subestação (${grupos.manobra.length}):*`, codigos(grupos.manobra));
+    linhas.push('', `🔌 *Manobras (${grupos.manobra.length})*`, codigos(grupos.manobra));
   }
   if (grupos.inspecao.length) {
-    linhas.push('', `*Inspeções de rotina SE (${grupos.inspecao.length}):*`, codigos(grupos.inspecao));
+    linhas.push('', `🔍 *Inspeções de rotina (${grupos.inspecao.length})*`, codigos(grupos.inspecao));
   }
   if (grupos.outros.length) {
-    linhas.push('', `*Leitura por subestação (${grupos.outros.length}):*`, codigos(grupos.outros));
+    linhas.push('', `📈 *Leitura (${grupos.outros.length})*`, codigos(grupos.outros));
   }
   if (itens.length) {
-    linhas.push('', `*SUPERVISORES:* ${encTxt}`);
+    linhas.push('', '👷 *Supervisores*', encTxt);
   }
   return linhas.join('\n');
 }
