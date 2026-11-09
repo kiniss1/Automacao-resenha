@@ -30,8 +30,13 @@ const fmtCaml = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDat
 
 function decode(s) {
   return (s || '')
-    .replace(/&#10;/g, ' ').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    // códigos numéricos (&#9; tabulação, &#10; quebra de linha, &#39; aspas...)
+    .replace(/&#(\d+);/g, (_, n) => {
+      const c = String.fromCharCode(Number(n));
+      return /\s/.test(c) ? ' ' : c;
+    })
+    .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&') // por último, para não decodificar duas vezes
     .replace(/\s+/g, ' ').trim();
 }
 
